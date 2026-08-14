@@ -46,6 +46,9 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = Instant.now();
 
+    @Column(name = "last_login")
+    private Instant lastLogin;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",

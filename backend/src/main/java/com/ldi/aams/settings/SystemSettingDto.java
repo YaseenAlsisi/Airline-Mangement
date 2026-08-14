@@ -1,0 +1,19 @@
+package com.ldi.aams.settings;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class SystemSettingDto {
+    private UUID id;
+    private String key;
+    private String value;
+    private String description;
+}

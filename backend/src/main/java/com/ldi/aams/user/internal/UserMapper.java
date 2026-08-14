@@ -21,6 +21,7 @@ public class UserMapper {
                         .collect(Collectors.toSet()))
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
+                .lastLogin(user.getLastLogin())
                 .build();
     }
 

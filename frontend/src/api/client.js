@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: 'http://localhost:8081',
   headers: {
     'Content-Type': 'application/json'
   }
@@ -31,7 +31,7 @@ apiClient.interceptors.response.use(
         const refreshToken = useAuthStore.getState().refreshToken;
         if (!refreshToken) throw new Error('No refresh token');
 
-        const response = await axios.post('http://localhost:8080/api/v1/auth/refresh', { refreshToken });
+        const response = await axios.post('http://localhost:8081/api/v1/auth/refresh', { refreshToken });
         const { accessToken, refreshToken: newRefreshToken } = response.data.data;
 
         useAuthStore.getState().setTokens(accessToken, newRefreshToken);

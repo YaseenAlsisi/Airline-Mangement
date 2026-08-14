@@ -24,6 +24,7 @@ public class UserDto {
         private Set<RoleDto.RoleResponse> roles;
         private Instant createdAt;
         private Instant updatedAt;
+        private Instant lastLogin;
     }
 
     @Data
