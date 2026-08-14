@@ -38,9 +38,9 @@ INSERT INTO role_permissions (role_id, permission_id)
 SELECT '00000000-0000-0000-0000-000000000002', id FROM permissions 
 WHERE code LIKE '%_VIEW' OR code IN ('NOTE_CREATE', 'NOTE_REPLY');
 
--- Insert default admin user (password is 'admin' hashed with bcrypt: $2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HCGKKPTBaLTheU8hH3b32)
+-- Insert default admin user (password is 'admin' hashed with bcrypt: $2a$10$5DxKN6AwOCsrH62fP8OHhO4gM0HeUUscQsjNGtpo.52oMBeC8eiBa)
 INSERT INTO users (id, username, email, password_hash, full_name, is_active) VALUES 
-('11111111-1111-1111-1111-111111111111', 'admin', 'admin@example.com', '$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HCGKKPTBaLTheU8hH3b32', 'System Administrator', true);
+('11111111-1111-1111-1111-111111111111', 'admin', 'admin@example.com', '$2a$10$5DxKN6AwOCsrH62fP8OHhO4gM0HeUUscQsjNGtpo.52oMBeC8eiBa', 'System Administrator', true);
 
 -- Assign ADMIN role to default admin user
 INSERT INTO user_roles (user_id, role_id) VALUES 

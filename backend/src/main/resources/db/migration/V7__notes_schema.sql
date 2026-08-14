@@ -12,10 +12,12 @@ CREATE TABLE notes (
 CREATE INDEX idx_notes_entity ON notes(entity_type, entity_id);
 
 -- Insert NOTE_MANAGE permission
-INSERT INTO permissions (id, name, description) VALUES
-    (gen_random_uuid(), 'NOTE_MANAGE', 'Can create and view notes');
+INSERT INTO permissions (id, code, description, module) VALUES
+    (gen_random_uuid(), 'NOTE_MANAGE', 'Can create and view notes', 'note')
+ON CONFLICT (code) DO UPDATE SET description = EXCLUDED.description;
 
 -- Assign NOTE_MANAGE to ADMIN role
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r, permissions p
-WHERE r.name = 'ADMIN' AND p.name = 'NOTE_MANAGE';
+WHERE r.name = 'ADMIN' AND p.code = 'NOTE_MANAGE'
+ON CONFLICT DO NOTHING;

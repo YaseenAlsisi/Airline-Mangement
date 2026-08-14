@@ -1,7 +1,8 @@
 package com.ldi.aams.common.config;
 
-import com.ldi.aams.user.internal.UserRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.stream.Collectors;
+
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,7 +16,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.stream.Collectors;
+import com.ldi.aams.user.internal.UserRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @RequiredArgsConstructor
@@ -57,5 +60,12 @@ public class ApplicationConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public CommandLineRunner testPassword(PasswordEncoder passwordEncoder) {
+        return args -> {
+            System.out.println("New BCrypt hash: " + passwordEncoder.encode("admin"));
+        };
     }
 }
