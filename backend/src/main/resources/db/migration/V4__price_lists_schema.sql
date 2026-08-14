@@ -1,14 +1,12 @@
-CREATE TABLE price_lists (
+CREATE TABLE price_list_entries (
     id UUID PRIMARY KEY,
-    code VARCHAR(50) NOT NULL UNIQUE,
-    name VARCHAR(255) NOT NULL,
-    airline_id UUID REFERENCES airlines(id) ON DELETE SET NULL,
-    agent_id UUID REFERENCES agents(id) ON DELETE SET NULL,
-    commission_percentage DECIMAL(5, 2) DEFAULT 0.00,
-    markup_amount DECIMAL(15, 2) DEFAULT 0.00,
-    status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
-    valid_from DATE,
-    valid_to DATE,
+    price_list_id UUID NOT NULL REFERENCES price_lists(id) ON DELETE CASCADE,
+    departure VARCHAR(100) NOT NULL,
+    destination VARCHAR(100) NOT NULL,
+    passenger_type VARCHAR(50) NOT NULL,
+    price DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+    commission DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+    currency VARCHAR(10) NOT NULL DEFAULT 'EGP',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

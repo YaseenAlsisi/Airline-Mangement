@@ -1,0 +1,67 @@
+{
+  "navigation": {
+    "Dashboard": "لوحة التحكم",
+    "Excel Import": "رفع الإكسيل",
+    "Price Lists": "قوائم الأسعار",
+    "Agent Data": "بيانات الوكلاء",
+    "Airlines": "شركات الطيران",
+    "Transactions": "المعاملات",
+    "Reports": "التقارير",
+    "Notes": "الملاحظات",
+    "Settings": "الإعدادات"
+  },
+  "header": {
+    "Your Profile": "حسابك",
+    "Sign out": "خروج"
+  },
+  "login": {
+    "title": "سجل دخولك لحسابك",
+    "username": "اسم المستخدم",
+    "password": "كلمة المرور",
+    "signIn": "دخول",
+    "signingIn": "بيسجل دخول...",
+    "loginFailed": "تسجيل الدخول فشل. اتأكد من بياناتك."
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "welcome": "يا هلا بيك",
+    "stat_totalTickets": "إجمالي التذاكر",
+    "stat_totalRevenue": "إجمالي الإيرادات",
+    "stat_activeAgents": "الوكلاء النشطين",
+    "recentTransactions": "أحدث المعاملات",
+    "viewAll": "عرض الكل"
+  },
+  "priceList": {
+    "departure": "جهة المغادرة",
+    "destination": "الوجهة",
+    "passengerType": "النوع",
+    "price": "الإجمالي",
+    "commission": "العمولة",
+    "currency": "العملة",
+    "addEntry": "إضافة سعر جديد",
+    "remove": "حذف",
+    "destinations": {
+      "Benghazi": "بنغازي",
+      "Tripoli": "طرابلس",
+      "Misrata": "مصراته",
+      "Sabha": "سبها",
+      "Land": "البري"
+    },
+    "departures": {
+      "Borg El Arab": "برج العرب",
+      "Cairo": "القاهرة"
+    },
+    "passengerTypes": {
+      "Adult": "بالغ",
+      "ChildTo8": "طفل ل 8 سنين",
+      "Child": "طفل",
+      "Ladies": "السيدات",
+      "Infant": "رضيع"
+    },
+    "currencies": {
+      "EGP": "جنيه مصري",
+      "USD": "دولار",
+      "EUR": "يورو"
+    }
+  }
+}

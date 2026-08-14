@@ -60,6 +60,10 @@ public class PriceList {
     @Builder.Default
     private Instant updatedAt = Instant.now();
 
+    @OneToMany(mappedBy = "priceList", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private java.util.List<PriceListEntry> entries = new java.util.ArrayList<>();
+
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = Instant.now();

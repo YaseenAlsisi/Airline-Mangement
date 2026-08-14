@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { LoginPage } from './pages/auth/LoginPage';
 import { MainLayout } from './components/layout/MainLayout';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
@@ -15,14 +16,21 @@ import NotesDataPage from './pages/notes/NotesDataPage';
 import PlaceholderPage from './pages/PlaceholderPage';import { jsxDEV as _jsxDEV } from "react/jsx-dev-runtime";
 
 function App() {
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+    document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+  }, [i18n.language]);
+
   return (/*#__PURE__*/
     _jsxDEV(BrowserRouter, { children: /*#__PURE__*/
       _jsxDEV(Routes, { children: [/*#__PURE__*/
-        _jsxDEV(Route, { path: "/login", element: /*#__PURE__*/_jsxDEV(LoginPage, {}, void 0, false) }, void 0, false), /*#__PURE__*/
+        _jsxDEV(Route, { path: "/", element: /*#__PURE__*/_jsxDEV(LoginPage, {}, void 0, false) }, void 0, false), /*#__PURE__*/
 
         _jsxDEV(Route, { element: /*#__PURE__*/_jsxDEV(ProtectedRoute, {}, void 0, false), children: /*#__PURE__*/
           _jsxDEV(Route, { element: /*#__PURE__*/_jsxDEV(MainLayout, {}, void 0, false), children: [/*#__PURE__*/
-            _jsxDEV(Route, { path: "/", element: /*#__PURE__*/_jsxDEV(DashboardPage, {}, void 0, false) }, void 0, false), /*#__PURE__*/
+            _jsxDEV(Route, { path: "/dashboard", element: /*#__PURE__*/_jsxDEV(DashboardPage, {}, void 0, false) }, void 0, false), /*#__PURE__*/
 
             _jsxDEV(Route, { element: /*#__PURE__*/_jsxDEV(ProtectedRoute, { requiredPermission: "TRANSACTION_CREATE" }, void 0, false), children: /*#__PURE__*/
               _jsxDEV(Route, { path: "/import", element: /*#__PURE__*/_jsxDEV(ImportDataPage, {}, void 0, false) }, void 0, false) }, void 0, false

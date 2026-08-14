@@ -1,0 +1,67 @@
+{
+  "navigation": {
+    "Dashboard": "Dashboard",
+    "Excel Import": "Excel Import",
+    "Price Lists": "Price Lists",
+    "Agent Data": "Agent Data",
+    "Airlines": "Airlines",
+    "Transactions": "Transactions",
+    "Reports": "Reports",
+    "Notes": "Notes",
+    "Settings": "Settings"
+  },
+  "header": {
+    "Your Profile": "Your Profile",
+    "Sign out": "Sign out"
+  },
+  "login": {
+    "title": "Sign in to your account",
+    "username": "Username",
+    "password": "Password",
+    "signIn": "Sign in",
+    "signingIn": "Signing in...",
+    "loginFailed": "Login failed. Please check your credentials."
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back",
+    "stat_totalTickets": "Total Tickets",
+    "stat_totalRevenue": "Total Revenue",
+    "stat_activeAgents": "Active Agents",
+    "recentTransactions": "Recent Transactions",
+    "viewAll": "View all"
+  },
+  "priceList": {
+    "departure": "Departure",
+    "destination": "Destination",
+    "passengerType": "Passenger Type",
+    "price": "Total Price",
+    "commission": "Commission",
+    "currency": "Currency",
+    "addEntry": "Add Entry",
+    "remove": "Remove",
+    "destinations": {
+      "Benghazi": "Benghazi",
+      "Tripoli": "Tripoli",
+      "Misrata": "Misrata",
+      "Sabha": "Sabha",
+      "Land": "Land Only"
+    },
+    "departures": {
+      "Borg El Arab": "Borg El Arab",
+      "Cairo": "Cairo"
+    },
+    "passengerTypes": {
+      "Adult": "Adult",
+      "ChildTo8": "Child to 8 yrs",
+      "Child": "Child",
+      "Ladies": "Ladies",
+      "Infant": "Infant"
+    },
+    "currencies": {
+      "EGP": "EGP",
+      "USD": "USD",
+      "EUR": "EUR"
+    }
+  }
+}

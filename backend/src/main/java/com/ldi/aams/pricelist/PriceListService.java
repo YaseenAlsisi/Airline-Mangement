@@ -74,6 +74,20 @@ public class PriceListService {
                 .validTo(request.getValidTo())
                 .build();
 
+        if (request.getEntries() != null) {
+            priceList.getEntries().addAll(request.getEntries().stream().map(e -> 
+                com.ldi.aams.pricelist.internal.PriceListEntry.builder()
+                    .priceList(priceList)
+                    .departure(e.getDeparture())
+                    .destination(e.getDestination())
+                    .passengerType(e.getPassengerType())
+                    .price(e.getPrice() != null ? e.getPrice() : BigDecimal.ZERO)
+                    .commission(e.getCommission() != null ? e.getCommission() : BigDecimal.ZERO)
+                    .currency(e.getCurrency() != null ? e.getCurrency() : "EGP")
+                    .build()
+            ).toList());
+        }
+
         return priceListMapper.toResponse(priceListRepository.save(priceList));
     }
 
@@ -100,6 +114,21 @@ public class PriceListService {
         }
         if (request.getStatus() != null) {
             priceList.setStatus(request.getStatus());
+        }
+
+        if (request.getEntries() != null) {
+            priceList.getEntries().clear();
+            priceList.getEntries().addAll(request.getEntries().stream().map(e -> 
+                com.ldi.aams.pricelist.internal.PriceListEntry.builder()
+                    .priceList(priceList)
+                    .departure(e.getDeparture())
+                    .destination(e.getDestination())
+                    .passengerType(e.getPassengerType())
+                    .price(e.getPrice() != null ? e.getPrice() : BigDecimal.ZERO)
+                    .commission(e.getCommission() != null ? e.getCommission() : BigDecimal.ZERO)
+                    .currency(e.getCurrency() != null ? e.getCurrency() : "EGP")
+                    .build()
+            ).toList());
         }
 
         return priceListMapper.toResponse(priceListRepository.save(priceList));

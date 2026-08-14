@@ -17,6 +17,20 @@ public class PriceListDto {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class PriceListEntryResponse {
+        private UUID id;
+        private String departure;
+        private String destination;
+        private String passengerType;
+        private BigDecimal price;
+        private BigDecimal commission;
+        private String currency;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class PriceListResponse {
         private UUID id;
         private String code;
@@ -30,6 +44,26 @@ public class PriceListDto {
         private LocalDate validTo;
         private Instant createdAt;
         private Instant updatedAt;
+        private java.util.List<PriceListEntryResponse> entries;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CreatePriceListEntryRequest {
+        @NotBlank(message = "Departure is required")
+        private String departure;
+
+        @NotBlank(message = "Destination is required")
+        private String destination;
+
+        @NotBlank(message = "Passenger type is required")
+        private String passengerType;
+
+        private BigDecimal price;
+        private BigDecimal commission;
+        private String currency;
     }
 
     @Data
@@ -50,6 +84,7 @@ public class PriceListDto {
         private String status;
         private LocalDate validFrom;
         private LocalDate validTo;
+        private java.util.List<CreatePriceListEntryRequest> entries;
     }
 
     @Data
@@ -67,5 +102,6 @@ public class PriceListDto {
         private String status;
         private LocalDate validFrom;
         private LocalDate validTo;
+        private java.util.List<CreatePriceListEntryRequest> entries;
     }
 }

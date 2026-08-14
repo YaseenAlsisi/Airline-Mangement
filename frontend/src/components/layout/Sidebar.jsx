@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   HomeIcon,
   ArrowUpTrayIcon,
@@ -14,7 +15,7 @@ import {
 import clsx from 'clsx';import { jsxDEV as _jsxDEV } from "react/jsx-dev-runtime";
 
 const navigation = [
-{ name: 'Dashboard', href: '/', icon: HomeIcon },
+{ name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
 { name: 'Excel Import', href: '/import', icon: ArrowUpTrayIcon },
 { name: 'Price Lists', href: '/price-lists', icon: CurrencyDollarIcon },
 { name: 'Agent Data', href: '/agents', icon: UsersIcon },
@@ -25,6 +26,8 @@ const navigation = [
 { name: 'Settings', href: '/settings', icon: Cog6ToothIcon }];
 
 export const Sidebar = () => {
+  const { t } = useTranslation();
+
   return (/*#__PURE__*/
     _jsxDEV("div", { className: "flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4", children: [/*#__PURE__*/
       _jsxDEV("div", { className: "flex h-16 shrink-0 items-center", children: /*#__PURE__*/
@@ -47,7 +50,7 @@ export const Sidebar = () => {
                   ), children: [/*#__PURE__*/
 
                   _jsxDEV(item.icon, { className: "h-6 w-6 shrink-0", "aria-hidden": "true" }, void 0, false),
-                  item.name] }, void 0, true
+                  t(`navigation.${item.name}`)] }, void 0, true
                 ) }, item.name, false
               )
               ) }, void 0, false

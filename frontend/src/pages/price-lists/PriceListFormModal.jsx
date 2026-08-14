@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { createPriceList, updatePriceList } from '../../api/priceLists.api';
 import { getAgents } from '../../api/agents.api';
-import { getAirlines } from '../../api/airlines.api';import { jsxDEV as _jsxDEV } from "react/jsx-dev-runtime";
+import { getAirlines } from '../../api/airlines.api';
+import { useTranslation } from 'react-i18next';
+import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 const PriceListFormModal = ({ isOpen, priceList, onClose }) => {
+  const { t } = useTranslation();
+  
   const [formData, setFormData] = useState({
     code: '',
     name: '',
     airlineId: null,
     agentId: null,
-    commissionPercentage: 0,
-    markupAmount: 0,
     status: 'ACTIVE',
     validFrom: null,
-    validTo: null
+    validTo: null,
+    entries: []
   });
 
   const [agents, setAgents] = useState([]);
@@ -26,18 +29,20 @@ const PriceListFormModal = ({ isOpen, priceList, onClose }) => {
       fetchDropdownData();
     }
     if (priceList) {
-      setFormData(priceList);
+      setFormData({
+        ...priceList,
+        entries: priceList.entries || []
+      });
     } else {
       setFormData({
         code: '',
         name: '',
         airlineId: null,
         agentId: null,
-        commissionPercentage: 0,
-        markupAmount: 0,
         status: 'ACTIVE',
         validFrom: null,
-        validTo: null
+        validTo: null,
+        entries: []
       });
     }
   }, [priceList, isOpen]);
@@ -45,9 +50,9 @@ const PriceListFormModal = ({ isOpen, priceList, onClose }) => {
   const fetchDropdownData = async () => {
     try {
       const [agentsRes, airlinesRes] = await Promise.all([
-      getAgents({ size: 1000 }), // In a real app, use a searchable combobox for large datasets
-      getAirlines({ size: 1000 })]
-      );
+        getAgents({ size: 1000 }), 
+        getAirlines({ size: 1000 })
+      ]);
       setAgents(agentsRes.data?.content || []);
       setAirlines(airlinesRes.data?.content || []);
     } catch (e) {
@@ -56,19 +61,38 @@ const PriceListFormModal = ({ isOpen, priceList, onClose }) => {
   };
 
   const handleChange = (e) => {
-    const { name, value, type } = e.target;
-    let finalValue = value;
-
-    if (type === 'number') {
-      finalValue = value ? parseFloat(value) : 0;
-    } else if (value === '') {
-      // Handle empty dropdowns (nulling them out)
-      if (name === 'agentId' || name === 'airlineId' || name === 'validFrom' || name === 'validTo') {
-        finalValue = null;
-      }
-    }
-
+    const { name, value } = e.target;
+    let finalValue = value === '' ? null : value;
     setFormData((prev) => ({ ...prev, [name]: finalValue }));
+  };
+
+  const handleEntryChange = (index, field, value) => {
+    const newEntries = [...formData.entries];
+    newEntries[index] = { ...newEntries[index], [field]: value };
+    setFormData({ ...formData, entries: newEntries });
+  };
+
+  const addEntry = () => {
+    setFormData({
+      ...formData,
+      entries: [
+        ...formData.entries,
+        {
+          departure: '',
+          destination: '',
+          passengerType: '',
+          price: 0,
+          commission: 0,
+          currency: 'EGP'
+        }
+      ]
+    });
+  };
+
+  const removeEntry = (index) => {
+    const newEntries = [...formData.entries];
+    newEntries.splice(index, 1);
+    setFormData({ ...formData, entries: newEntries });
   };
 
   const handleSubmit = async (e) => {
@@ -84,7 +108,7 @@ const PriceListFormModal = ({ isOpen, priceList, onClose }) => {
       }
       onClose(true);
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'An error occurred while saving the price list.');
+      setError(err.response?.data?.error?.message || 'An error occurred while saving.');
     } finally {
       setLoading(false);
     }
@@ -92,180 +116,244 @@ const PriceListFormModal = ({ isOpen, priceList, onClose }) => {
 
   if (!isOpen) return null;
 
-  return (/*#__PURE__*/
-    _jsxDEV("div", { className: "relative z-50", "aria-labelledby": "modal-title", role: "dialog", "aria-modal": "true", children: [/*#__PURE__*/
-      _jsxDEV("div", { className: "fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" }, void 0, false), /*#__PURE__*/
+  return (
+    <div className="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+      <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+          <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-start shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl sm:p-6">
+            <div>
+              <h3 className="text-base font-semibold leading-6 text-gray-900" id="modal-title">
+                {priceList ? 'Edit Price List' : 'Create Price List'}
+              </h3>
+              
+              {error && (
+                <div className="mt-2 rounded-md bg-red-50 p-4">
+                  <div className="text-sm text-red-700">{error}</div>
+                </div>
+              )}
 
-      _jsxDEV("div", { className: "fixed inset-0 z-10 w-screen overflow-y-auto", children: /*#__PURE__*/
-        _jsxDEV("div", { className: "flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0", children: /*#__PURE__*/
-          _jsxDEV("div", { className: "relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6", children: /*#__PURE__*/
-            _jsxDEV("div", { children: [/*#__PURE__*/
-              _jsxDEV("h3", { className: "text-base font-semibold leading-6 text-gray-900", id: "modal-title", children:
-                priceList ? 'Edit Price List' : 'Create Price List' }, void 0, false
-              ),
+              <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="code" className="block text-sm font-medium leading-6 text-gray-900">Code *</label>
+                    <input
+                      type="text"
+                      name="code"
+                      id="code"
+                      required
+                      disabled={!!priceList}
+                      value={formData.code || ''}
+                      onChange={handleChange}
+                      className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 disabled:bg-gray-100"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium leading-6 text-gray-900">Name / Description *</label>
+                    <input
+                      type="text"
+                      name="name"
+                      id="name"
+                      required
+                      value={formData.name || ''}
+                      onChange={handleChange}
+                      className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    />
+                  </div>
+                </div>
 
-              error && /*#__PURE__*/
-              _jsxDEV("div", { className: "mt-2 rounded-md bg-red-50 p-4", children: /*#__PURE__*/
-                _jsxDEV("div", { className: "text-sm text-red-700", children: error }, void 0, false) }, void 0, false
-              ), /*#__PURE__*/
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label htmlFor="agentId" className="block text-sm font-medium leading-6 text-gray-900">Applies To Agent</label>
+                    <select
+                      name="agentId"
+                      id="agentId"
+                      value={formData.agentId || ''}
+                      onChange={handleChange}
+                      className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    >
+                      <option value="">-- All Agents (Global) --</option>
+                      {agents.map((a) => <option key={a.id} value={a.id}>{a.name} ({a.code})</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="airlineId" className="block text-sm font-medium leading-6 text-gray-900">Applies To Airline</label>
+                    <select
+                      name="airlineId"
+                      id="airlineId"
+                      value={formData.airlineId || ''}
+                      onChange={handleChange}
+                      className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    >
+                      <option value="">-- All Airlines (Global) --</option>
+                      {airlines.map((a) => <option key={a.id} value={a.id}>{a.name} ({a.code})</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="status" className="block text-sm font-medium leading-6 text-gray-900">Status</label>
+                    <select
+                      name="status"
+                      id="status"
+                      value={formData.status}
+                      onChange={handleChange}
+                      className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    >
+                      <option value="ACTIVE">ACTIVE</option>
+                      <option value="INACTIVE">INACTIVE</option>
+                    </select>
+                  </div>
+                </div>
+                
+                {/* Pricing Matrix Section */}
+                <div className="mt-8 border-t border-gray-200 pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-sm font-medium leading-6 text-gray-900">Pricing Matrix</h4>
+                    <button
+                      type="button"
+                      onClick={addEntry}
+                      className="inline-flex items-center gap-x-1.5 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
+                    >
+                      <PlusIcon className="-ms-0.5 h-5 w-5" aria-hidden="true" />
+                      {t('priceList.addEntry')}
+                    </button>
+                  </div>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-300">
+                      <thead>
+                        <tr>
+                          <th className="py-3.5 pe-3 text-start text-sm font-semibold text-gray-900">{t('priceList.departure')}</th>
+                          <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('priceList.destination')}</th>
+                          <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('priceList.passengerType')}</th>
+                          <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('priceList.price')}</th>
+                          <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('priceList.commission')}</th>
+                          <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('priceList.currency')}</th>
+                          <th className="relative py-3.5 ps-3 pe-4 sm:pe-0">
+                            <span className="sr-only">{t('priceList.remove')}</span>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {formData.entries.map((entry, index) => (
+                          <tr key={index}>
+                            <td className="whitespace-nowrap py-4 pe-3 text-sm">
+                              <input
+                                list="departures-list"
+                                value={entry.departure}
+                                onChange={(e) => handleEntryChange(index, 'departure', e.target.value)}
+                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                required
+                              />
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-4 text-sm">
+                              <input
+                                list="destinations-list"
+                                value={entry.destination}
+                                onChange={(e) => handleEntryChange(index, 'destination', e.target.value)}
+                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                required
+                              />
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-4 text-sm">
+                              <input
+                                list="passengers-list"
+                                value={entry.passengerType}
+                                onChange={(e) => handleEntryChange(index, 'passengerType', e.target.value)}
+                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                required
+                              />
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-4 text-sm">
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={entry.price}
+                                onChange={(e) => handleEntryChange(index, 'price', parseFloat(e.target.value))}
+                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                required
+                              />
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-4 text-sm">
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={entry.commission}
+                                onChange={(e) => handleEntryChange(index, 'commission', parseFloat(e.target.value))}
+                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                required
+                              />
+                            </td>
+                            <td className="whitespace-nowrap px-3 py-4 text-sm">
+                              <select
+                                value={entry.currency}
+                                onChange={(e) => handleEntryChange(index, 'currency', e.target.value)}
+                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                              >
+                                <option value="EGP">{t('priceList.currencies.EGP')}</option>
+                                <option value="USD">{t('priceList.currencies.USD')}</option>
+                                <option value="EUR">{t('priceList.currencies.EUR')}</option>
+                              </select>
+                            </td>
+                            <td className="relative whitespace-nowrap py-4 ps-3 pe-4 text-end text-sm font-medium sm:pe-0">
+                              <button
+                                type="button"
+                                onClick={() => removeEntry(index)}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                <TrashIcon className="h-5 w-5" aria-hidden="true" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
 
-              _jsxDEV("form", { onSubmit: handleSubmit, className: "mt-4 space-y-4", children: [/*#__PURE__*/
-                _jsxDEV("div", { className: "grid grid-cols-2 gap-4", children: [/*#__PURE__*/
-                  _jsxDEV("div", { children: [/*#__PURE__*/
-                    _jsxDEV("label", { htmlFor: "code", className: "block text-sm font-medium leading-6 text-gray-900", children: "Code *" }, void 0, false), /*#__PURE__*/
-                    _jsxDEV("input", {
-                      type: "text",
-                      name: "code",
-                      id: "code",
-                      required: true,
-                      disabled: !!priceList,
-                      value: formData.code || '',
-                      onChange: handleChange,
-                      className: "mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 disabled:bg-gray-100" }, void 0, false
-                    )] }, void 0, true
-                  ), /*#__PURE__*/
+                <datalist id="departures-list">
+                  <option value={t('priceList.departures.Borg El Arab')} />
+                  <option value={t('priceList.departures.Cairo')} />
+                </datalist>
+                
+                <datalist id="destinations-list">
+                  <option value={t('priceList.destinations.Benghazi')} />
+                  <option value={t('priceList.destinations.Tripoli')} />
+                  <option value={t('priceList.destinations.Misrata')} />
+                  <option value={t('priceList.destinations.Sabha')} />
+                  <option value={t('priceList.destinations.Land')} />
+                </datalist>
 
-                  _jsxDEV("div", { children: [/*#__PURE__*/
-                    _jsxDEV("label", { htmlFor: "name", className: "block text-sm font-medium leading-6 text-gray-900", children: "Name / Description *" }, void 0, false), /*#__PURE__*/
-                    _jsxDEV("input", {
-                      type: "text",
-                      name: "name",
-                      id: "name",
-                      required: true,
-                      value: formData.name || '',
-                      onChange: handleChange,
-                      className: "mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" }, void 0, false
-                    )] }, void 0, true
-                  )] }, void 0, true
-                ), /*#__PURE__*/
+                <datalist id="passengers-list">
+                  <option value={t('priceList.passengerTypes.Adult')} />
+                  <option value={t('priceList.passengerTypes.ChildTo8')} />
+                  <option value={t('priceList.passengerTypes.Child')} />
+                  <option value={t('priceList.passengerTypes.Ladies')} />
+                  <option value={t('priceList.passengerTypes.Infant')} />
+                </datalist>
 
-                _jsxDEV("div", { className: "grid grid-cols-2 gap-4", children: [/*#__PURE__*/
-                  _jsxDEV("div", { children: [/*#__PURE__*/
-                    _jsxDEV("label", { htmlFor: "agentId", className: "block text-sm font-medium leading-6 text-gray-900", children: "Applies To Agent" }, void 0, false), /*#__PURE__*/
-                    _jsxDEV("select", {
-                      name: "agentId",
-                      id: "agentId",
-                      value: formData.agentId || '',
-                      onChange: handleChange,
-                      className: "mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6", children: [/*#__PURE__*/
-
-                      _jsxDEV("option", { value: "", children: "-- All Agents (Global) --" }, void 0, false),
-                      agents.map((a) => /*#__PURE__*/_jsxDEV("option", { value: a.id, children: [a.name, " (", a.code, ")"] }, a.id, true))] }, void 0, true
-                    )] }, void 0, true
-                  ), /*#__PURE__*/
-                  _jsxDEV("div", { children: [/*#__PURE__*/
-                    _jsxDEV("label", { htmlFor: "airlineId", className: "block text-sm font-medium leading-6 text-gray-900", children: "Applies To Airline" }, void 0, false), /*#__PURE__*/
-                    _jsxDEV("select", {
-                      name: "airlineId",
-                      id: "airlineId",
-                      value: formData.airlineId || '',
-                      onChange: handleChange,
-                      className: "mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6", children: [/*#__PURE__*/
-
-                      _jsxDEV("option", { value: "", children: "-- All Airlines (Global) --" }, void 0, false),
-                      airlines.map((a) => /*#__PURE__*/_jsxDEV("option", { value: a.id, children: [a.name, " (", a.code, ")"] }, a.id, true))] }, void 0, true
-                    )] }, void 0, true
-                  )] }, void 0, true
-                ), /*#__PURE__*/
-
-                _jsxDEV("div", { className: "grid grid-cols-2 gap-4", children: [/*#__PURE__*/
-                  _jsxDEV("div", { children: [/*#__PURE__*/
-                    _jsxDEV("label", { htmlFor: "commissionPercentage", className: "block text-sm font-medium leading-6 text-gray-900", children: "Commission %" }, void 0, false), /*#__PURE__*/
-                    _jsxDEV("div", { className: "relative mt-1 rounded-md shadow-sm", children: [/*#__PURE__*/
-                      _jsxDEV("input", {
-                        type: "number",
-                        step: "0.01",
-                        name: "commissionPercentage",
-                        id: "commissionPercentage",
-                        value: formData.commissionPercentage || 0,
-                        onChange: handleChange,
-                        className: "block w-full rounded-md border-0 py-1.5 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" }, void 0, false
-                      ), /*#__PURE__*/
-                      _jsxDEV("div", { className: "pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3", children: /*#__PURE__*/
-                        _jsxDEV("span", { className: "text-gray-500 sm:text-sm", children: "%" }, void 0, false) }, void 0, false
-                      )] }, void 0, true
-                    )] }, void 0, true
-                  ), /*#__PURE__*/
-                  _jsxDEV("div", { children: [/*#__PURE__*/
-                    _jsxDEV("label", { htmlFor: "markupAmount", className: "block text-sm font-medium leading-6 text-gray-900", children: "Fixed Markup" }, void 0, false), /*#__PURE__*/
-                    _jsxDEV("div", { className: "relative mt-1 rounded-md shadow-sm", children: [/*#__PURE__*/
-                      _jsxDEV("div", { className: "pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3", children: /*#__PURE__*/
-                        _jsxDEV("span", { className: "text-gray-500 sm:text-sm", children: "$" }, void 0, false) }, void 0, false
-                      ), /*#__PURE__*/
-                      _jsxDEV("input", {
-                        type: "number",
-                        step: "0.01",
-                        name: "markupAmount",
-                        id: "markupAmount",
-                        value: formData.markupAmount || 0,
-                        onChange: handleChange,
-                        className: "block w-full rounded-md border-0 py-1.5 pl-7 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" }, void 0, false
-                      )] }, void 0, true
-                    )] }, void 0, true
-                  )] }, void 0, true
-                ), /*#__PURE__*/
-
-                _jsxDEV("div", { className: "grid grid-cols-3 gap-4", children: [/*#__PURE__*/
-                  _jsxDEV("div", { children: [/*#__PURE__*/
-                    _jsxDEV("label", { htmlFor: "validFrom", className: "block text-sm font-medium leading-6 text-gray-900", children: "Valid From" }, void 0, false), /*#__PURE__*/
-                    _jsxDEV("input", {
-                      type: "date",
-                      name: "validFrom",
-                      id: "validFrom",
-                      value: formData.validFrom || '',
-                      onChange: handleChange,
-                      className: "mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" }, void 0, false
-                    )] }, void 0, true
-                  ), /*#__PURE__*/
-                  _jsxDEV("div", { children: [/*#__PURE__*/
-                    _jsxDEV("label", { htmlFor: "validTo", className: "block text-sm font-medium leading-6 text-gray-900", children: "Valid To" }, void 0, false), /*#__PURE__*/
-                    _jsxDEV("input", {
-                      type: "date",
-                      name: "validTo",
-                      id: "validTo",
-                      value: formData.validTo || '',
-                      onChange: handleChange,
-                      className: "mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" }, void 0, false
-                    )] }, void 0, true
-                  ), /*#__PURE__*/
-                  _jsxDEV("div", { children: [/*#__PURE__*/
-                    _jsxDEV("label", { htmlFor: "status", className: "block text-sm font-medium leading-6 text-gray-900", children: "Status" }, void 0, false), /*#__PURE__*/
-                    _jsxDEV("select", {
-                      name: "status",
-                      id: "status",
-                      value: formData.status,
-                      onChange: handleChange,
-                      className: "mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6", children: [/*#__PURE__*/
-
-                      _jsxDEV("option", { value: "ACTIVE", children: "ACTIVE" }, void 0, false), /*#__PURE__*/
-                      _jsxDEV("option", { value: "INACTIVE", children: "INACTIVE" }, void 0, false)] }, void 0, true
-                    )] }, void 0, true
-                  )] }, void 0, true
-                ), /*#__PURE__*/
-
-                _jsxDEV("div", { className: "mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3", children: [/*#__PURE__*/
-                  _jsxDEV("button", {
-                    type: "submit",
-                    disabled: loading,
-                    className: "inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:col-start-2 disabled:bg-indigo-400", children:
-
-                    loading ? 'Saving...' : 'Save' }, void 0, false
-                  ), /*#__PURE__*/
-                  _jsxDEV("button", {
-                    type: "button",
-                    onClick: () => onClose(false),
-                    className: "mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0", children:
-                    "Cancel" }, void 0, false
-
-                  )] }, void 0, true
-                )] }, void 0, true
-              )] }, void 0, true
-            ) }, void 0, false
-          ) }, void 0, false
-        ) }, void 0, false
-      )] }, void 0, true
-    ));
-
+                <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:col-start-2 disabled:bg-indigo-400"
+                  >
+                    {loading ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onClose(false)}
+                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default PriceListFormModal;

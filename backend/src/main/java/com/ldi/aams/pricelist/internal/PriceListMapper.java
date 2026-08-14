@@ -20,6 +20,19 @@ public class PriceListMapper {
                 .validTo(priceList.getValidTo())
                 .createdAt(priceList.getCreatedAt())
                 .updatedAt(priceList.getUpdatedAt())
+                .entries(priceList.getEntries() != null ? priceList.getEntries().stream().map(this::toEntryResponse).toList() : java.util.Collections.emptyList())
+                .build();
+    }
+
+    public PriceListDto.PriceListEntryResponse toEntryResponse(PriceListEntry entry) {
+        return PriceListDto.PriceListEntryResponse.builder()
+                .id(entry.getId())
+                .departure(entry.getDeparture())
+                .destination(entry.getDestination())
+                .passengerType(entry.getPassengerType())
+                .price(entry.getPrice())
+                .commission(entry.getCommission())
+                .currency(entry.getCurrency())
                 .build();
     }
 }

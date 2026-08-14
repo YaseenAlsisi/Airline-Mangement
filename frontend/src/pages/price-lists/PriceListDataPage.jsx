@@ -116,8 +116,8 @@ export const PriceListDataPage = () => {
                       _jsxDEV("div", { children: pl.airlineId ? 'Specific Airline' : 'All Airlines' }, void 0, false)] }, void 0, true
                     ), /*#__PURE__*/
                     _jsxDEV("td", { className: "whitespace-nowrap px-3 py-4 text-sm text-gray-500", children: [/*#__PURE__*/
-                      _jsxDEV("div", { children: ["Com: ", pl.commissionPercentage, "%"] }, void 0, true), /*#__PURE__*/
-                      _jsxDEV("div", { children: ["MU: $", pl.markupAmount] }, void 0, true)] }, void 0, true
+                      _jsxDEV("div", { children: ["Entries: ", pl.entries?.length || 0] }, void 0, true), /*#__PURE__*/
+                      _jsxDEV("div", { className: "text-xs", children: ["Com: ", pl.commissionPercentage, "% | MU: $", pl.markupAmount] }, void 0, true)] }, void 0, true
                     ), /*#__PURE__*/
                     _jsxDEV("td", { className: "whitespace-nowrap px-3 py-4 text-sm text-gray-500", children: [/*#__PURE__*/
                       _jsxDEV("div", { children: ["From: ", pl.validFrom || '-'] }, void 0, true), /*#__PURE__*/
