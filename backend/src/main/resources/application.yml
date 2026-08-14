@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: aams
+  datasource:
+    url: jdbc:postgresql://localhost:5432/aams
+    username: postgres
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+logging:
+  level:
+    root: INFO
+    com.ldi.aams: DEBUG
+    org.springframework.modulith: INFO
+
+jwt:
+  secret: 9F86D081884C7D659A2FEAA0C55AD015A3BF4F1B2B0B822CD15D6C15B0F00A08
+  access-token-expiration-ms: 900000 # 15 minutes
+  refresh-token-expiration-ms: 86400000 # 24 hours

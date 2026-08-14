@@ -1,0 +1,17 @@
+CREATE TABLE transactions (
+    id UUID PRIMARY KEY,
+    ticket_number VARCHAR(50) NOT NULL UNIQUE,
+    pnr VARCHAR(10),
+    passenger_name VARCHAR(255),
+    airline_id UUID REFERENCES airlines(id) ON DELETE SET NULL,
+    agent_id UUID REFERENCES agents(id) ON DELETE SET NULL,
+    issue_date DATE NOT NULL,
+    base_fare DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+    tax DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+    total_fare DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+    agent_commission DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+    net_payable DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+    status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
