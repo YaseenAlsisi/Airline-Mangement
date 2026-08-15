@@ -103,10 +103,53 @@ public class ManifestImportService {
                 }
             }
 
+            Set<String> processedKeys = new HashSet<>();
             for (Row row : sheet) {
                 if (row.getRowNum() <= headerRow.getRowNum()) continue;
 
                 if (isRowEmpty(row)) continue;
+
+                String passportNumber = getStringValue(row, headerMap.get("passportNumber"));
+                LocalDate departureDate = getDateValue(row, headerMap.get("departureDate"));
+                String passengerName = getStringValue(row, headerMap.get("passengerName"));
+
+                boolean isDuplicate = false;
+
+                if (passportNumber != null && !passportNumber.isEmpty()) {
+                    String uniqueKey = "PPT_" + passportNumber + "_" + departureDate;
+                    if (processedKeys.contains(uniqueKey)) {
+                        isDuplicate = true;
+                    } else {
+                        List<ManifestPassenger> existing = passengerRepository.findByPassportNumber(passportNumber);
+                        for (ManifestPassenger ep : existing) {
+                            if (Objects.equals(ep.getDepartureDate(), departureDate)) {
+                                isDuplicate = true;
+                                break;
+                            }
+                        }
+                        if (!isDuplicate) processedKeys.add(uniqueKey);
+                    }
+                }
+
+                if (!isDuplicate && passengerName != null && !passengerName.isEmpty()) {
+                    String uniqueKey = "NAME_" + passengerName + "_" + departureDate;
+                    if (processedKeys.contains(uniqueKey)) {
+                        isDuplicate = true;
+                    } else {
+                        List<ManifestPassenger> existing = passengerRepository.findByPassengerName(passengerName);
+                        for (ManifestPassenger ep : existing) {
+                            if (Objects.equals(ep.getDepartureDate(), departureDate)) {
+                                isDuplicate = true;
+                                break;
+                            }
+                        }
+                        if (!isDuplicate) processedKeys.add(uniqueKey);
+                    }
+                }
+
+                if (isDuplicate) {
+                    continue; // Skip because it already exists
+                }
 
                 totalRows++;
 
@@ -114,14 +157,14 @@ public class ManifestImportService {
                 passenger.setBatch(batch);
                 passenger.setRowNumber(row.getRowNum() + 1);
 
-                passenger.setPassengerName(getStringValue(row, headerMap.get("passengerName")));
+                passenger.setPassengerName(passengerName);
                 passenger.setBirthDate(getDateValue(row, headerMap.get("birthDate")));
                 passenger.setNationalId(getStringValue(row, headerMap.get("nationalId")));
-                passenger.setPassportNumber(getStringValue(row, headerMap.get("passportNumber")));
+                passenger.setPassportNumber(passportNumber);
                 passenger.setDeparturePort(getStringValue(row, headerMap.get("departurePort")));
                 passenger.setDestination(getStringValue(row, headerMap.get("destination")));
                 passenger.setFlightNumber(getStringValue(row, headerMap.get("flightNumber")));
-                passenger.setDepartureDate(getDateValue(row, headerMap.get("departureDate")));
+                passenger.setDepartureDate(departureDate);
                 passenger.setArrivalTime(getTimeValue(row, headerMap.get("arrivalTime")));
                 passenger.setInvestmentSupplier(getStringValue(row, headerMap.get("investmentSupplier")));
                 passenger.setServiceType(getStringValue(row, headerMap.get("serviceType")));
@@ -547,6 +590,15 @@ public class ManifestImportService {
         }
         if (batch.getInvalidRows() > 0) {
             throw new IllegalStateException("Cannot publish batch with invalid rows. Fix them first.");
+        }
+
+        List<ManifestPassenger> passengers = passengerRepository.findByBatchId(batchId);
+        for (ManifestPassenger p : passengers) {
+            if ("VALID".equals(p.getValidationStatus()) && p.getAgentNameRaw() != null && !p.getAgentNameRaw().isBlank()) {
+                Agent agent = matchOrCreateAgent(p.getAgentNameRaw());
+                p.setAgent(agent);
+                passengerRepository.save(p);
+            }
         }
 
         batch.setStatus("PUBLISHED");

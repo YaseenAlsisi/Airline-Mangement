@@ -18,4 +18,7 @@ public interface ManifestPassengerRepository extends JpaRepository<ManifestPasse
     @Modifying
     @Query("DELETE FROM ManifestPassenger p WHERE p.batch.id = :batchId")
     void deleteByBatchId(@Param("batchId") UUID batchId);
+
+    List<ManifestPassenger> findByPassportNumber(String passportNumber);
+    List<ManifestPassenger> findByPassengerName(String passengerName);
 }
