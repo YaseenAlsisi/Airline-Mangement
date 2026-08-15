@@ -3,6 +3,8 @@ package com.ldi.aams.pricelist.internal;
 import com.ldi.aams.pricelist.PriceListDto;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+
 @Component
 public class PriceListMapper {
 
@@ -20,15 +22,22 @@ public class PriceListMapper {
                 .validTo(priceList.getValidTo())
                 .createdAt(priceList.getCreatedAt())
                 .updatedAt(priceList.getUpdatedAt())
-                .entries(priceList.getEntries() != null ? priceList.getEntries().stream().map(this::toEntryResponse).toList() : java.util.Collections.emptyList())
+                .groups(priceList.getGroups() != null ? priceList.getGroups().stream().map(this::toGroupResponse).toList() : Collections.emptyList())
+                .build();
+    }
+
+    public PriceListDto.PricingGroupResponse toGroupResponse(PricingGroup group) {
+        return PriceListDto.PricingGroupResponse.builder()
+                .id(group.getId())
+                .departureAirport(group.getDepartureAirport())
+                .destination(group.getDestination())
+                .entries(group.getEntries() != null ? group.getEntries().stream().map(this::toEntryResponse).toList() : Collections.emptyList())
                 .build();
     }
 
     public PriceListDto.PriceListEntryResponse toEntryResponse(PriceListEntry entry) {
         return PriceListDto.PriceListEntryResponse.builder()
                 .id(entry.getId())
-                .departure(entry.getDeparture())
-                .destination(entry.getDestination())
                 .passengerType(entry.getPassengerType())
                 .price(entry.getPrice())
                 .commission(entry.getCommission())

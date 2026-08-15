@@ -4,3 +4,4 @@ export const getPriceLists = (params) => apiClient.get('/api/v1/price-lists', { 
 export const getPriceList = (id) => apiClient.get(`/api/v1/price-lists/${id}`);
 export const createPriceList = (data) => apiClient.post('/api/v1/price-lists', data);
 export const updatePriceList = (id, data) => apiClient.put(`/api/v1/price-lists/${id}`, data);
+export const deletePriceList = (id) => apiClient.delete(`/api/v1/price-lists/${id}`);

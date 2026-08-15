@@ -31,37 +31,119 @@
     "recentTransactions": "أحدث المعاملات",
     "viewAll": "عرض الكل"
   },
+  "passengerType": {
+    "ADULT": "بالغ",
+    "CHILD": "طفل",
+    "CHILD_UNDER_8": "طفل ل 8 سنين",
+    "LADIES": "السيدات",
+    "INFANT": "رضيع"
+  },
   "priceList": {
+    "title": "قوائم الأسعار",
+    "subtitle": "إدارة قوائم الأسعار والعمولات الخاصة بالرحلات",
+    "add": "إضافة قائمة أسعار",
+    "edit": "تعديل",
+    "name": "الاسم",
+    "code": "الكود",
+    "status": "الحالة",
+    "validFrom": "صالح من",
+    "validTo": "صالح إلى",
+    "saving": "جاري الحفظ...",
+    "save": "حفظ",
+    "cancel": "إلغاء",
     "departure": "جهة المغادرة",
     "destination": "الوجهة",
     "passengerType": "النوع",
-    "price": "الإجمالي",
+    "price": "السعر",
     "commission": "العمولة",
     "currency": "العملة",
     "addEntry": "إضافة سعر جديد",
     "remove": "حذف",
-    "destinations": {
-      "Benghazi": "بنغازي",
-      "Tripoli": "طرابلس",
-      "Misrata": "مصراته",
-      "Sabha": "سبها",
-      "Land": "البري"
+    "type": "النوع",
+    "total": "الاجمالي",
+    "pricingGroups": "مجموعات التسعير",
+    "pricingGroup": "مجموعة تسعير",
+    "addPricingGroup": "إضافة مجموعة تسعير",
+    "removePricingGroup": "إزالة المجموعة",
+    "departureAirport": "جهة المغادرة / المنفذ",
+    "departureAirportPlaceholder": "اكتب جهة المغادرة...",
+    "destinationPlaceholder": "اكتب الوجهة...",
+    "passengerPricing": "تسعير الركاب",
+    "addPassengerType": "إضافة راكب",
+    "removePassengerType": "حذف الراكب",
+    "selectType": "اختر النوع",
+    "empty": {
+      "title": "لا توجد قوائم أسعار.",
+      "description": "لا توجد مجموعات تسعير مضافة بعد."
     },
-    "departures": {
-      "Borg El Arab": "برج العرب",
-      "Cairo": "القاهرة"
-    },
-    "passengerTypes": {
-      "Adult": "بالغ",
-      "ChildTo8": "طفل ل 8 سنين",
-      "Child": "طفل",
-      "Ladies": "السيدات",
-      "Infant": "رضيع"
-    },
-    "currencies": {
-      "EGP": "جنيه مصري",
-      "USD": "دولار",
-      "EUR": "يورو"
+    "validation": {
+      "duplicatePassengerType": "لا يمكن تكرار نفس نوع الراكب داخل نفس مجموعة التسعير."
     }
+  },
+  "import": {
+    "title": "استيراد كشف الركاب",
+    "subtitle": "ارفع كشف الإكسيل اليومي للركاب. راجع البيانات، عدل أي أخطاء، وانشرها مباشرة في بيانات الوكلاء.",
+    "uploadFile": "ارفع ملف",
+    "dragAndDrop": "أو اسحب واسقط الملف هنا",
+    "fileLimit": "بحد أقصى 10 ميجا",
+    "selectedFile": "الملف المختار:",
+    "startImport": "ابدأ الاستيراد",
+    "processing": "جاري المعالجة...",
+    "errorTitle": "خطأ",
+    "previewTitle": "مراجعة الكشف",
+    "statusPublished": "تم نشر هذا الكشف بنجاح.",
+    "statusDraft": "راجع الصفوف وصلح الأخطاء قبل النشر.",
+    "fixErrorsFirst": "يرجى إصلاح الصفوف الخاطئة أولاً",
+    "publishData": "نشر البيانات للوكلاء",
+    "publishing": "جاري النشر...",
+    "stat": {
+      "totalRows": "إجمالي الصفوف",
+      "validRows": "الصفوف الصحيحة",
+      "invalidRows": "الصفوف الخاطئة"
+    },
+    "viewInAgents": "البيانات الآن متاحة. يمكنك عرض كشوف الركاب من صفحة بيانات الوكلاء.",
+    "publishSuccess": "تم نشر بيانات الكشف بنجاح!",
+    "saveError": "فشل حفظ التعديلات",
+    "editRow": "تعديل",
+    "saveRow": "حفظ",
+    "cancelRow": "إلغاء",
+    "error": {
+      "invalidFile": "يرجى اختيار ملف إكسيل صحيح (.xlsx أو .xls)",
+      "uploadFailed": "حدث خطأ أثناء الاستيراد",
+      "publishFailed": "حدث خطأ أثناء النشر"
+    },
+    "col": {
+      "row": "م",
+      "status": "الحالة",
+      "passengerName": "اسم الراكب",
+      "passport": "الجواز",
+      "agent": "الوكيل (إكسيل)",
+      "departureDate": "تاريخ المغادرة",
+      "flight": "الرحلة",
+      "destination": "الوجهة",
+      "category": "الفئة",
+      "actions": "إجراءات"
+    }
+  },
+  "agent": {
+    "title": "الوكلاء",
+    "subtitle": "قائمة بكل وكلاء السفر في النظام شاملة الكود، الاسم، وإجمالي عدد الركاب.",
+    "addAgent": "إضافة وكيل",
+    "noneFound": "لا يوجد وكلاء.",
+    "passengers": {
+      "title": "ركاب الوكيل:",
+      "none": "لا يوجد ركاب لهذا الوكيل."
+    },
+    "col": {
+      "code": "الكود",
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "status": "الحالة",
+      "passengers": "إجمالي الركاب"
+    }
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "edit": "تعديل"
   }
 }

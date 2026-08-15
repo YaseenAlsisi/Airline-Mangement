@@ -98,7 +98,7 @@ public class GlobalExceptionHandler {
         log.error("Unhandled exception", ex);
         ErrorResponse.ErrorDetail detail = ErrorResponse.ErrorDetail.builder()
                 .code("INTERNAL_ERROR")
-                .message("An unexpected error occurred")
+                .message("An unexpected error occurred: " + ex.getMessage())
                 .build();
         return new ResponseEntity<>(ErrorResponse.builder().error(detail).build(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
