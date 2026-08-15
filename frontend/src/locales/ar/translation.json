@@ -24,12 +24,54 @@
   },
   "dashboard": {
     "title": "لوحة التحكم",
-    "welcome": "يا هلا بيك",
-    "stat_totalTickets": "إجمالي التذاكر",
-    "stat_totalRevenue": "إجمالي الإيرادات",
-    "stat_activeAgents": "الوكلاء النشطين",
-    "recentTransactions": "أحدث المعاملات",
-    "viewAll": "عرض الكل"
+    "subtitle": "نظرة عامة على أداء أعمال السفر والحجوزات",
+    "refreshData": "تحديث البيانات",
+    "filters": {
+      "allDestinations": "كل الوجهات",
+      "allAgents": "كل الوكلاء",
+      "month": "شهر"
+    },
+    "kpi": {
+      "totalPassengers": "إجمالي المسافرين",
+      "totalFlights": "إجمالي الرحلات",
+      "totalAgents": "إجمالي الوكلاء",
+      "totalRevenue": "إجمالي الإيرادات",
+      "totalExpenses": "إجمالي المصروفات",
+      "netProfit": "صافي الربح",
+      "vsPrevious": "عن الفترة السابقة",
+      "profitMargin": "هامش الربح",
+      "currency": "ج.م"
+    },
+    "charts": {
+      "passengersByDestination": "المسافرون حسب الوجهة",
+      "revenueByService": "الإيرادات حسب نوع الخدمة",
+      "passengersByAirline": "المسافرون حسب شركة الطيران",
+      "notes": "الملاحظات",
+      "adult": "بالغ",
+      "female": "أنثى",
+      "total": "الإجمالي",
+      "mostActiveAgents": "أكثر الوكلاء نشاطاً (من حيث عدد المسافرين)",
+      "viewAllAgents": "عرض كل الوكلاء"
+    },
+    "tables": {
+      "todaysFlights": "رحلات اليوم",
+      "flightTime": "وقت الرحلة",
+      "flightFrom": "من",
+      "flightTo": "إلى",
+      "flightPassengers": "عدد المسافرين",
+      "flightType": "نوع الخدمة",
+      "viewAllFlights": "عرض جميع الرحلات"
+    },
+    "summary": {
+      "financialSummary": "الملخص المالي",
+      "revenue": "الإيرادات",
+      "expenses": "المصروفات",
+      "profit": "الربح",
+      "profitRatio": "نسبة الربح",
+      "viewDetailedFinancial": "عرض التقرير المالي التفصيلي",
+      "serviceTypes": "أنواع الخدمات (عدد المسافرين)",
+      "currencyNote": "جميع الأرقام بالعملة المصرية (ج.م)"
+    }
   },
   "passengerType": {
     "ADULT": "بالغ",

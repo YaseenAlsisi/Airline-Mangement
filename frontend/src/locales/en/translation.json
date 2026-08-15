@@ -24,12 +24,54 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "welcome": "Welcome back",
-    "stat_totalTickets": "Total Tickets",
-    "stat_totalRevenue": "Total Revenue",
-    "stat_activeAgents": "Active Agents",
-    "recentTransactions": "Recent Transactions",
-    "viewAll": "View all"
+    "subtitle": "Overview of travel and booking business performance",
+    "refreshData": "Refresh Data",
+    "filters": {
+      "allDestinations": "All Destinations",
+      "allAgents": "All Agents",
+      "month": "Month"
+    },
+    "kpi": {
+      "totalPassengers": "Total Passengers",
+      "totalFlights": "Total Flights",
+      "totalAgents": "Total Agents",
+      "totalRevenue": "Total Revenue",
+      "totalExpenses": "Total Expenses",
+      "netProfit": "Net Profit",
+      "vsPrevious": "vs previous period",
+      "profitMargin": "Profit margin",
+      "currency": "EGP"
+    },
+    "charts": {
+      "passengersByDestination": "Passengers by Destination",
+      "revenueByService": "Revenue by Service Type",
+      "passengersByAirline": "Passengers by Airline",
+      "notes": "Notes",
+      "adult": "Adult",
+      "female": "Female",
+      "total": "Total",
+      "mostActiveAgents": "Most Active Agents (by passengers)",
+      "viewAllAgents": "View All Agents"
+    },
+    "tables": {
+      "todaysFlights": "Today's Flights",
+      "flightTime": "Time",
+      "flightFrom": "From",
+      "flightTo": "To",
+      "flightPassengers": "Passengers",
+      "flightType": "Type",
+      "viewAllFlights": "View All Flights"
+    },
+    "summary": {
+      "financialSummary": "Financial Summary",
+      "revenue": "Revenue",
+      "expenses": "Expenses",
+      "profit": "Profit",
+      "profitRatio": "Profit Ratio",
+      "viewDetailedFinancial": "View Detailed Financial Report",
+      "serviceTypes": "Service Types (Passengers)",
+      "currencyNote": "All figures in EGP"
+    }
   },
   "passengerType": {
     "ADULT": "Adult",
