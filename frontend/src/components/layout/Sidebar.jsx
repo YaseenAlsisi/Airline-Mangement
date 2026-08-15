@@ -10,54 +10,93 @@ import {
   ChartBarIcon,
   ChatBubbleLeftRightIcon,
   Cog6ToothIcon,
-  PaperAirplaneIcon } from
-'@heroicons/react/24/outline';
-import clsx from 'clsx';import { jsxDEV as _jsxDEV } from "react/jsx-dev-runtime";
+  PaperAirplaneIcon,
+  RectangleGroupIcon
+} from '@heroicons/react/24/outline';
+import clsx from 'clsx';
 
 const navigation = [
-{ name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-{ name: 'Excel Import', href: '/import', icon: ArrowUpTrayIcon },
-{ name: 'Price Lists', href: '/price-lists', icon: CurrencyDollarIcon },
-{ name: 'Agent Data', href: '/agents', icon: UsersIcon },
-{ name: 'Airlines', href: '/airlines', icon: PaperAirplaneIcon },
-{ name: 'Transactions', href: '/transactions', icon: CreditCardIcon },
-{ name: 'Reports', href: '/reports', icon: ChartBarIcon },
-{ name: 'Notes', href: '/notes', icon: ChatBubbleLeftRightIcon },
-{ name: 'Settings', href: '/settings', icon: Cog6ToothIcon }];
+  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
+  { name: 'Excel Import', href: '/import', icon: ArrowUpTrayIcon },
+  { name: 'Price Lists', href: '/price-lists', icon: CurrencyDollarIcon },
+  { name: 'Agent Data', href: '/agents', icon: UsersIcon },
+  { name: 'Airlines', href: '/airlines', icon: PaperAirplaneIcon },
+  { name: 'Transactions', href: '/transactions', icon: CreditCardIcon },
+  { name: 'Reports', href: '/sales-reports', icon: ChartBarIcon },
+  { name: 'Notes', href: '/notes', icon: ChatBubbleLeftRightIcon },
+  { name: 'Settings', href: '/settings', icon: Cog6ToothIcon }
+];
 
 export const Sidebar = () => {
   const { t } = useTranslation();
 
-  return (/*#__PURE__*/
-    _jsxDEV("div", { className: "flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4", children: [/*#__PURE__*/
-      _jsxDEV("div", { className: "flex h-16 shrink-0 items-center", children: /*#__PURE__*/
-        _jsxDEV("h1", { className: "text-white font-bold text-xl", children: "AAMS" }, void 0, false) }, void 0, false
-      ), /*#__PURE__*/
-      _jsxDEV("nav", { className: "flex flex-1 flex-col", children: /*#__PURE__*/
-        _jsxDEV("ul", { role: "list", className: "flex flex-1 flex-col gap-y-7", children: /*#__PURE__*/
-          _jsxDEV("li", { children: /*#__PURE__*/
-            _jsxDEV("ul", { role: "list", className: "-mx-2 space-y-1", children:
-              navigation.map((item) => /*#__PURE__*/
-              _jsxDEV("li", { children: /*#__PURE__*/
-                _jsxDEV(NavLink, {
-                  to: item.href,
-                  className: ({ isActive }) =>
-                  clsx(
-                    isActive ?
-                    'bg-gray-800 text-white' :
-                    'text-gray-400 hover:bg-gray-800 hover:text-white',
-                    'group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6'
-                  ), children: [/*#__PURE__*/
+  return (
+    <div className="flex grow flex-col overflow-hidden bg-[#0B1121] relative h-full w-full">
+      {/* Watermark Background - Exact Airplane over clouds */}
+      <div 
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage: 'url("/airplane-bg.jpg")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center bottom',
+          maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 15%, rgba(0,0,0,0) 85%)',
+          WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 15%, rgba(0,0,0,0) 85%)'
+        }}
+      />
+      
+      {/* Content wrapper with z-index to stay above watermark, NO scrollbar (fixed) */}
+      <div className="relative z-10 flex flex-col h-full px-4 pb-4 overflow-hidden">
+        {/* Logo Section */}
+        <div className="flex h-24 shrink-0 items-center px-2">
+          <div className="flex items-center gap-3">
+            <div className="bg-[#fdfbf6] p-2 rounded-xl shadow-sm">
+              <RectangleGroupIcon className="w-6 h-6 text-[#0B1121]" strokeWidth={2} />
+            </div>
+            <h1 className="text-white font-bold text-xl tracking-wide">AAMS</h1>
+          </div>
+        </div>
+        
+        {/* Navigation */}
+        <nav className="flex flex-1 flex-col mt-2">
+          <ul role="list" className="flex flex-1 flex-col gap-y-7">
+            <li>
+              <ul role="list" className="space-y-2">
+                {navigation.map((item) => (
+                  <li key={item.name}>
+                    <NavLink
+                      to={item.href}
+                      className={({ isActive }) =>
+                        clsx(
+                          isActive
+                            ? 'bg-[#1e2e4f] text-white shadow-sm ring-1 ring-white/10'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5',
+                          'group flex gap-x-3 rounded-2xl p-3 text-sm font-medium leading-6 transition-all duration-200'
+                        )
+                      }
+                    >
+                      <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                      {t(`navigation.${item.name}`)}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          </ul>
+        </nav>
 
-                  _jsxDEV(item.icon, { className: "h-6 w-6 shrink-0", "aria-hidden": "true" }, void 0, false),
-                  t(`navigation.${item.name}`)] }, void 0, true
-                ) }, item.name, false
-              )
-              ) }, void 0, false
-            ) }, void 0, false
-          ) }, void 0, false
-        ) }, void 0, false
-      )] }, void 0, true
-    ));
-
+        {/* Bottom Cards */}
+        <div className="mt-auto pt-8">
+          <div className="bg-[#1e2e4f]/80 border border-white/10 rounded-2xl p-4 flex items-center gap-3 backdrop-blur-md mb-4 shadow-lg">
+            <PaperAirplaneIcon className="w-6 h-6 text-white/80 transform -rotate-45 shrink-0" strokeWidth={2} />
+            <div className="text-[11px] font-medium text-white/90 leading-tight">
+              Airline Accounting<br/>Management System
+            </div>
+          </div>
+          <div className="text-xs text-white/40 font-medium px-2">
+            © 2025 AAMS
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
