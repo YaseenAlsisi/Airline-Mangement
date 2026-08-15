@@ -13,6 +13,16 @@ export const previewManifestImport = async (file) => {
   return response;
 };
 
+export const getBatches = async (params) => {
+  const response = await axiosInstance.get(`${API_BASE}`, { params });
+  return response;
+};
+
+export const getBatchPreview = async (batchId) => {
+  const response = await axiosInstance.get(`${API_BASE}/${batchId}`);
+  return response;
+};
+
 export const getManifestRows = async (batchId, params) => {
   const response = await axiosInstance.get(`${API_BASE}/${batchId}/rows`, { params });
   return response;

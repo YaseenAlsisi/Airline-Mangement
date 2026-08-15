@@ -31,6 +31,21 @@ public class ManifestImportController {
         return ResponseEntity.ok(mapper.toBatchPreviewResponse(batch, rowsPage.getContent()));
     }
 
+    @GetMapping
+    @PreAuthorize("hasAnyAuthority('MANIFEST_IMPORT_VIEW', 'AGENT_VIEW')")
+    public ResponseEntity<Page<ManifestDto.BatchResponse>> getAllBatches(Pageable pageable) {
+        Page<ManifestImportBatch> batches = service.getAllBatches(pageable);
+        return ResponseEntity.ok(batches.map(mapper::toBatchResponse));
+    }
+
+    @GetMapping("/{batchId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ManifestDto.BatchPreviewResponse> getBatchPreview(@PathVariable UUID batchId) {
+        ManifestImportBatch batch = service.getBatch(batchId);
+        Page<ManifestPassenger> rowsPage = service.getRows(batchId, Pageable.unpaged());
+        return ResponseEntity.ok(mapper.toBatchPreviewResponse(batch, rowsPage.getContent()));
+    }
+
     @GetMapping("/{batchId}/rows")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<ManifestDto.PassengerRowResponse>> getRows(

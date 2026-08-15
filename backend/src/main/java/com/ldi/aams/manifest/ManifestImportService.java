@@ -88,6 +88,7 @@ public class ManifestImportService {
                     else if (header.equals("الوكيل")) headerMap.put("agentName", cell.getColumnIndex());
                     else if (header.equals("مورد الاستثمار")) headerMap.put("investmentSupplier", cell.getColumnIndex());
                     else if (header.contains("نوع الخدمه") || header.contains("نوع الخدمة")) headerMap.put("serviceType", cell.getColumnIndex());
+                    else if (header.equals("النوع")) headerMap.put("passengerCategory", cell.getColumnIndex());
                     else if (header.equals("مدين دولار")) headerMap.put("debitUsd", cell.getColumnIndex());
                     else if (header.equals("دائن دولار")) headerMap.put("creditUsd", cell.getColumnIndex());
                     else if (header.equals("مدين مصري")) headerMap.put("debitEgp", cell.getColumnIndex());
@@ -264,6 +265,11 @@ public class ManifestImportService {
     public ManifestImportBatch getBatch(UUID batchId) {
         return batchRepository.findById(batchId)
                 .orElseThrow(() -> new IllegalArgumentException("Batch not found"));
+    }
+
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<ManifestImportBatch> getAllBatches(org.springframework.data.domain.Pageable pageable) {
+        return batchRepository.findAll(pageable);
     }
 
     @Transactional(readOnly = true)

@@ -5,7 +5,8 @@ import {
   UserIcon, IdentificationIcon, BuildingOfficeIcon, 
   CalendarDaysIcon, PaperAirplaneIcon, MapPinIcon, 
   TagIcon, ExclamationCircleIcon, CheckCircleIcon,
-  PencilSquareIcon, XMarkIcon, CheckIcon
+  PencilSquareIcon, XMarkIcon, CheckIcon,
+  CakeIcon, MapIcon, ClockIcon, BriefcaseIcon
 } from '@heroicons/react/24/outline';
 
 export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated }) => {
@@ -114,7 +115,7 @@ export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated }) => {
               {/* Passenger Name */}
               <div className="sm:col-span-2">
                 <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <UserIcon className="w-4 h-4" /> {t('import.col.passengerName', 'Passenger Name')}
+                  <UserIcon className="w-4 h-4" /> {t('import.col.passengerName', 'الاسم')}
                 </label>
                 {isEditing ? (
                   <input type="text" name="passengerName" value={editFormData.passengerName || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
@@ -123,10 +124,22 @@ export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated }) => {
                 )}
               </div>
 
+              {/* Date of Birth */}
+              <div>
+                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
+                  <CakeIcon className="w-4 h-4" /> {t('import.col.birthDate', 'تاريخ الميلاد')}
+                </label>
+                {isEditing ? (
+                  <input type="date" name="birthDate" value={editFormData.birthDate || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
+                ) : (
+                  <div className="text-sm text-slate-700 bg-slate-50 px-3 py-2 rounded-lg">{row.birthDate || '-'}</div>
+                )}
+              </div>
+
               {/* Passport */}
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <IdentificationIcon className="w-4 h-4" /> {t('import.col.passport', 'Passport')}
+                  <IdentificationIcon className="w-4 h-4" /> {t('import.col.passport', 'رقم الجواز')}
                 </label>
                 {isEditing ? (
                   <input type="text" name="passportNumber" value={editFormData.passportNumber || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
@@ -135,10 +148,94 @@ export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated }) => {
                 )}
               </div>
 
+              {/* Departure Port */}
+              <div>
+                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
+                  <MapIcon className="w-4 h-4" /> {t('import.col.departurePort', 'المنفذ')}
+                </label>
+                {isEditing ? (
+                  <input type="text" name="departurePort" value={editFormData.departurePort || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
+                ) : (
+                  <div className="text-sm text-slate-700 bg-slate-50 px-3 py-2 rounded-lg">{row.departurePort || '-'}</div>
+                )}
+              </div>
+
+              {/* Destination */}
+              <div>
+                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
+                  <MapPinIcon className="w-4 h-4" /> {t('import.col.destination', 'جهة المغادرة')}
+                </label>
+                {isEditing ? (
+                  <input type="text" name="destination" value={editFormData.destination || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
+                ) : (
+                  <div className="text-sm text-slate-700 bg-slate-50 px-3 py-2 rounded-lg">{row.destination || '-'}</div>
+                )}
+              </div>
+
+              {/* Flight */}
+              <div>
+                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
+                  <PaperAirplaneIcon className="w-4 h-4" /> {t('import.col.flight', 'رقم الرحلة')}
+                </label>
+                {isEditing ? (
+                  <input type="text" name="flightNumber" value={editFormData.flightNumber || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
+                ) : (
+                  <div className="text-sm text-slate-700 bg-slate-50 px-3 py-2 rounded-lg">{row.flightNumber || '-'}</div>
+                )}
+              </div>
+
+              {/* Dep Date */}
+              <div>
+                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
+                  <CalendarDaysIcon className="w-4 h-4" /> {t('import.col.departureDate', 'تاريخ المغادرة')}
+                </label>
+                {isEditing ? (
+                  <input type="date" name="departureDate" value={editFormData.departureDate || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
+                ) : (
+                  <div className="text-sm text-slate-700 bg-slate-50 px-3 py-2 rounded-lg">{row.departureDate || '-'}</div>
+                )}
+              </div>
+
+              {/* Arrival Time */}
+              <div>
+                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
+                  <ClockIcon className="w-4 h-4" /> {t('import.col.arrivalTime', 'ميعاد الوصول')}
+                </label>
+                {isEditing ? (
+                  <input type="time" name="arrivalTime" value={editFormData.arrivalTime || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" step="2" />
+                ) : (
+                  <div className="text-sm text-slate-700 bg-slate-50 px-3 py-2 rounded-lg">{row.arrivalTime || '-'}</div>
+                )}
+              </div>
+
+              {/* Agent */}
+              <div>
+                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
+                  <BuildingOfficeIcon className="w-4 h-4" /> {t('import.col.agent', 'الوكيل')}
+                </label>
+                {isEditing ? (
+                  <input type="text" name="agentNameRaw" value={editFormData.agentNameRaw || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
+                ) : (
+                  <div className="text-sm text-indigo-700 font-medium bg-indigo-50/50 px-3 py-2 rounded-lg border border-indigo-100/50">{row.agentNameRaw || '-'}</div>
+                )}
+              </div>
+
+              {/* Service Type */}
+              <div>
+                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
+                  <BriefcaseIcon className="w-4 h-4" /> {t('import.col.serviceType', 'نوع الخدمة')}
+                </label>
+                {isEditing ? (
+                  <input type="text" name="serviceType" value={editFormData.serviceType || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
+                ) : (
+                  <div className="text-sm text-slate-700 bg-slate-50 px-3 py-2 rounded-lg">{row.serviceType || '-'}</div>
+                )}
+              </div>
+
               {/* Category */}
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <TagIcon className="w-4 h-4" /> {t('import.col.category', 'Category')}
+                  <TagIcon className="w-4 h-4" /> {t('import.col.category', 'النوع')}
                 </label>
                 {isEditing ? (
                   <select name="passengerCategory" value={editFormData.passengerCategory || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm">
@@ -154,54 +251,6 @@ export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated }) => {
                   <div className="text-sm text-slate-700 bg-slate-50 px-3 py-2 rounded-lg">
                     {categoryOptions.find(o => o.value === row.passengerCategory)?.label || row.passengerCategory || '-'}
                   </div>
-                )}
-              </div>
-
-              {/* Agent */}
-              <div className="sm:col-span-2">
-                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <BuildingOfficeIcon className="w-4 h-4" /> {t('import.col.agent', 'Agent (Excel)')}
-                </label>
-                {isEditing ? (
-                  <input type="text" name="agentNameRaw" value={editFormData.agentNameRaw || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
-                ) : (
-                  <div className="text-sm text-indigo-700 font-medium bg-indigo-50/50 px-3 py-2 rounded-lg border border-indigo-100/50">{row.agentNameRaw || '-'}</div>
-                )}
-              </div>
-
-              {/* Dep Date */}
-              <div>
-                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <CalendarDaysIcon className="w-4 h-4" /> {t('import.col.departureDate', 'Dep. Date')}
-                </label>
-                {isEditing ? (
-                  <input type="date" name="departureDate" value={editFormData.departureDate || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
-                ) : (
-                  <div className="text-sm text-slate-700 bg-slate-50 px-3 py-2 rounded-lg">{row.departureDate || '-'}</div>
-                )}
-              </div>
-
-              {/* Flight */}
-              <div>
-                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <PaperAirplaneIcon className="w-4 h-4" /> {t('import.col.flight', 'Flight')}
-                </label>
-                {isEditing ? (
-                  <input type="text" name="flightNumber" value={editFormData.flightNumber || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
-                ) : (
-                  <div className="text-sm text-slate-700 bg-slate-50 px-3 py-2 rounded-lg">{row.flightNumber || '-'}</div>
-                )}
-              </div>
-
-              {/* Destination */}
-              <div className="sm:col-span-2">
-                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <MapPinIcon className="w-4 h-4" /> {t('import.col.destination', 'Destination')}
-                </label>
-                {isEditing ? (
-                  <input type="text" name="destination" value={editFormData.destination || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
-                ) : (
-                  <div className="text-sm text-slate-700 bg-slate-50 px-3 py-2 rounded-lg">{row.destination || '-'}</div>
                 )}
               </div>
 

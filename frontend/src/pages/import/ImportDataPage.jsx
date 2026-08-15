@@ -1,9 +1,12 @@
-import React, { useState, useRef } from 'react';
-import { previewManifestImport, publishManifestImport } from '../../api/manifestImport.api';
+import React, { useState, useRef, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { previewManifestImport, publishManifestImport, getBatchPreview } from '../../api/manifestImport.api';
 import { DocumentArrowUpIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import { ManifestEditableGrid } from './components/ManifestEditableGrid';
-
+import { ManifestEditableTable } from './components/ManifestEditableTable';
+import { PlaneLoader } from './components/PlaneLoader';
+import { Squares2X2Icon, ListBulletIcon } from '@heroicons/react/24/outline';
 export const ImportDataPage = () => {
   const { t } = useTranslation();
   const [file, setFile] = useState(null);
@@ -13,7 +16,43 @@ export const ImportDataPage = () => {
   const [batch, setBatch] = useState(null);
   const [rows, setRows] = useState([]);
   const [error, setError] = useState(null);
+  const [viewMode, setViewMode] = useState('table');
   const fileInputRef = useRef(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadBatch = async (id) => {
+      setUploading(true);
+      try {
+        const res = await getBatchPreview(id);
+        setBatch(res.data || res); // axios unwrap handled by interceptor or manually? The previous code uses res directly or res.data depending on axios setup.
+        // wait, the previous code uses: const res = await previewManifestImport(file); setBatch(res);
+        // this implies interceptor returns res.data.
+        const batchData = res.data || res;
+        setBatch(batchData);
+        setRows(batchData.rows || []);
+        sessionStorage.setItem('activeManifestBatchId', id);
+      } catch (e) {
+        console.error("Failed to load batch", e);
+        sessionStorage.removeItem('activeManifestBatchId');
+      } finally {
+        setUploading(false);
+      }
+    };
+
+    const urlBatchId = searchParams.get('batchId');
+    const sessionBatchId = sessionStorage.getItem('activeManifestBatchId');
+    
+    if (urlBatchId) {
+      loadBatch(urlBatchId);
+      // clean URL
+      searchParams.delete('batchId');
+      setSearchParams(searchParams, { replace: true });
+    } else if (sessionBatchId) {
+      loadBatch(sessionBatchId);
+    }
+  }, []);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -59,8 +98,12 @@ export const ImportDataPage = () => {
 
     try {
       const res = await previewManifestImport(file);
-      setBatch(res);
-      setRows(res.rows || []);
+      const batchData = res.data || res;
+      setBatch(batchData);
+      setRows(batchData.rows || []);
+      if (batchData.id) {
+        sessionStorage.setItem('activeManifestBatchId', batchData.id);
+      }
     } catch (err) {
       let errorObj = err.response?.data?.error;
       let apiMsg = err.response?.data?.message || err.response?.data?.detail;
@@ -99,7 +142,9 @@ export const ImportDataPage = () => {
     setError(null);
     try {
       const res = await publishManifestImport(batch.id);
-      setBatch(res);
+      const batchData = res.data || res;
+      setBatch(batchData);
+      sessionStorage.removeItem('activeManifestBatchId');
       alert(t('import.publishSuccess', 'Successfully published manifest data!'));
     } catch (err) {
       let errorObj = err.response?.data?.error;
@@ -126,6 +171,7 @@ export const ImportDataPage = () => {
       setRows([]);
       setFile(null);
       setError(null);
+      sessionStorage.removeItem('activeManifestBatchId');
     }
   };
 
@@ -202,13 +248,13 @@ export const ImportDataPage = () => {
       ) : null}
 
       {batch && (
-        <div className="bg-white shadow sm:rounded-lg overflow-hidden">
-          <div className="px-4 py-5 sm:px-6 flex justify-between items-center bg-gray-50 border-b border-gray-200">
+        <div className="bg-transparent mt-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 mb-6 gap-4">
             <div>
-              <h3 className="text-lg font-medium leading-6 text-gray-900">
+              <h2 className="text-2xl font-bold leading-7 text-slate-900 sm:truncate sm:text-3xl sm:tracking-tight">
                 {t('import.previewTitle', 'Manifest Preview')}
-              </h3>
-              <p className="mt-1 max-w-2xl text-sm text-gray-500">
+              </h2>
+              <p className="mt-1 max-w-2xl text-sm text-slate-500">
                 {batch.status === 'PUBLISHED' 
                   ? t('import.statusPublished', 'This batch has been successfully published.') 
                   : t('import.statusDraft', 'Review rows and fix errors before publishing.')}
@@ -219,7 +265,7 @@ export const ImportDataPage = () => {
                 <button
                   type="button"
                   onClick={handleClear}
-                  className="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-red-600 shadow-sm ring-1 ring-inset ring-red-300 hover:bg-red-50"
+                  className="inline-flex items-center rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 transition-colors"
                 >
                   {t('import.clearAll', 'الغاء الجدول بالكامل')}
                 </button>
@@ -227,7 +273,7 @@ export const ImportDataPage = () => {
                   type="button"
                   onClick={handlePublish}
                   disabled={publishing || batch.invalidRows > 0}
-                  className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 disabled:bg-green-400 disabled:cursor-not-allowed"
+                  className="inline-flex items-center rounded-xl bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/30 hover:bg-blue-600 disabled:bg-blue-300 disabled:shadow-none disabled:cursor-not-allowed transition-all"
                   title={batch.invalidRows > 0 ? t('import.fixErrorsFirst', 'Please fix invalid rows first') : ''}
                 >
                   {publishing ? t('import.publishing', 'Publishing...') : t('import.publishData', 'Publish Data to Agents')}
@@ -261,7 +307,31 @@ export const ImportDataPage = () => {
             </dl>
 
             {batch.status === 'DRAFT' && rows.length > 0 && (
-              <ManifestEditableGrid batchId={batch.id} rows={rows} onRowUpdated={handleRowUpdated} />
+              <>
+                <div className="flex justify-end mb-4 gap-2">
+                  <div className="flex bg-slate-100 p-1 rounded-lg">
+                    <button 
+                      onClick={() => setViewMode('table')}
+                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === 'table' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                      <ListBulletIcon className="w-4 h-4" />
+                      {t('import.viewList', 'جدول')}
+                    </button>
+                    <button 
+                      onClick={() => setViewMode('grid')}
+                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                      <Squares2X2Icon className="w-4 h-4" />
+                      {t('import.viewGrid', 'مربعات')}
+                    </button>
+                  </div>
+                </div>
+                {viewMode === 'grid' ? (
+                  <ManifestEditableGrid batchId={batch.id} rows={rows} onRowUpdated={handleRowUpdated} />
+                ) : (
+                  <ManifestEditableTable batchId={batch.id} rows={rows} onRowUpdated={handleRowUpdated} />
+                )}
+              </>
             )}
             {batch.status === 'PUBLISHED' && (
                <div className="text-center py-10 bg-gray-50 rounded-lg text-gray-600">
@@ -271,6 +341,9 @@ export const ImportDataPage = () => {
           </div>
         </div>
       )}
+
+      {/* Render Loader Overlay */}
+      {uploading && <PlaneLoader text={t('import.processingLoader', 'جاري معالجة البيانات...')} onCancel={() => setUploading(false)} />}
     </div>
   );
 };

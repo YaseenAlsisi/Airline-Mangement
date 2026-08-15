@@ -11,6 +11,7 @@ import AirlineDataPage from './pages/airlines/AirlineDataPage';
 import PriceListDataPage from './pages/price-lists/PriceListDataPage';
 import TransactionDataPage from './pages/transactions/TransactionDataPage';
 import ImportDataPage from './pages/import/ImportDataPage';
+import ManifestFilesPage from './pages/import/ManifestFilesPage';
 import ReportsPage from './pages/reports/ReportsPage';
 import NotesDataPage from './pages/notes/NotesDataPage';
 
@@ -33,6 +34,7 @@ function App() {
 
             <Route element={<ProtectedRoute requiredPermission="AGENT_VIEW" />}>
               <Route path="/import" element={<ImportDataPage />} />
+              <Route path="/files" element={<ManifestFilesPage />} />
             </Route>
 
             <Route element={<ProtectedRoute requiredPermission="PRICE_VIEW" />}>
