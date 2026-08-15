@@ -71,4 +71,30 @@ public class AgentManifestController {
 
         return ResponseEntity.ok(page);
     }
+
+    @GetMapping("/all-manifest-passengers")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Page<ManifestDto.PassengerRowResponse>> getAllPassengers(Pageable pageable) {
+        List<ManifestPassenger> allPublished = passengerRepository.findAll().stream()
+                .filter(p -> "PUBLISHED".equals(p.getBatch().getStatus()))
+                .collect(Collectors.toList());
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), allPublished.size());
+        
+        List<ManifestPassenger> pageContent;
+        if (start > allPublished.size()) {
+            pageContent = Collections.emptyList();
+        } else {
+            pageContent = allPublished.subList(start, end);
+        }
+
+        Page<ManifestDto.PassengerRowResponse> page = new PageImpl<>(
+                pageContent.stream().map(mapper::toPassengerRowResponse).collect(Collectors.toList()),
+                pageable,
+                allPublished.size()
+        );
+
+        return ResponseEntity.ok(page);
+    }
 }

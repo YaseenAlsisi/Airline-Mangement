@@ -10,4 +10,6 @@ import java.util.UUID;
 public interface ManifestPassengerRepository extends JpaRepository<ManifestPassenger, UUID> {
     Page<ManifestPassenger> findByBatchId(UUID batchId, Pageable pageable);
     List<ManifestPassenger> findByBatchId(UUID batchId);
+    List<ManifestPassenger> findByPassportNumber(String passportNumber);
+    List<ManifestPassenger> findByPassengerName(String passengerName);
 }

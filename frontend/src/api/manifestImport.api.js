@@ -47,3 +47,8 @@ export const getAgentManifestPassengers = async (agentId, params) => {
   const response = await axiosInstance.get(`/api/v1/agents/${agentId}/manifest-passengers`, { params });
   return response;
 };
+
+export const getAllManifestPassengers = async (params) => {
+  const response = await axiosInstance.get(`/api/v1/agents/all-manifest-passengers`, { params });
+  return response;
+};
