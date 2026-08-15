@@ -42,4 +42,13 @@ public class NoteController {
             Authentication authentication) {
         return new ResponseEntity<>(ApiResponse.success(noteService.createNote(request, authentication.getName())), HttpStatus.CREATED);
     }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('NOTE_MANAGE') or hasAuthority('NOTE_DELETE_ANY')")
+    public ResponseEntity<ApiResponse<Void>> deleteNote(
+            @PathVariable UUID id,
+            Authentication authentication) {
+        noteService.deleteNote(id, authentication);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
 }

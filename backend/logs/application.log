@@ -886,3 +886,99 @@ Caused by: java.lang.IllegalArgumentException: Invalid UUID string: undefined
 	at org.springframework.web.method.annotation.AbstractNamedValueMethodArgumentResolver.convertIfNecessary(AbstractNamedValueMethodArgumentResolver.java:294) ~[spring-web-6.1.11.jar:6.1.11]
 	... 135 common frames omitted
 
+2026-08-15T10:36:05.567+03:00  INFO 22244 --- [demo] [main] com.ldi.aams.AamsApplication             : Starting AamsApplication using Java 22.0.2 with PID 22244 (C:\Users\Moham\OneDrive\Desktop\PROJECTS\Airline-Mangement\backend\target\classes started by Moham in C:\Users\Moham\OneDrive\Desktop\PROJECTS\Airline-Mangement\backend)
+2026-08-15T10:36:05.573+03:00 DEBUG 22244 --- [demo] [main] com.ldi.aams.AamsApplication             : Running with Spring Boot v3.3.2, Spring v6.1.11
+2026-08-15T10:36:05.573+03:00  INFO 22244 --- [demo] [main] com.ldi.aams.AamsApplication             : No active profile set, falling back to 1 default profile: "default"
+2026-08-15T10:36:08.406+03:00  INFO 22244 --- [demo] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-08-15T10:36:08.633+03:00  INFO 22244 --- [demo] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 211 ms. Found 14 JPA repository interfaces.
+2026-08-15T10:36:10.234+03:00  INFO 22244 --- [demo] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8082 (http)
+2026-08-15T10:36:10.264+03:00  INFO 22244 --- [demo] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-08-15T10:36:10.264+03:00  INFO 22244 --- [demo] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.26]
+2026-08-15T10:36:10.387+03:00  INFO 22244 --- [demo] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-08-15T10:36:10.387+03:00  INFO 22244 --- [demo] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 4707 ms
+2026-08-15T10:36:11.052+03:00  INFO 22244 --- [demo] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-08-15T10:36:14.166+03:00  INFO 22244 --- [demo] [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@210d3a42
+2026-08-15T10:36:14.166+03:00  INFO 22244 --- [demo] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-08-15T10:36:14.422+03:00  INFO 22244 --- [demo] [main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://ep-tiny-night-b1ydnyk0.c-5.eu-central-1.aws.neon.tech/neondb (PostgreSQL 18.4)
+2026-08-15T10:36:15.126+03:00  WARN 22244 --- [demo] [main] o.f.c.internal.database.base.Database    : Flyway upgrade recommended: PostgreSQL 18.4 is newer than this version of Flyway and support has not been tested. The latest supported version of PostgreSQL is 16.
+2026-08-15T10:36:15.773+03:00  INFO 22244 --- [demo] [main] o.f.core.internal.command.DbValidate     : Successfully validated 15 migrations (execution time 00:00.496s)
+2026-08-15T10:36:17.115+03:00  INFO 22244 --- [demo] [main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": 14
+2026-08-15T10:36:17.294+03:00  INFO 22244 --- [demo] [main] o.f.core.internal.command.DbMigrate      : Schema "public" is up to date. No migration necessary.
+2026-08-15T10:36:18.206+03:00  INFO 22244 --- [demo] [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-08-15T10:36:18.326+03:00  INFO 22244 --- [demo] [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.2.Final
+2026-08-15T10:36:18.405+03:00  INFO 22244 --- [demo] [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-08-15T10:36:18.922+03:00  INFO 22244 --- [demo] [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-08-15T10:36:19.338+03:00  WARN 22244 --- [demo] [main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-08-15T10:36:22.006+03:00  INFO 22244 --- [demo] [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-08-15T10:36:28.642+03:00  INFO 22244 --- [demo] [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-08-15T10:36:29.757+03:00 DEBUG 22244 --- [demo] [main] c.ldi.aams.auth.internal.JwtAuthFilter   : Filter 'jwtAuthFilter' configured for use
+2026-08-15T10:36:30.312+03:00  INFO 22244 --- [demo] [main] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-08-15T10:36:30.312+03:00  WARN 22244 --- [demo] [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used for username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider.
+2026-08-15T10:36:30.882+03:00  INFO 22244 --- [demo] [main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-08-15T10:36:32.401+03:00  WARN 22244 --- [demo] [main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-08-15T10:36:33.162+03:00  INFO 22244 --- [demo] [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-08-15T10:36:34.342+03:00  WARN 22244 --- [demo] [main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
+2026-08-15T10:36:34.819+03:00  INFO 22244 --- [demo] [main] .s.m.e.c.DefaultEventPublicationRegistry : No publications outstanding!
+2026-08-15T10:36:34.829+03:00  INFO 22244 --- [demo] [main] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-08-15T10:36:34.835+03:00  INFO 22244 --- [demo] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-08-15T10:36:35.805+03:00  INFO 22244 --- [demo] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2026-08-15T10:36:35.842+03:00  INFO 22244 --- [demo] [main] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-08-15T10:36:35.876+03:00 ERROR 22244 --- [demo] [main] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8082 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8082 or configure this application to listen on another port.
+
+2026-08-15T10:37:33.747+03:00  INFO 17348 --- [demo] [main] com.ldi.aams.AamsApplication             : Starting AamsApplication using Java 22.0.2 with PID 17348 (C:\Users\Moham\OneDrive\Desktop\PROJECTS\Airline-Mangement\backend\target\classes started by Moham in C:\Users\Moham\OneDrive\Desktop\PROJECTS\Airline-Mangement\backend)
+2026-08-15T10:37:33.749+03:00 DEBUG 17348 --- [demo] [main] com.ldi.aams.AamsApplication             : Running with Spring Boot v3.3.2, Spring v6.1.11
+2026-08-15T10:37:33.752+03:00  INFO 17348 --- [demo] [main] com.ldi.aams.AamsApplication             : No active profile set, falling back to 1 default profile: "default"
+2026-08-15T10:37:36.675+03:00  INFO 17348 --- [demo] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-08-15T10:37:37.000+03:00  INFO 17348 --- [demo] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 303 ms. Found 14 JPA repository interfaces.
+2026-08-15T10:37:39.581+03:00  INFO 17348 --- [demo] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8082 (http)
+2026-08-15T10:37:39.622+03:00  INFO 17348 --- [demo] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-08-15T10:37:39.622+03:00  INFO 17348 --- [demo] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.26]
+2026-08-15T10:37:39.821+03:00  INFO 17348 --- [demo] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-08-15T10:37:39.823+03:00  INFO 17348 --- [demo] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 6001 ms
+2026-08-15T10:37:40.962+03:00  INFO 17348 --- [demo] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-08-15T10:37:43.229+03:00  INFO 17348 --- [demo] [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@7d17906
+2026-08-15T10:37:43.234+03:00  INFO 17348 --- [demo] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-08-15T10:37:43.552+03:00  INFO 17348 --- [demo] [main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://ep-tiny-night-b1ydnyk0.c-5.eu-central-1.aws.neon.tech/neondb (PostgreSQL 18.4)
+2026-08-15T10:37:44.278+03:00  WARN 17348 --- [demo] [main] o.f.c.internal.database.base.Database    : Flyway upgrade recommended: PostgreSQL 18.4 is newer than this version of Flyway and support has not been tested. The latest supported version of PostgreSQL is 16.
+2026-08-15T10:37:44.952+03:00  INFO 17348 --- [demo] [main] o.f.core.internal.command.DbValidate     : Successfully validated 15 migrations (execution time 00:00.550s)
+2026-08-15T10:37:46.241+03:00  INFO 17348 --- [demo] [main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": 14
+2026-08-15T10:37:46.434+03:00  INFO 17348 --- [demo] [main] o.f.core.internal.command.DbMigrate      : Schema "public" is up to date. No migration necessary.
+2026-08-15T10:37:47.511+03:00  INFO 17348 --- [demo] [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-08-15T10:37:47.711+03:00  INFO 17348 --- [demo] [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.2.Final
+2026-08-15T10:37:47.852+03:00  INFO 17348 --- [demo] [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-08-15T10:37:48.733+03:00  INFO 17348 --- [demo] [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-08-15T10:37:49.111+03:00  WARN 17348 --- [demo] [main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-08-15T10:37:52.997+03:00  INFO 17348 --- [demo] [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-08-15T10:37:59.651+03:00  INFO 17348 --- [demo] [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-08-15T10:38:00.844+03:00 DEBUG 17348 --- [demo] [main] c.ldi.aams.auth.internal.JwtAuthFilter   : Filter 'jwtAuthFilter' configured for use
+2026-08-15T10:38:01.502+03:00  INFO 17348 --- [demo] [main] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-08-15T10:38:01.504+03:00  WARN 17348 --- [demo] [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used for username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider.
+2026-08-15T10:38:02.056+03:00  INFO 17348 --- [demo] [main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-08-15T10:38:04.032+03:00  WARN 17348 --- [demo] [main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-08-15T10:38:05.282+03:00  INFO 17348 --- [demo] [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-08-15T10:38:07.330+03:00  INFO 17348 --- [demo] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8082 (http) with context path '/'
+2026-08-15T10:38:07.373+03:00  INFO 17348 --- [demo] [main] o.s.s.config.TaskSchedulerRouter         : No TaskScheduler/ScheduledExecutorService bean found for scheduled processing
+2026-08-15T10:38:07.398+03:00  INFO 17348 --- [demo] [main] com.ldi.aams.AamsApplication             : Started AamsApplication in 34.76 seconds (process running for 35.849)
+2026-08-15T10:39:56.676+03:00  INFO 17348 --- [demo] [http-nio-8082-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-08-15T10:39:56.695+03:00  INFO 17348 --- [demo] [http-nio-8082-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-08-15T10:39:56.959+03:00  INFO 17348 --- [demo] [http-nio-8082-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 256 ms
+2026-08-15T12:04:39.092+03:00  WARN 17348 --- [demo] [HikariPool-1 housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=2m27s856ms85µs400ns).
+2026-08-15T12:10:30.217+03:00  WARN 17348 --- [demo] [HikariPool-1 housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=5m54s666ms861µs100ns).
+2026-08-15T12:15:39.762+03:00  INFO 17348 --- [demo] [SpringApplicationShutdownHook] .s.m.e.c.DefaultEventPublicationRegistry : No publications outstanding!
+2026-08-15T12:15:39.834+03:00  INFO 17348 --- [demo] [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-08-15T12:15:39.896+03:00  INFO 17348 --- [demo] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-08-15T12:15:40.916+03:00  INFO 17348 --- [demo] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

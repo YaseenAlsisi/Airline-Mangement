@@ -146,4 +146,34 @@
     "loading": "Loading...",
     "edit": "Edit"
   }
+  },
+  "settings": {
+    "title": "Settings & Administration",
+    "subtitle": "Manage your account settings, users, and system preferences.",
+    "tabs": {
+      "account": "My Account",
+      "users": "Users",
+      "roles": "Roles & Permissions",
+      "notifications": "Notifications"
+    },
+    "account": {
+      "loading": "Loading profile...",
+      "title": "My Account",
+      "profileInfo": "Profile Information",
+      "fullName": "Full Name",
+      "email": "Email Address",
+      "updateProfile": "Update Profile",
+      "changePasswordTitle": "Change Password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "updatePasswordBtn": "Update Password",
+      "profileUpdated": "Profile updated successfully.",
+      "profileUpdateFailed": "Failed to update profile.",
+      "passwordsNotMatch": "New passwords do not match.",
+      "passwordUpdated": "Password updated successfully.",
+      "passwordUpdateFailed": "Failed to change password. Make sure your old password is correct.",
+      "profileLoadFailed": "Failed to load profile."
+    }
+  }
 }

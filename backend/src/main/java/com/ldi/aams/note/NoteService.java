@@ -8,6 +8,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.access.AccessDeniedException;
+import com.ldi.aams.common.exception.ResourceNotFoundException;
 
 import java.util.UUID;
 
@@ -40,5 +43,20 @@ public class NoteService {
                 .createdBy(username)
                 .build();
         return noteMapper.toResponse(noteRepository.save(note));
+    }
+
+    @Transactional
+    public void deleteNote(UUID noteId, Authentication authentication) {
+        Note note = noteRepository.findById(noteId)
+                .orElseThrow(() -> new ResourceNotFoundException("Note", "id", noteId));
+        
+        boolean canDeleteAny = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("NOTE_DELETE_ANY") || a.getAuthority().equals("SYSTEM_MANAGE"));
+                
+        if (!canDeleteAny && !note.getCreatedBy().equals(authentication.getName())) {
+            throw new AccessDeniedException("You do not have permission to delete this note");
+        }
+        
+        noteRepository.delete(note);
     }
 }
