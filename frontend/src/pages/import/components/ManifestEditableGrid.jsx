@@ -9,11 +9,18 @@ import {
   CakeIcon, MapIcon, ClockIcon, BriefcaseIcon
 } from '@heroicons/react/24/outline';
 
-export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated }) => {
+export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated, selectedRows, setSelectedRows }) => {
   const { t } = useTranslation();
   const [editingRowId, setEditingRowId] = useState(null);
   const [editFormData, setEditFormData] = useState({});
   const [saving, setSaving] = useState(false);
+
+  const toggleSelection = (rowId) => {
+    const next = new Set(selectedRows);
+    if (next.has(rowId)) next.delete(rowId);
+    else next.add(rowId);
+    setSelectedRows(next);
+  };
 
   const handleEditClick = (row) => {
     setEditingRowId(row.id);
@@ -62,13 +69,19 @@ export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated }) => {
             key={row.id} 
             className={`relative flex flex-col overflow-hidden rounded-2xl bg-white/70 backdrop-blur-xl shadow-sm hover:shadow-xl transition-all duration-300 border-2 ${
               isError ? 'border-red-200 hover:border-red-300' : 'border-slate-100 hover:border-indigo-100'
-            }`}
+            } ${selectedRows.has(row.id) ? 'ring-2 ring-indigo-500 border-indigo-500' : ''}`}
           >
             {/* Header Area */}
             <div className={`px-5 py-4 flex justify-between items-center border-b ${isError ? 'bg-red-50/50 border-red-100' : 'bg-slate-50/50 border-slate-100'}`}>
               <div className="flex items-center gap-3">
+                <input 
+                  type="checkbox" 
+                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 cursor-pointer w-4 h-4 mr-1"
+                  checked={selectedRows.has(row.id)}
+                  onChange={() => toggleSelection(row.id)}
+                />
                 <span className="flex items-center justify-center w-8 h-8 rounded-full bg-white shadow-sm text-xs font-bold text-slate-500">
-                  #{row.rowNumber}
+                  #{row.rowNumber > 0 ? row.rowNumber - 1 : row.rowNumber}
                 </span>
                 {isError ? (
                   <span title={row.validationErrors} className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700 cursor-help">
@@ -115,7 +128,7 @@ export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated }) => {
               {/* Passenger Name */}
               <div className="sm:col-span-2">
                 <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <UserIcon className="w-4 h-4" /> {t('import.col.passengerName', 'الاسم')}
+                  <UserIcon className="w-4 h-4" /> {t('import.col.passengerName', 'Passenger Name')}
                 </label>
                 {isEditing ? (
                   <input type="text" name="passengerName" value={editFormData.passengerName || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
@@ -127,7 +140,7 @@ export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated }) => {
               {/* Date of Birth */}
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <CakeIcon className="w-4 h-4" /> {t('import.col.birthDate', 'تاريخ الميلاد')}
+                  <CakeIcon className="w-4 h-4" /> {t('import.col.birthDate', 'Birth Date')}
                 </label>
                 {isEditing ? (
                   <input type="date" name="birthDate" value={editFormData.birthDate || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
@@ -139,7 +152,7 @@ export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated }) => {
               {/* Passport */}
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <IdentificationIcon className="w-4 h-4" /> {t('import.col.passport', 'رقم الجواز')}
+                  <IdentificationIcon className="w-4 h-4" /> {t('import.col.passport', 'Passport')}
                 </label>
                 {isEditing ? (
                   <input type="text" name="passportNumber" value={editFormData.passportNumber || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
@@ -151,7 +164,7 @@ export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated }) => {
               {/* Departure Port */}
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <MapIcon className="w-4 h-4" /> {t('import.col.departurePort', 'المنفذ')}
+                  <MapIcon className="w-4 h-4" /> {t('import.col.departurePort', 'Dep. Port')}
                 </label>
                 {isEditing ? (
                   <input type="text" name="departurePort" value={editFormData.departurePort || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
@@ -163,7 +176,7 @@ export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated }) => {
               {/* Destination */}
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <MapPinIcon className="w-4 h-4" /> {t('import.col.destination', 'جهة المغادرة')}
+                  <MapPinIcon className="w-4 h-4" /> {t('import.col.destination', 'Destination')}
                 </label>
                 {isEditing ? (
                   <input type="text" name="destination" value={editFormData.destination || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
@@ -175,7 +188,7 @@ export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated }) => {
               {/* Flight */}
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <PaperAirplaneIcon className="w-4 h-4" /> {t('import.col.flight', 'رقم الرحلة')}
+                  <PaperAirplaneIcon className="w-4 h-4" /> {t('import.col.flight', 'Flight')}
                 </label>
                 {isEditing ? (
                   <input type="text" name="flightNumber" value={editFormData.flightNumber || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
@@ -187,7 +200,7 @@ export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated }) => {
               {/* Dep Date */}
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <CalendarDaysIcon className="w-4 h-4" /> {t('import.col.departureDate', 'تاريخ المغادرة')}
+                  <CalendarDaysIcon className="w-4 h-4" /> {t('import.col.departureDate', 'Dep. Date')}
                 </label>
                 {isEditing ? (
                   <input type="date" name="departureDate" value={editFormData.departureDate || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
@@ -199,7 +212,7 @@ export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated }) => {
               {/* Arrival Time */}
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <ClockIcon className="w-4 h-4" /> {t('import.col.arrivalTime', 'ميعاد الوصول')}
+                  <ClockIcon className="w-4 h-4" /> {t('import.col.arrivalTime', 'Arrival Time')}
                 </label>
                 {isEditing ? (
                   <input type="time" name="arrivalTime" value={editFormData.arrivalTime || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" step="2" />
@@ -211,7 +224,7 @@ export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated }) => {
               {/* Agent */}
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <BuildingOfficeIcon className="w-4 h-4" /> {t('import.col.agent', 'الوكيل')}
+                  <BuildingOfficeIcon className="w-4 h-4" /> {t('import.col.agent', 'Agent (Excel)')}
                 </label>
                 {isEditing ? (
                   <input type="text" name="agentNameRaw" value={editFormData.agentNameRaw || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
@@ -223,7 +236,7 @@ export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated }) => {
               {/* Service Type */}
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <BriefcaseIcon className="w-4 h-4" /> {t('import.col.serviceType', 'نوع الخدمة')}
+                  <BriefcaseIcon className="w-4 h-4" /> {t('import.col.serviceType', 'Service Type')}
                 </label>
                 {isEditing ? (
                   <input type="text" name="serviceType" value={editFormData.serviceType || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm" />
@@ -235,7 +248,7 @@ export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated }) => {
               {/* Category */}
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <TagIcon className="w-4 h-4" /> {t('import.col.category', 'النوع')}
+                  <TagIcon className="w-4 h-4" /> {t('import.col.category', 'Category')}
                 </label>
                 {isEditing ? (
                   <select name="passengerCategory" value={editFormData.passengerCategory || ''} onChange={handleChange} className="block w-full rounded-lg border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm">

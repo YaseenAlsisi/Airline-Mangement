@@ -62,6 +62,11 @@ public class ManifestImportService {
             Map<String, Integer> headerMap = new HashMap<>();
             int noteCount = 0;
 
+            Map<String, Agent> agentCache = new HashMap<>();
+            agentRepository.findAll().forEach(a -> agentCache.put(a.getName().trim().toLowerCase(), a));
+
+            List<ManifestPassenger> passengersToSave = new ArrayList<>();
+
             for (Cell cell : headerRow) {
                 if (cell == null) continue;
                 String header = cell.toString().trim();
@@ -132,7 +137,7 @@ public class ManifestImportService {
                 passenger.setAgentNameRaw(agentNameRaw);
 
                 if (agentNameRaw != null && !agentNameRaw.trim().isEmpty()) {
-                    Agent agent = matchOrCreateAgent(agentNameRaw.trim());
+                    Agent agent = matchOrCreateAgent(agentNameRaw.trim(), agentCache);
                     passenger.setAgent(agent);
                 }
 
@@ -160,8 +165,10 @@ public class ManifestImportService {
                     invalidRows++;
                 }
 
-                passengerRepository.save(passenger);
+                passengersToSave.add(passenger);
             }
+
+            passengerRepository.saveAll(passengersToSave);
         }
 
         batch.setTotalRows(totalRows);
@@ -170,13 +177,12 @@ public class ManifestImportService {
         return batchRepository.save(batch);
     }
 
-    private Agent matchOrCreateAgent(String rawName) {
+    private Agent matchOrCreateAgent(String rawName, Map<String, Agent> agentCache) {
         String normalized = rawName.replaceAll("\\s+", " ").trim();
-        List<Agent> agents = agentRepository.findAll(); // Optimization: use query by name in a real scenario
-        for (Agent a : agents) {
-            if (a.getName().equalsIgnoreCase(normalized)) {
-                return a;
-            }
+        String lower = normalized.toLowerCase();
+        
+        if (agentCache.containsKey(lower)) {
+            return agentCache.get(lower);
         }
 
         // Not found, create
@@ -185,7 +191,9 @@ public class ManifestImportService {
         newAgent.setCode("AGT-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase());
         newAgent.setStatus("ACTIVE");
         newAgent.setCurrency("USD");
-        return agentRepository.save(newAgent);
+        Agent savedAgent = agentRepository.save(newAgent);
+        agentCache.put(lower, savedAgent);
+        return savedAgent;
     }
 
     private boolean isRowEmpty(Row row) {
@@ -354,6 +362,52 @@ public class ManifestImportService {
     }
 
     @Transactional
+    public void deleteRow(UUID batchId, UUID rowId) {
+        ManifestPassenger passenger = passengerRepository.findById(rowId)
+                .orElseThrow(() -> new IllegalArgumentException("Row not found"));
+        if (!passenger.getBatch().getId().equals(batchId)) {
+            throw new IllegalArgumentException("Row does not belong to this batch");
+        }
+
+        ManifestImportBatch batch = passenger.getBatch();
+        batch.setTotalRows(Math.max(0, batch.getTotalRows() - 1));
+        
+        if ("VALID".equals(passenger.getValidationStatus())) {
+            batch.setValidRows(Math.max(0, batch.getValidRows() - 1));
+        } else if ("ERROR".equals(passenger.getValidationStatus())) {
+            batch.setInvalidRows(Math.max(0, batch.getInvalidRows() - 1));
+        }
+
+        passengerRepository.delete(passenger);
+        batchRepository.save(batch);
+    }
+
+    @Transactional
+    public void deleteRows(UUID batchId, List<UUID> rowIds) {
+        if (rowIds == null || rowIds.isEmpty()) return;
+
+        List<ManifestPassenger> passengers = passengerRepository.findByIdInAndBatchId(rowIds, batchId);
+        if (passengers.isEmpty()) return;
+
+        ManifestImportBatch batch = getBatch(batchId);
+        
+        int removedValid = 0;
+        int removedInvalid = 0;
+
+        for (ManifestPassenger p : passengers) {
+            if ("VALID".equals(p.getValidationStatus())) removedValid++;
+            else if ("ERROR".equals(p.getValidationStatus())) removedInvalid++;
+        }
+
+        batch.setTotalRows(Math.max(0, batch.getTotalRows() - passengers.size()));
+        batch.setValidRows(Math.max(0, batch.getValidRows() - removedValid));
+        batch.setInvalidRows(Math.max(0, batch.getInvalidRows() - removedInvalid));
+
+        passengerRepository.deleteAll(passengers);
+        batchRepository.save(batch);
+    }
+
+    @Transactional
     public ManifestImportBatch publishBatch(UUID batchId) {
         ManifestImportBatch batch = getBatch(batchId);
         if (!"DRAFT".equals(batch.getStatus())) {
@@ -366,5 +420,19 @@ public class ManifestImportService {
         batch.setStatus("PUBLISHED");
         batch.setPublishedAt(Instant.now());
         return batchRepository.save(batch);
+    }
+
+    @Transactional
+    public void deleteBatch(UUID batchId) {
+        ManifestImportBatch batch = getBatch(batchId);
+        passengerRepository.deleteByBatchId(batchId);
+        batchRepository.delete(batch);
+    }
+
+    @Transactional
+    public void deleteBatches(List<UUID> batchIds) {
+        for (UUID id : batchIds) {
+            deleteBatch(id);
+        }
     }
 }

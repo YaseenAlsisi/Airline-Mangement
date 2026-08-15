@@ -65,10 +65,42 @@ public class ManifestImportController {
         return ResponseEntity.ok(mapper.toPassengerRowResponse(updated));
     }
 
+    @DeleteMapping("/{batchId}/rows/{rowId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteRow(
+            @PathVariable UUID batchId,
+            @PathVariable UUID rowId) {
+        service.deleteRow(batchId, rowId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{batchId}/rows/bulk")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteRowsBulk(
+            @PathVariable UUID batchId,
+            @RequestBody List<UUID> rowIds) {
+        service.deleteRows(batchId, rowIds);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/{batchId}/publish")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ManifestDto.BatchResponse> publishBatch(@PathVariable UUID batchId) {
         ManifestImportBatch batch = service.publishBatch(batchId);
         return ResponseEntity.ok(mapper.toBatchResponse(batch));
+    }
+
+    @DeleteMapping("/bulk")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteBatches(@RequestBody List<UUID> batchIds) {
+        service.deleteBatches(batchIds);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{batchId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteBatch(@PathVariable UUID batchId) {
+        service.deleteBatch(batchId);
+        return ResponseEntity.noContent().build();
     }
 }

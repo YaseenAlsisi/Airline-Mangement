@@ -33,8 +33,28 @@ export const updateManifestRow = async (batchId, rowId, data) => {
   return response;
 };
 
+export const deleteManifestRow = async (batchId, rowId) => {
+  const response = await axiosInstance.delete(`${API_BASE}/${batchId}/rows/${rowId}`);
+  return response;
+};
+
+export const deleteManifestRowsBulk = async (batchId, rowIds) => {
+  const response = await axiosInstance.delete(`${API_BASE}/${batchId}/rows/bulk`, { data: rowIds });
+  return response;
+};
+
 export const publishManifestImport = async (batchId) => {
   const response = await axiosInstance.post(`${API_BASE}/${batchId}/publish`);
+  return response;
+};
+
+export const deleteManifestBatch = async (batchId) => {
+  const response = await axiosInstance.delete(`${API_BASE}/${batchId}`);
+  return response;
+};
+
+export const deleteManifestBatches = async (batchIds) => {
+  const response = await axiosInstance.delete(`${API_BASE}/bulk`, { data: batchIds });
   return response;
 };
 

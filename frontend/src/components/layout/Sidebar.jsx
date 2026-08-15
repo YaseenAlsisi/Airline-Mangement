@@ -63,21 +63,11 @@ export const Sidebar = () => {
                     }
                   >
                     <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
-                    {t(`navigation.${item.name}`)}
+                    {t(`navigation.${item.name}`, item.name)}
                   </NavLink>
                 </li>
               ))}
             </ul>
-          </li>
-          
-          <li className="mt-auto">
-            <a
-              href="/logout"
-              className="group flex gap-x-3 rounded-xl p-3 text-sm font-semibold leading-6 text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-all"
-            >
-              <ArrowRightOnRectangleIcon className="h-6 w-6 shrink-0" aria-hidden="true" />
-              {t('navigation.Log out', 'Log out')}
-            </a>
           </li>
         </ul>
       </nav>

@@ -8,8 +8,8 @@ const generateId = () => Math.random().toString(36).substring(2, 15);
 const defaultEntry = () => ({
   clientId: generateId(),
   passengerType: '',
-  price: 0,
-  commission: 0,
+  price: '',
+  commission: '',
   currency: 'EGP'
 });
 
@@ -56,8 +56,8 @@ const PriceListFormModal = ({ isOpen, priceList, onClose }) => {
                     id: e.id,
                     clientId: generateId(),
                     passengerType: e.passengerType || '',
-                    price: e.price || 0,
-                    commission: e.commission || 0,
+                    price: e.price !== undefined && e.price !== null ? e.price : '',
+                    commission: e.commission !== undefined && e.commission !== null ? e.commission : '',
                     currency: e.currency || 'EGP'
                   }))
                 : [defaultEntry()]
@@ -144,10 +144,11 @@ const PriceListFormModal = ({ isOpen, priceList, onClose }) => {
 
       if (priceList) {
         await updatePriceList(priceList.id, dataToSubmit);
+        onClose(true, t('priceList.updateSuccess', 'تم تعديل قائمة الأسعار بنجاح'));
       } else {
         await createPriceList(dataToSubmit);
+        onClose(true, t('priceList.createSuccess', 'تم إضافة قائمة الأسعار بنجاح'));
       }
-      onClose(true);
     } catch (err) {
       const apiError = err.response?.data;
       const errorMessage = apiError?.error?.message || 
@@ -193,20 +194,20 @@ const PriceListFormModal = ({ isOpen, priceList, onClose }) => {
                             name="name"
                             value={formData.name || ''}
                             onChange={handleChange}
-                            className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            className="block w-full rounded-lg border-0 py-2 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 transition-all bg-white"
                             placeholder="Optional: Auto-generated if empty"
                           />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium leading-6 text-gray-900">{t('priceList.code', 'Code')}</label>
+                        <label className="block text-sm font-medium leading-6 text-slate-700">{t('priceList.code', 'Code')}</label>
                         <div className="mt-2">
                           <input
                             type="text"
                             name="code"
                             value={formData.code || ''}
                             onChange={handleChange}
-                            className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            className="block w-full rounded-lg border-0 py-2 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 transition-all bg-white"
                             placeholder="Optional: Auto-generated if empty"
                           />
                         </div>
@@ -234,44 +235,48 @@ const PriceListFormModal = ({ isOpen, priceList, onClose }) => {
                       )}
 
                       {formData.groups.map((group, groupIndex) => (
-                        <div key={group.clientId} className="bg-white border border-gray-300 rounded-md shadow-sm overflow-hidden">
+                        <div key={group.clientId} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden hover:border-indigo-200 transition-colors">
                           {/* Group Header */}
-                          <div className="bg-gray-100 px-4 py-3 flex justify-between items-center border-b border-gray-300">
-                            <span className="font-semibold text-gray-700">{t('priceList.pricingGroup', 'Pricing Group')} #{groupIndex + 1}</span>
+                          <div className="bg-slate-50/80 px-5 py-4 flex justify-between items-center border-b border-slate-100">
+                            <span className="font-bold text-slate-700 flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs">{groupIndex + 1}</div>
+                              {t('priceList.pricingGroup', 'Pricing Group')}
+                            </span>
                             <button
                               type="button"
                               onClick={() => removeGroup(groupIndex)}
-                              className="text-red-600 hover:text-red-800 text-sm font-medium"
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-1"
                             >
+                              <TrashIcon className="w-4 h-4" />
                               {t('priceList.removePricingGroup', 'Remove Group')}
                             </button>
                           </div>
                           
-                          <div className="p-4 space-y-4">
+                          <div className="p-5 space-y-6">
                             {/* Route Inputs */}
                             <div className="grid grid-cols-1 gap-y-4 sm:grid-cols-2 sm:gap-x-4">
                               <div>
-                                <label className="block text-sm font-medium leading-6 text-gray-900">
+                                <label className="block text-sm font-medium leading-6 text-slate-700">
                                   {t('priceList.departureAirport', 'Departure Airport / Port')}
                                 </label>
                                 <input
                                   type="text"
                                   value={group.departureAirport}
                                   onChange={(e) => handleGroupChange(groupIndex, 'departureAirport', e.target.value)}
-                                  className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                  className="mt-1 block w-full rounded-lg border-0 py-2 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 transition-all bg-white"
                                   placeholder={t('priceList.departureAirportPlaceholder', 'Type departure...')}
                                   required
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium leading-6 text-gray-900">
+                                <label className="block text-sm font-medium leading-6 text-slate-700">
                                   {t('priceList.destination', 'Destination')}
                                 </label>
                                 <input
                                   type="text"
                                   value={group.destination}
                                   onChange={(e) => handleGroupChange(groupIndex, 'destination', e.target.value)}
-                                  className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                  className="mt-1 block w-full rounded-lg border-0 py-2 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 transition-all bg-white"
                                   placeholder={t('priceList.destinationPlaceholder', 'Type destination...')}
                                   required
                                 />
@@ -279,42 +284,42 @@ const PriceListFormModal = ({ isOpen, priceList, onClose }) => {
                             </div>
 
                             {/* Passenger Pricing Table */}
-                            <div className="mt-6">
-                              <div className="flex justify-between items-center mb-2">
-                                <label className="block text-sm font-medium leading-6 text-gray-900">
+                            <div className="mt-6 pt-4 border-t border-slate-100">
+                              <div className="flex justify-between items-center mb-4">
+                                <label className="block text-sm font-bold leading-6 text-slate-800">
                                   {t('priceList.passengerPricing', 'Passenger Pricing')}
                                 </label>
                                 <button
                                   type="button"
                                   onClick={() => addEntry(groupIndex)}
-                                  className="text-indigo-600 hover:text-indigo-800 text-sm font-medium inline-flex items-center"
+                                  className="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-sm font-medium inline-flex items-center transition-colors"
                                 >
-                                  <PlusIcon className="h-4 w-4 mr-1" />
+                                  <PlusIcon className="h-4 w-4 mr-1.5" />
                                   {t('priceList.addPassengerType', 'Add Passenger')}
                                 </button>
                               </div>
-                              <div className="overflow-x-auto ring-1 ring-gray-300 sm:rounded-lg">
-                                <table className="min-w-full divide-y divide-gray-300">
-                                  <thead className="bg-gray-50">
+                              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                                <table className="min-w-full divide-y divide-slate-200">
+                                  <thead className="bg-slate-50">
                                     <tr>
-                                      <th scope="col" className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('priceList.passengerType', 'Passenger Type')}</th>
-                                      <th scope="col" className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('priceList.price', 'Price')}</th>
-                                      <th scope="col" className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('priceList.commission', 'Commission')}</th>
-                                      <th scope="col" className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('priceList.currency', 'Currency')}</th>
-                                      <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6"><span className="sr-only">Actions</span></th>
+                                      <th scope="col" className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500 uppercase tracking-wide">{t('priceList.passengerType', 'Passenger Type')}</th>
+                                      <th scope="col" className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500 uppercase tracking-wide">{t('priceList.price', 'Price')}</th>
+                                      <th scope="col" className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500 uppercase tracking-wide">{t('priceList.commission', 'Commission')}</th>
+                                      <th scope="col" className="px-4 py-3.5 text-start text-xs font-semibold text-slate-500 uppercase tracking-wide">{t('priceList.currency', 'Currency')}</th>
+                                      <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6 w-16"><span className="sr-only">Actions</span></th>
                                     </tr>
                                   </thead>
-                                  <tbody className="divide-y divide-gray-200 bg-white">
+                                  <tbody className="divide-y divide-slate-100 bg-white">
                                     {group.entries.map((entry, entryIndex) => {
                                       // Determine disabled passenger types
                                       const selectedTypes = group.entries.map(e => e.passengerType).filter(Boolean);
                                       return (
-                                        <tr key={entry.clientId}>
-                                          <td className="whitespace-nowrap px-3 py-4 text-sm">
+                                        <tr key={entry.clientId} className="hover:bg-slate-50/50 transition-colors">
+                                          <td className="whitespace-nowrap px-4 py-3 text-sm">
                                             <select
                                               value={entry.passengerType}
                                               onChange={(e) => handleEntryChange(groupIndex, entryIndex, 'passengerType', e.target.value)}
-                                              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                              className="block w-full rounded-lg border-0 py-2 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 transition-all bg-white"
                                               required
                                             >
                                               <option value="">{t('priceList.selectType', 'Select Type')}</option>
@@ -329,44 +334,46 @@ const PriceListFormModal = ({ isOpen, priceList, onClose }) => {
                                               ))}
                                             </select>
                                           </td>
-                                          <td className="whitespace-nowrap px-3 py-4 text-sm">
+                                          <td className="whitespace-nowrap px-4 py-3 text-sm">
                                             <input
                                               type="number"
                                               min="0"
                                               step="0.01"
+                                              placeholder="0.00"
                                               value={entry.price}
                                               onChange={(e) => handleEntryChange(groupIndex, entryIndex, 'price', e.target.value === '' ? '' : parseFloat(e.target.value))}
-                                              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                              className="block w-full rounded-lg border-0 py-2 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 transition-all bg-white"
                                               required
                                             />
                                           </td>
-                                          <td className="whitespace-nowrap px-3 py-4 text-sm">
+                                          <td className="whitespace-nowrap px-4 py-3 text-sm">
                                             <input
                                               type="number"
                                               min="0"
                                               step="0.01"
+                                              placeholder="0.00"
                                               value={entry.commission}
                                               onChange={(e) => handleEntryChange(groupIndex, entryIndex, 'commission', e.target.value === '' ? '' : parseFloat(e.target.value))}
-                                              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                              className="block w-full rounded-lg border-0 py-2 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 transition-all bg-white"
                                               required
                                             />
                                           </td>
-                                          <td className="whitespace-nowrap px-3 py-4 text-sm">
+                                          <td className="whitespace-nowrap px-4 py-3 text-sm">
                                             <select
                                               value={entry.currency}
                                               onChange={(e) => handleEntryChange(groupIndex, entryIndex, 'currency', e.target.value)}
-                                              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                              className="block w-full rounded-lg border-0 py-2 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 transition-all bg-white"
                                             >
                                               <option value="EGP">EGP</option>
                                               <option value="USD">USD</option>
                                               <option value="EUR">EUR</option>
                                             </select>
                                           </td>
-                                          <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                          <td className="relative whitespace-nowrap py-3 pl-3 pr-4 text-center text-sm font-medium sm:pr-6">
                                             <button
                                               type="button"
                                               onClick={() => removeEntry(groupIndex, entryIndex)}
-                                              className="text-red-600 hover:text-red-900"
+                                              className="text-red-400 hover:text-red-600 p-1.5 hover:bg-red-50 rounded-lg transition-colors"
                                               title={t('priceList.removePassengerType', 'Remove')}
                                             >
                                               <TrashIcon className="h-5 w-5" />

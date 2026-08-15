@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { getPriceLists, deletePriceList } from '../../api/priceLists.api';
 import { useAuthStore } from '../../store/authStore';
 import PriceListFormModal from './PriceListFormModal';
 import { useTranslation } from 'react-i18next';
+import { FunnelIcon, PaperAirplaneIcon, MapPinIcon, ChevronLeftIcon, CheckIcon } from '@heroicons/react/24/outline';
 
 export const PriceListDataPage = () => {
   const { t } = useTranslation();
@@ -11,6 +12,12 @@ export const PriceListDataPage = () => {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPriceList, setEditingPriceList] = useState(null);
+  const [departureFilter, setDepartureFilter] = useState('');
+  const [destinationFilter, setDestinationFilter] = useState('');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filterView, setFilterView] = useState('main'); // 'main', 'departure', 'destination'
+  const [toast, setToast] = useState(null);
+  const filterRef = useRef(null);
 
   const canCreate = hasPermission('PRICE_CREATE');
   const canEdit = hasPermission('PRICE_EDIT');
@@ -32,6 +39,22 @@ export const PriceListDataPage = () => {
     fetchPriceLists();
   }, []);
 
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setIsFilterOpen(false);
+      }
+    }
+    
+    if (isFilterOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isFilterOpen]);
+
   const handleEdit = (priceList) => {
     if (!canEdit) return;
     setEditingPriceList(priceList);
@@ -47,6 +70,8 @@ export const PriceListDataPage = () => {
       setLoading(true);
       await deletePriceList(priceList.id);
       fetchPriceLists();
+      setToast(t('priceList.deleteSuccess', 'تم حذف قائمة الأسعار بنجاح'));
+      setTimeout(() => setToast(null), 3000);
     } catch (e) {
       console.error("Failed to delete price list:", e);
       alert(t('priceList.deleteError', 'حدث خطأ أثناء محاولة الحذف.'));
@@ -60,21 +85,140 @@ export const PriceListDataPage = () => {
     setIsModalOpen(true);
   };
 
-  const handleModalClose = (shouldRefresh) => {
+  const handleModalClose = (shouldRefresh, message) => {
     setIsModalOpen(false);
     if (shouldRefresh) {
       fetchPriceLists();
+      if (message) {
+        setToast(message);
+        setTimeout(() => setToast(null), 3000);
+      }
     }
   };
 
   return (
     <div>
-      <div className="sm:flex sm:items-center mb-8">
+      <div className="sm:flex sm:items-center sm:justify-between mb-8 gap-4 flex-wrap">
         <div className="sm:flex-auto">
           <h1 className="text-2xl font-bold leading-6 text-gray-900">{t('priceList.title', 'Price Lists (قوائم الأسعار)')}</h1>
           <p className="mt-2 text-sm text-gray-700">{t('priceList.subtitle', 'Manage your price lists and display them in the required grid format.')}</p>
         </div>
-        <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+        
+        <div className="mt-4 sm:mt-0 flex items-center gap-4 flex-wrap">
+          {/* Filter Dropdown Button */}
+          <div className="relative inline-block text-left" ref={filterRef}>
+            <button
+              type="button"
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className="inline-flex items-center justify-center gap-x-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors"
+            >
+              <FunnelIcon className="h-5 w-5 text-gray-500" aria-hidden="true" />
+              Filter
+              {(departureFilter || destinationFilter) && (
+                <span className="flex h-2 w-2 rounded-full bg-indigo-600 absolute top-1.5 right-1.5"></span>
+              )}
+            </button>
+
+            {isFilterOpen && (
+              <div className="absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-xl bg-white shadow-xl ring-1 ring-slate-200 focus:outline-none p-3 transition-all overflow-hidden">
+                
+                {filterView === 'main' && (
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-800 mb-2">{t('priceList.addFilter', 'Add Filter')}</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      
+                      <button 
+                        onClick={() => setFilterView('departure')}
+                        className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${departureFilter ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 hover:border-indigo-200 hover:bg-slate-50'}`}
+                      >
+                        <PaperAirplaneIcon className={`w-5 h-5 mb-1 ${departureFilter ? 'text-indigo-600' : 'text-slate-500'}`} />
+                        <span className={`text-[11px] font-semibold ${departureFilter ? 'text-indigo-700' : 'text-slate-600'}`}>
+                          {t('priceList.departure', 'Departure')}
+                        </span>
+                      </button>
+
+                      <button 
+                        onClick={() => setFilterView('destination')}
+                        className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${destinationFilter ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 hover:border-indigo-200 hover:bg-slate-50'}`}
+                      >
+                        <MapPinIcon className={`w-5 h-5 mb-1 ${destinationFilter ? 'text-indigo-600' : 'text-slate-500'}`} />
+                        <span className={`text-[11px] font-semibold ${destinationFilter ? 'text-indigo-700' : 'text-slate-600'}`}>
+                          {t('priceList.destination', 'Destination')}
+                        </span>
+                      </button>
+                      
+                    </div>
+
+                    {/* Clear Filters */}
+                    {(departureFilter || destinationFilter) && (
+                      <div className="mt-4 pt-3 border-t border-slate-100">
+                        <button
+                          onClick={() => { setDepartureFilter(''); setDestinationFilter(''); }}
+                          className="w-full py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg text-center font-bold transition-colors"
+                        >
+                          {t('priceList.clearFilters', 'مسح الفلاتر')}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {filterView === 'departure' && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                       <button onClick={() => setFilterView('main')} className="p-1 hover:bg-slate-100 rounded-lg text-slate-500"><ChevronLeftIcon className="w-5 h-5"/></button>
+                       <h3 className="text-sm font-bold text-slate-800">{t('priceList.selectDeparture', 'Select Departure')}</h3>
+                    </div>
+                    <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                       <button 
+                          onClick={() => { setDepartureFilter(''); setFilterView('main'); }}
+                          className={`w-full text-start px-3 py-2 rounded-lg text-sm font-medium ${!departureFilter ? 'bg-indigo-500 text-white' : 'text-slate-700 hover:bg-slate-100'}`}
+                       >
+                          {t('priceList.allDepartures', 'الكل (All)')}
+                       </button>
+                       {[...new Set(priceLists.flatMap(pl => (pl.groups || []).map(g => g.departureAirport?.trim())).filter(Boolean))].sort().map(dep => (
+                         <button 
+                            key={dep}
+                            onClick={() => { setDepartureFilter(dep); setFilterView('main'); }}
+                            className={`w-full text-start px-3 py-2 rounded-lg text-sm font-medium ${departureFilter === dep ? 'bg-indigo-500 text-white' : 'text-slate-700 hover:bg-slate-100'}`}
+                         >
+                            {dep}
+                         </button>
+                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {filterView === 'destination' && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                       <button onClick={() => setFilterView('main')} className="p-1 hover:bg-slate-100 rounded-lg text-slate-500"><ChevronLeftIcon className="w-5 h-5"/></button>
+                       <h3 className="text-sm font-bold text-slate-800">{t('priceList.selectDestination', 'Select Destination')}</h3>
+                    </div>
+                    <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                       <button 
+                          onClick={() => { setDestinationFilter(''); setFilterView('main'); }}
+                          className={`w-full text-start px-3 py-2 rounded-lg text-sm font-medium ${!destinationFilter ? 'bg-indigo-500 text-white' : 'text-slate-700 hover:bg-slate-100'}`}
+                       >
+                          {t('priceList.allDestinations', 'الكل (All)')}
+                       </button>
+                       {[...new Set(priceLists.flatMap(pl => (pl.groups || []).map(g => g.destination?.trim())).filter(Boolean))].sort().map(dest => (
+                         <button 
+                            key={dest}
+                            onClick={() => { setDestinationFilter(dest); setFilterView('main'); }}
+                            className={`w-full text-start px-3 py-2 rounded-lg text-sm font-medium ${destinationFilter === dest ? 'bg-indigo-500 text-white' : 'text-slate-700 hover:bg-slate-100'}`}
+                         >
+                            {dest}
+                         </button>
+                       ))}
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            )}
+          </div>
+
           {canCreate && (
             <button
               onClick={handleCreate}
@@ -94,7 +238,19 @@ export const PriceListDataPage = () => {
           <div className="text-center py-10 text-gray-500 bg-white rounded-lg shadow">{t('priceList.empty.title', 'No price lists found.')}</div>
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            {priceLists.map((pl) => {
+            {priceLists.map(pl => {
+              if (departureFilter || destinationFilter) {
+                return {
+                  ...pl,
+                  groups: (pl.groups || []).filter(g => {
+                    const matchDep = !departureFilter || g.departureAirport?.trim() === departureFilter;
+                    const matchDest = !destinationFilter || g.destination?.trim() === destinationFilter;
+                    return matchDep && matchDest;
+                  })
+                };
+              }
+              return pl;
+            }).filter(pl => (!departureFilter && !destinationFilter) || (pl.groups && pl.groups.length > 0)).map((pl) => {
               return (
                 <div key={pl.id} className="bg-white p-6 shadow-md ring-1 ring-gray-900/5 sm:rounded-xl h-fit">
                   {/* Header of the Price List */}
@@ -145,10 +301,16 @@ export const PriceListDataPage = () => {
                               <table className="w-full text-start">
                                 <thead>
                                   <tr className="bg-gray-50/50 border-b border-gray-100">
-                                    <th className="px-6 py-3 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/2">
+                                    <th className="px-6 py-3 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/4">
                                       {t('priceList.type', 'نوع المسافر')}
                                     </th>
-                                    <th className="px-6 py-3 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/2">
+                                    <th className="px-6 py-3 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/4">
+                                      {t('priceList.basePrice', 'السعر الأساسي')}
+                                    </th>
+                                    <th className="px-6 py-3 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/4">
+                                      {t('priceList.commission', 'العمولة')}
+                                    </th>
+                                    <th className="px-6 py-3 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/4">
                                       {t('priceList.total', 'السعر الإجمالي')}
                                     </th>
                                   </tr>
@@ -156,13 +318,23 @@ export const PriceListDataPage = () => {
                                 <tbody className="divide-y divide-gray-100">
                                   {group.entries && group.entries.map((entry) => {
                                     const passengerTypeTrans = t(`passengerType.${entry.passengerType}`, entry.passengerType);
+                                    const basePrice = Number(entry.price) || 0;
+                                    const commission = Number(entry.commission) || 0;
+                                    const total = basePrice + commission;
+                                    
                                     return (
                                       <tr key={entry.id} className="hover:bg-indigo-50/30 transition-colors">
                                         <td className="px-6 py-4 text-sm font-medium text-gray-900">
                                           {passengerTypeTrans}
                                         </td>
+                                        <td className="px-6 py-4 text-sm font-medium text-gray-600">
+                                          {basePrice.toLocaleString()} <span className="text-xs text-gray-400 font-normal">{entry.currency || 'EGP'}</span>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm font-medium text-orange-600">
+                                          {commission.toLocaleString()} <span className="text-xs text-gray-400 font-normal">{entry.currency || 'EGP'}</span>
+                                        </td>
                                         <td className="px-6 py-4 text-sm font-bold text-indigo-600">
-                                          {entry.price.toLocaleString()} <span className="text-xs text-gray-400 font-normal">{entry.currency || 'EGP'}</span>
+                                          {total.toLocaleString()} <span className="text-xs text-gray-400 font-normal">{entry.currency || 'EGP'}</span>
                                         </td>
                                       </tr>
                                     );
@@ -188,6 +360,18 @@ export const PriceListDataPage = () => {
           priceList={editingPriceList}
           onClose={handleModalClose}
         />
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed top-24 right-8 z-50 animate-fade-in-up">
+          <div className="flex items-center gap-3 bg-white px-4 py-3 rounded-xl shadow-lg border-l-4 border-green-500 text-slate-800 font-medium">
+            <div className="bg-green-100 p-1.5 rounded-full">
+              <CheckIcon className="w-5 h-5 text-green-600" />
+            </div>
+            {toast}
+          </div>
+        </div>
       )}
     </div>
   );

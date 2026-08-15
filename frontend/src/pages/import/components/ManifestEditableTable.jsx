@@ -25,7 +25,7 @@ const CategoryPill = ({ category, options }) => {
   );
 };
 
-export const ManifestEditableTable = ({ batchId, rows, onRowUpdated }) => {
+export const ManifestEditableTable = ({ batchId, rows, onRowUpdated, selectedRows, setSelectedRows }) => {
   const { t } = useTranslation();
   const [editingRowId, setEditingRowId] = useState(null);
   const [editFormData, setEditFormData] = useState({});
@@ -54,6 +54,25 @@ export const ManifestEditableTable = ({ batchId, rows, onRowUpdated }) => {
     }
   };
 
+  const toggleSelection = (rowId) => {
+    const next = new Set(selectedRows);
+    if (next.has(rowId)) next.delete(rowId);
+    else next.add(rowId);
+    setSelectedRows(next);
+  };
+
+  const toggleSelectAll = () => {
+    if (rows.length === 0) return;
+    const allSelected = rows.every(r => selectedRows.has(r.id));
+    const next = new Set(selectedRows);
+    if (allSelected) {
+      rows.forEach(r => next.delete(r.id));
+    } else {
+      rows.forEach(r => next.add(r.id));
+    }
+    setSelectedRows(next);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setEditFormData({ ...editFormData, [name]: value });
@@ -73,18 +92,26 @@ export const ManifestEditableTable = ({ batchId, rows, onRowUpdated }) => {
         <table className="w-full text-left border-collapse whitespace-nowrap">
           <thead>
             <tr className="border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
-              <th className="py-4 px-4">#</th>
-              <th className="py-4 px-4">{t('import.col.passengerName', 'الاسم')}</th>
-              <th className="py-4 px-4">{t('import.col.passport', 'رقم الجواز')}</th>
-              <th className="py-4 px-4">{t('import.col.category', 'النوع')}</th>
-              <th className="py-4 px-4">{t('import.col.agent', 'الوكيل')}</th>
-              <th className="py-4 px-4">{t('import.col.departureDate', 'تاريخ المغادرة')}</th>
-              <th className="py-4 px-4">{t('import.col.flight', 'رقم الرحلة')}</th>
-              <th className="py-4 px-4">{t('import.col.destination', 'جهة المغادرة')}</th>
-              <th className="py-4 px-4">{t('import.col.departurePort', 'المنفذ')}</th>
-              <th className="py-4 px-4">{t('import.col.birthDate', 'تاريخ الميلاد')}</th>
-              <th className="py-4 px-4">{t('import.col.arrivalTime', 'ميعاد الوصول')}</th>
-              <th className="py-4 px-4">{t('import.col.serviceType', 'نوع الخدمة')}</th>
+              <th className="py-4 px-4 w-12">
+                <input 
+                  type="checkbox" 
+                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 cursor-pointer w-4 h-4"
+                  checked={rows.length > 0 && rows.every(r => selectedRows.has(r.id))}
+                  onChange={toggleSelectAll}
+                />
+              </th>
+              <th className="py-4 px-2">#</th>
+              <th className="py-4 px-4">{t('import.col.passengerName', 'Passenger Name')}</th>
+              <th className="py-4 px-4">{t('import.col.passport', 'Passport')}</th>
+              <th className="py-4 px-4">{t('import.col.category', 'Category')}</th>
+              <th className="py-4 px-4">{t('import.col.agent', 'Agent (Excel)')}</th>
+              <th className="py-4 px-4">{t('import.col.departureDate', 'Dep. Date')}</th>
+              <th className="py-4 px-4">{t('import.col.flight', 'Flight')}</th>
+              <th className="py-4 px-4">{t('import.col.destination', 'Destination')}</th>
+              <th className="py-4 px-4">{t('import.col.departurePort', 'Dep. Port')}</th>
+              <th className="py-4 px-4">{t('import.col.birthDate', 'Birth Date')}</th>
+              <th className="py-4 px-4">{t('import.col.arrivalTime', 'Arrival Time')}</th>
+              <th className="py-4 px-4">{t('import.col.serviceType', 'Service Type')}</th>
               <th className="py-4 px-4">Status</th>
               <th className="py-4 px-4 text-center">Action</th>
             </tr>
@@ -97,10 +124,18 @@ export const ManifestEditableTable = ({ batchId, rows, onRowUpdated }) => {
               return (
                 <tr 
                   key={row.id} 
-                  className={`hover:bg-slate-50/50 transition-colors ${isError && !isEditing ? 'bg-red-50/20' : ''}`}
+                  className={`hover:bg-slate-50/50 transition-colors ${isError && !isEditing ? 'bg-red-50/20' : ''} ${selectedRows.has(row.id) ? 'bg-indigo-50/30' : ''}`}
                 >
-                  <td className="py-3 px-4 text-sm text-slate-500 font-medium">
-                    {row.rowNumber}
+                  <td className="py-3 px-4 w-12">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 cursor-pointer w-4 h-4"
+                      checked={selectedRows.has(row.id)}
+                      onChange={() => toggleSelection(row.id)}
+                    />
+                  </td>
+                  <td className="py-3 px-2 text-sm text-slate-500 font-medium">
+                    {row.rowNumber > 0 ? row.rowNumber - 1 : row.rowNumber}
                   </td>
                   
                   {/* Name */}

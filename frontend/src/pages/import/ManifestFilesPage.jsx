@@ -1,15 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { getBatches } from '../../api/manifestImport.api';
-import { DocumentTextIcon, PencilSquareIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { getBatches, deleteManifestBatches } from '../../api/manifestImport.api';
+import { DocumentTextIcon, PencilSquareIcon, CheckCircleIcon, ExclamationTriangleIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { PlaneLoader } from './components/PlaneLoader';
+import { Pagination } from '../../components/ui/Pagination';
 
 export const ManifestFilesPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [batches, setBatches] = useState([]);
+  const [selectedBatchIds, setSelectedBatchIds] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState(null);
+  const [toast, setToast] = useState(null);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchBatches();
@@ -18,10 +26,11 @@ export const ManifestFilesPage = () => {
   const fetchBatches = async () => {
     setLoading(true);
     try {
-      const res = await getBatches({ size: 50, sort: 'createdAt,desc' });
-      // Depending on axios response interceptor, data might be unwrapped
+      const res = await getBatches({ size: 1000, sort: 'createdAt,desc' }); // increased size for client pagination
       const data = res.data || res;
       setBatches(data.content || []);
+      setSelectedBatchIds([]); // reset selection on fetch
+      setCurrentPage(1);
     } catch (err) {
       console.error(err);
       setError(t('files.errorLoad', 'Failed to load files history'));
@@ -32,6 +41,40 @@ export const ManifestFilesPage = () => {
 
   const handleContinueEditing = (batchId) => {
     navigate(`/import?batchId=${batchId}`);
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedBatchIds(batches.map(b => b.id));
+    } else {
+      setSelectedBatchIds([]);
+    }
+  };
+
+  const handleSelectRow = (batchId) => {
+    setSelectedBatchIds(prev => 
+      prev.includes(batchId) ? prev.filter(id => id !== batchId) : [...prev, batchId]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedBatchIds.length === 0) return;
+    if (window.confirm(t('files.confirmBulkDelete', `Are you sure you want to delete ${selectedBatchIds.length} file(s)?`))) {
+      setDeleting(true);
+      try {
+        await deleteManifestBatches(selectedBatchIds);
+        await fetchBatches();
+        
+        // Show Toast
+        setToast(t('files.deleteSuccess', 'تم مسح الملفات بنجاح / Files deleted successfully'));
+        setTimeout(() => setToast(null), 3000);
+      } catch (err) {
+        console.error(err);
+        setError(t('files.errorDelete', 'Failed to delete the selected files'));
+      } finally {
+        setDeleting(false);
+      }
+    }
   };
 
   return (
@@ -45,6 +88,22 @@ export const ManifestFilesPage = () => {
             {t('files.subtitle', 'View previously uploaded manifest files, check their status, or continue editing drafts.')}
           </p>
         </div>
+        
+        {/* Bulk Actions Top Bar */}
+        {selectedBatchIds.length > 0 && (
+          <div className="mt-4 flex md:ml-4 md:mt-0 items-center gap-4 bg-red-50 px-4 py-2 rounded-lg border border-red-100">
+            <span className="text-sm font-medium text-red-800">
+              {selectedBatchIds.length} {t('files.selected', 'Selected')}
+            </span>
+            <button
+              onClick={handleBulkDelete}
+              className="inline-flex items-center gap-2 rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 transition-colors"
+            >
+              <TrashIcon className="h-4 w-4" />
+              {t('files.deleteAll', 'Delete Selected')}
+            </button>
+          </div>
+        )}
       </div>
 
       {error && (
@@ -58,6 +117,14 @@ export const ManifestFilesPage = () => {
           <table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-slate-50">
               <tr>
+                <th scope="col" className="px-6 py-4 text-left">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 cursor-pointer"
+                    onChange={handleSelectAll}
+                    checked={batches.length > 0 && selectedBatchIds.length === batches.length}
+                  />
+                </th>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   {t('files.col.fileName', 'File Name')}
                 </th>
@@ -81,19 +148,27 @@ export const ManifestFilesPage = () => {
             <tbody className="bg-white divide-y divide-slate-200">
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-10 text-center text-slate-500">
+                  <td colSpan="7" className="px-6 py-10 text-center text-slate-500">
                     {t('common.loading', 'Loading...')}
                   </td>
                 </tr>
               ) : batches.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-10 text-center text-slate-500">
+                  <td colSpan="7" className="px-6 py-10 text-center text-slate-500">
                     {t('files.noFiles', 'No files found.')}
                   </td>
                 </tr>
               ) : (
-                batches.map((batch) => (
-                  <tr key={batch.id} className="hover:bg-slate-50 transition-colors">
+                batches.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((batch) => (
+                  <tr key={batch.id} className={`transition-colors ${selectedBatchIds.includes(batch.id) ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 cursor-pointer"
+                        checked={selectedBatchIds.includes(batch.id)}
+                        onChange={() => handleSelectRow(batch.id)}
+                      />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <DocumentTextIcon className="w-6 h-6 text-indigo-500" />
@@ -144,7 +219,32 @@ export const ManifestFilesPage = () => {
             </tbody>
           </table>
         </div>
+        
+        {batches.length > itemsPerPage && (
+          <div className="border-t border-slate-200 px-4 py-4 sm:px-6">
+            <Pagination 
+              currentPage={currentPage} 
+              totalPages={Math.ceil(batches.length / itemsPerPage)} 
+              onPageChange={setCurrentPage} 
+            />
+          </div>
+        )}
       </div>
+
+      {/* Loading Overlay */}
+      {deleting && <PlaneLoader text={t('files.deletingLoader', 'جاري المسح...')} />}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed top-24 right-8 z-50 animate-fade-in-up">
+          <div className="flex items-center gap-3 bg-white px-4 py-3 rounded-xl shadow-lg border-l-4 border-green-500 text-slate-800 font-medium">
+            <div className="bg-green-100 p-1.5 rounded-full">
+              <CheckIcon className="w-5 h-5 text-green-600" />
+            </div>
+            {toast}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

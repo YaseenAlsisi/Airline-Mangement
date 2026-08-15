@@ -1,12 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { previewManifestImport, publishManifestImport, getBatchPreview } from '../../api/manifestImport.api';
-import { DocumentArrowUpIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { previewManifestImport, publishManifestImport, getBatchPreview, deleteManifestRowsBulk } from '../../api/manifestImport.api';
+import { DocumentArrowUpIcon, CheckCircleIcon, ExclamationTriangleIcon, CheckIcon, FunnelIcon, ArrowUpTrayIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import { ManifestEditableGrid } from './components/ManifestEditableGrid';
 import { ManifestEditableTable } from './components/ManifestEditableTable';
 import { PlaneLoader } from './components/PlaneLoader';
 import { Squares2X2Icon, ListBulletIcon } from '@heroicons/react/24/outline';
+import { Pagination } from '../../components/ui/Pagination';
+
 export const ImportDataPage = () => {
   const { t } = useTranslation();
   const [file, setFile] = useState(null);
@@ -16,7 +18,12 @@ export const ImportDataPage = () => {
   const [batch, setBatch] = useState(null);
   const [rows, setRows] = useState([]);
   const [error, setError] = useState(null);
+  const [toast, setToast] = useState(null);
   const [viewMode, setViewMode] = useState('table');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [selectedRows, setSelectedRows] = useState(new Set());
+  
   const fileInputRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -26,9 +33,6 @@ export const ImportDataPage = () => {
       setUploading(true);
       try {
         const res = await getBatchPreview(id);
-        setBatch(res.data || res); // axios unwrap handled by interceptor or manually? The previous code uses res directly or res.data depending on axios setup.
-        // wait, the previous code uses: const res = await previewManifestImport(file); setBatch(res);
-        // this implies interceptor returns res.data.
         const batchData = res.data || res;
         setBatch(batchData);
         setRows(batchData.rows || []);
@@ -46,13 +50,10 @@ export const ImportDataPage = () => {
     
     if (urlBatchId) {
       loadBatch(urlBatchId);
-      // clean URL
-      searchParams.delete('batchId');
-      setSearchParams(searchParams, { replace: true });
     } else if (sessionBatchId) {
       loadBatch(sessionBatchId);
     }
-  }, []);
+  }, [searchParams.get('batchId')]);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -83,6 +84,7 @@ export const ImportDataPage = () => {
       setError(null);
       setBatch(null);
       setRows([]);
+      setCurrentPage(1);
     } else {
       setFile(null);
       setError(t('import.error.invalidFile', "Please select a valid Excel file (.xlsx or .xls)"));
@@ -101,9 +103,12 @@ export const ImportDataPage = () => {
       const batchData = res.data || res;
       setBatch(batchData);
       setRows(batchData.rows || []);
+      setCurrentPage(1);
       if (batchData.id) {
         sessionStorage.setItem('activeManifestBatchId', batchData.id);
       }
+      setToast(t('import.uploadSuccess', 'تم رفع البيانات بنجاح / Data imported successfully'));
+      setTimeout(() => setToast(null), 3000);
     } catch (err) {
       let errorObj = err.response?.data?.error;
       let apiMsg = err.response?.data?.message || err.response?.data?.detail;
@@ -136,6 +141,59 @@ export const ImportDataPage = () => {
     setBatch(prev => ({ ...prev, validRows: validCount, invalidRows: invalidCount }));
   };
 
+  const handleRowDeleted = (deletedRowId) => {
+    const newRows = rows.filter(r => r.id !== deletedRowId);
+    setRows(newRows);
+    
+    // Recalculate valid/invalid rows
+    let validCount = 0;
+    let invalidCount = 0;
+    newRows.forEach(r => {
+      if (r.validationStatus === 'VALID') validCount++;
+      else invalidCount++;
+    });
+    setBatch(prev => ({ 
+      ...prev, 
+      totalRows: newRows.length,
+      validRows: validCount, 
+      invalidRows: invalidCount 
+    }));
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedRows.size === 0) return;
+    if (!window.confirm(t('import.bulkDeleteConfirm', `Are you sure you want to delete ${selectedRows.size} selected row(s)?`))) {
+      return;
+    }
+    
+    try {
+      const rowIds = Array.from(selectedRows);
+      await deleteManifestRowsBulk(batch.id, rowIds);
+      
+      const newRows = rows.filter(r => !selectedRows.has(r.id));
+      setRows(newRows);
+      setSelectedRows(new Set());
+      
+      let validCount = 0;
+      let invalidCount = 0;
+      newRows.forEach(r => {
+        if (r.validationStatus === 'VALID') validCount++;
+        else invalidCount++;
+      });
+      setBatch(prev => ({ 
+        ...prev, 
+        totalRows: newRows.length,
+        validRows: validCount, 
+        invalidRows: invalidCount 
+      }));
+      setToast(t('import.bulkDeleteSuccess', 'تم حذف الصفوف المحددة بنجاح'));
+      setTimeout(() => setToast(null), 3000);
+    } catch (err) {
+      console.error(err);
+      alert(t('import.bulkDeleteError', 'Failed to delete selected rows'));
+    }
+  };
+
   const handlePublish = async () => {
     if (!batch) return;
     setPublishing(true);
@@ -145,7 +203,13 @@ export const ImportDataPage = () => {
       const batchData = res.data || res;
       setBatch(batchData);
       sessionStorage.removeItem('activeManifestBatchId');
-      alert(t('import.publishSuccess', 'Successfully published manifest data!'));
+      
+      setToast(t('import.publishSuccess', 'تم نشر البيانات بنجاح / Successfully published!'));
+      
+      setTimeout(() => {
+        setToast(null);
+        resetState();
+      }, 4000);
     } catch (err) {
       let errorObj = err.response?.data?.error;
       let apiMsg = err.response?.data?.message || err.response?.data?.detail;
@@ -165,13 +229,23 @@ export const ImportDataPage = () => {
     }
   };
 
+  const resetState = () => {
+    setBatch(null);
+    setRows([]);
+    setCurrentPage(1);
+    setFile(null);
+    setError(null);
+    setSelectedRows(new Set());
+    sessionStorage.removeItem('activeManifestBatchId');
+    if (searchParams.has('batchId')) {
+      searchParams.delete('batchId');
+      setSearchParams(searchParams, { replace: true });
+    }
+  };
+
   const handleClear = () => {
     if (window.confirm(t('import.confirmClear', 'Are you sure you want to discard this entire file and start over?'))) {
-      setBatch(null);
-      setRows([]);
-      setFile(null);
-      setError(null);
-      sessionStorage.removeItem('activeManifestBatchId');
+      resetState();
     }
   };
 
@@ -308,8 +382,49 @@ export const ImportDataPage = () => {
 
             {batch.status === 'DRAFT' && rows.length > 0 && (
               <>
-                <div className="flex justify-end mb-4 gap-2">
-                  <div className="flex bg-slate-100 p-1 rounded-lg">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+                  {/* Left Controls */}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-slate-500">{t('import.showing', 'Showing')}</span>
+                      <select 
+                        className="bg-indigo-50 border-none text-indigo-700 text-sm rounded-lg focus:ring-indigo-500 block p-2 cursor-pointer font-semibold outline-none"
+                        style={{backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%234338ca' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: `right 0.5rem center`, backgroundRepeat: `no-repeat`, backgroundSize: `1.5em 1.5em`, paddingRight: '2.5rem', appearance: 'none', WebkitAppearance: 'none'}}
+                        value={rowsPerPage}
+                        onChange={(e) => {
+                          setRowsPerPage(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
+                      >
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                    </div>
+
+                    {selectedRows.size > 0 && (
+                      <button 
+                        onClick={handleBulkDelete}
+                        className="inline-flex items-center gap-2 rounded-lg bg-red-50 text-red-600 px-4 py-2 text-sm font-bold shadow-sm ring-1 ring-inset ring-red-200 hover:bg-red-100 transition-colors"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                        {t('import.deleteSelected', 'حذف المحدد')} ({selectedRows.size})
+                      </button>
+                    )}
+
+                    <button type="button" className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 hover:bg-slate-50 transition-colors">
+                      <FunnelIcon className="h-4 w-4 text-slate-500" />
+                      {t('import.filter', 'Filter')}
+                    </button>
+                    <button type="button" className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 hover:bg-slate-50 transition-colors">
+                      <ArrowUpTrayIcon className="h-4 w-4 text-slate-500" />
+                      {t('import.export', 'Export')}
+                    </button>
+                  </div>
+
+                  {/* Right Controls */}
+                  <div className="flex bg-slate-100 p-1 rounded-lg shrink-0">
                     <button 
                       onClick={() => setViewMode('table')}
                       className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === 'table' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
@@ -327,15 +442,39 @@ export const ImportDataPage = () => {
                   </div>
                 </div>
                 {viewMode === 'grid' ? (
-                  <ManifestEditableGrid batchId={batch.id} rows={rows} onRowUpdated={handleRowUpdated} />
+                  <ManifestEditableGrid 
+                    batchId={batch.id} 
+                    rows={rows.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)} 
+                    onRowUpdated={handleRowUpdated} 
+                    selectedRows={selectedRows}
+                    setSelectedRows={setSelectedRows}
+                  />
                 ) : (
-                  <ManifestEditableTable batchId={batch.id} rows={rows} onRowUpdated={handleRowUpdated} />
+                  <ManifestEditableTable 
+                    batchId={batch.id} 
+                    rows={rows.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)} 
+                    onRowUpdated={handleRowUpdated} 
+                    selectedRows={selectedRows}
+                    setSelectedRows={setSelectedRows}
+                  />
                 )}
+                
+                <Pagination 
+                  currentPage={currentPage} 
+                  totalPages={Math.ceil(rows.length / rowsPerPage)} 
+                  onPageChange={setCurrentPage} 
+                />
               </>
             )}
             {batch.status === 'PUBLISHED' && (
-               <div className="text-center py-10 bg-gray-50 rounded-lg text-gray-600">
-                 {t('import.viewInAgents', 'Data is now live. View passenger manifests in the Agent Data page.')}
+               <div className="text-center py-10 bg-gray-50 rounded-lg text-gray-600 flex flex-col items-center justify-center gap-4 border border-gray-200 mt-6">
+                 <p className="text-lg font-medium">{t('import.viewInAgents', 'Data is now live. View passenger manifests in the Agent Data page.')}</p>
+                 <button 
+                   onClick={resetState}
+                   className="inline-flex items-center rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-indigo-500 transition-colors"
+                 >
+                   {t('import.uploadAnother', 'رفع ملف آخر (Upload Another File)')}
+                 </button>
                </div>
             )}
           </div>
@@ -344,6 +483,18 @@ export const ImportDataPage = () => {
 
       {/* Render Loader Overlay */}
       {uploading && <PlaneLoader text={t('import.processingLoader', 'جاري معالجة البيانات...')} onCancel={() => setUploading(false)} />}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed top-24 right-8 z-50 animate-fade-in-up">
+          <div className="flex items-center gap-3 bg-white px-4 py-3 rounded-xl shadow-lg border-l-4 border-green-500 text-slate-800 font-medium">
+            <div className="bg-green-100 p-1.5 rounded-full">
+              <CheckIcon className="w-5 h-5 text-green-600" />
+            </div>
+            {toast}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
