@@ -57,7 +57,16 @@ export const ImportDataPage = () => {
       const res = await importTransactions(file);
       setResult(res.data?.content || null);
     } catch (err) {
-      setError(err.response?.data?.error?.message || "An error occurred during import");
+      console.error("Import error details:", err, err.response?.data);
+      let errMsg = "An error occurred during import";
+      if (err.response?.data?.error?.message) {
+        errMsg = err.response.data.error.message;
+      } else if (typeof err.response?.data?.error === 'string') {
+        errMsg = err.response.data.error; // e.g. "Payload Too Large"
+      } else if (err.message) {
+        errMsg = err.message; // e.g. "Network Error"
+      }
+      setError(errMsg);
     } finally {
       setUploading(false);
     }
