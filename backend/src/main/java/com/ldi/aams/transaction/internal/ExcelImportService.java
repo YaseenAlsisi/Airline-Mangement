@@ -19,9 +19,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -38,9 +36,12 @@ public class ExcelImportService {
         }
 
         int totalRows = 0;
-        int successful = 0;
         int failed = 0;
         List<String> errors = new ArrayList<>();
+        List<TransactionDto.CreateTransactionRequest> batchRequests = new ArrayList<>();
+        
+        Map<String, UUID> airlineCache = new HashMap<>();
+        Map<String, UUID> agentCache = new HashMap<>();
 
         try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
             Sheet sheet = workbook.getSheetAt(0);
@@ -57,8 +58,7 @@ public class ExcelImportService {
 
                 totalRows++;
                 try {
-                    processRow(row);
-                    successful++;
+                    processRow(row, batchRequests, airlineCache, agentCache);
                 } catch (Exception e) {
                     failed++;
                     errors.add("Row " + (row.getRowNum() + 1) + ": " + e.getMessage());
@@ -66,6 +66,20 @@ public class ExcelImportService {
             }
         } catch (Exception e) {
             throw new BusinessException("Failed to process Excel file: " + e.getMessage(), "IMPORT_FAILED");
+        }
+
+        int successful = 0;
+        if (!batchRequests.isEmpty()) {
+            try {
+                List<TransactionDto.TransactionResponse> saved = transactionService.createTransactionsBatch(batchRequests);
+                successful = saved.size();
+                int duplicates = batchRequests.size() - successful;
+                if (duplicates > 0) {
+                    errors.add("Skipped " + duplicates + " row(s) because the ticket numbers already exist in the database.");
+                }
+            } catch (Exception e) {
+                throw new BusinessException("Failed to save batch to database: " + e.getMessage(), "BATCH_SAVE_FAILED");
+            }
         }
 
         return ImportDto.ImportResult.builder()
@@ -76,7 +90,7 @@ public class ExcelImportService {
                 .build();
     }
 
-    private void processRow(Row row) {
+    private void processRow(Row row, List<TransactionDto.CreateTransactionRequest> batchRequests, Map<String, UUID> airlineCache, Map<String, UUID> agentCache) {
         String ticketNumber = getCellAsString(row.getCell(0));
         String pnr = getCellAsString(row.getCell(1));
         String passengerName = getCellAsString(row.getCell(2));
@@ -107,22 +121,40 @@ public class ExcelImportService {
             throw new IllegalArgumentException("Issue date is missing");
         }
 
-        // Lookup airline and agent
-        Optional<Airline> airlineOpt = airlineCode != null && !airlineCode.isBlank() ? airlineRepository.findByCode(airlineCode) : Optional.empty();
-        Optional<Agent> agentOpt = agentCode != null && !agentCode.isBlank() ? agentRepository.findByCode(agentCode) : Optional.empty();
+        UUID airlineId = null;
+        if (airlineCode != null && !airlineCode.isBlank()) {
+            if (airlineCache.containsKey(airlineCode)) {
+                airlineId = airlineCache.get(airlineCode);
+            } else {
+                Optional<Airline> airlineOpt = airlineRepository.findByCode(airlineCode);
+                airlineId = airlineOpt.map(Airline::getId).orElse(null);
+                airlineCache.put(airlineCode, airlineId);
+            }
+        }
+
+        UUID agentId = null;
+        if (agentCode != null && !agentCode.isBlank()) {
+            if (agentCache.containsKey(agentCode)) {
+                agentId = agentCache.get(agentCode);
+            } else {
+                Optional<Agent> agentOpt = agentRepository.findByCode(agentCode);
+                agentId = agentOpt.map(Agent::getId).orElse(null);
+                agentCache.put(agentCode, agentId);
+            }
+        }
 
         TransactionDto.CreateTransactionRequest request = TransactionDto.CreateTransactionRequest.builder()
                 .ticketNumber(ticketNumber)
                 .pnr(pnr)
                 .passengerName(passengerName)
-                .airlineId(airlineOpt.map(Airline::getId).orElse(null))
-                .agentId(agentOpt.map(Agent::getId).orElse(null))
+                .airlineId(airlineId)
+                .agentId(agentId)
                 .issueDate(issueDate)
                 .baseFare(baseFare)
                 .tax(tax)
                 .build();
 
-        transactionService.createTransaction(request);
+        batchRequests.add(request);
     }
 
     private boolean isRowEmpty(Row row) {

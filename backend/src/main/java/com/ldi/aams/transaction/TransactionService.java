@@ -14,7 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -54,9 +55,49 @@ public class TransactionService {
                 .status(request.getStatus() != null ? request.getStatus() : "PENDING")
                 .build();
 
-        calculateFinancials(transaction);
+        calculateFinancials(transaction, null);
 
         return transactionMapper.toResponse(transactionRepository.save(transaction));
+    }
+
+    @Transactional
+    public List<TransactionDto.TransactionResponse> createTransactionsBatch(List<TransactionDto.CreateTransactionRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Set<String> ticketNumbers = requests.stream()
+                .map(TransactionDto.CreateTransactionRequest::getTicketNumber)
+                .collect(Collectors.toSet());
+
+        Set<String> existingTickets = transactionRepository.findExistingTicketNumbers(ticketNumbers);
+
+        List<Transaction> transactionsToSave = new ArrayList<>();
+        Map<String, PriceListDto.PriceListResponse> priceListCache = new HashMap<>();
+
+        for (TransactionDto.CreateTransactionRequest request : requests) {
+            if (existingTickets.contains(request.getTicketNumber())) {
+                continue; // Skip existing ticket numbers in batch
+            }
+
+            Transaction transaction = Transaction.builder()
+                    .ticketNumber(request.getTicketNumber())
+                    .pnr(request.getPnr())
+                    .passengerName(request.getPassengerName())
+                    .airlineId(request.getAirlineId())
+                    .agentId(request.getAgentId())
+                    .issueDate(request.getIssueDate())
+                    .baseFare(request.getBaseFare())
+                    .tax(request.getTax())
+                    .status(request.getStatus() != null ? request.getStatus() : "PENDING")
+                    .build();
+
+            calculateFinancials(transaction, priceListCache);
+            transactionsToSave.add(transaction);
+        }
+
+        List<Transaction> savedTransactions = transactionRepository.saveAll(transactionsToSave);
+        return savedTransactions.stream().map(transactionMapper::toResponse).collect(Collectors.toList());
     }
 
     @Transactional
@@ -76,21 +117,35 @@ public class TransactionService {
             transaction.setStatus(request.getStatus());
         }
 
-        calculateFinancials(transaction);
+        calculateFinancials(transaction, null);
 
         return transactionMapper.toResponse(transactionRepository.save(transaction));
     }
 
-    private void calculateFinancials(Transaction transaction) {
+    private void calculateFinancials(Transaction transaction, Map<String, PriceListDto.PriceListResponse> cache) {
         BigDecimal totalFare = transaction.getBaseFare().add(transaction.getTax());
         transaction.setTotalFare(totalFare);
 
-        // Find applicable price list
-        PriceListDto.PriceListResponse priceList = priceListService.findBestPriceList(
-                transaction.getAgentId(), 
-                transaction.getAirlineId(), 
-                transaction.getIssueDate()
-        );
+        PriceListDto.PriceListResponse priceList;
+        if (cache != null) {
+            String key = transaction.getAgentId() + "_" + transaction.getAirlineId() + "_" + transaction.getIssueDate();
+            if (cache.containsKey(key)) {
+                priceList = cache.get(key);
+            } else {
+                priceList = priceListService.findBestPriceList(
+                        transaction.getAgentId(), 
+                        transaction.getAirlineId(), 
+                        transaction.getIssueDate()
+                );
+                cache.put(key, priceList);
+            }
+        } else {
+            priceList = priceListService.findBestPriceList(
+                    transaction.getAgentId(), 
+                    transaction.getAirlineId(), 
+                    transaction.getIssueDate()
+            );
+        }
 
         BigDecimal agentCommission = BigDecimal.ZERO;
         BigDecimal markup = BigDecimal.ZERO;

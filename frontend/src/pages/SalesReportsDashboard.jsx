@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   DocumentTextIcon, 
   TableCellsIcon, 
@@ -18,10 +18,11 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon
 } from '@heroicons/react/24/outline';
+import { getSalesSummary } from '../api/reports.api';
 
 export default function SalesReportsDashboard() {
-  // Empty data as requested
-  const [data, setData] = useState([]);
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // Filters state
   const [filters, setFilters] = useState({
@@ -33,17 +34,36 @@ export default function SalesReportsDashboard() {
     serviceType: ''
   });
 
+  const fetchSummary = async () => {
+    setLoading(true);
+    try {
+      const res = await getSalesSummary(filters.fromDate, filters.toDate);
+      setSummary(res.data || null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSummary();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
   };
 
   const applyFilters = () => {
-    // Logic to apply filters when real data is connected
+    fetchSummary();
   };
 
   const resetFilters = () => {
     setFilters({ fromDate: '', toDate: '', agent: '', destination: '', airline: '', serviceType: '' });
+    // setTimeout to ensure state is updated before fetching
+    setTimeout(fetchSummary, 0);
   };
 
   return (
@@ -118,12 +138,12 @@ export default function SalesReportsDashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-        <KPICard title="Total Revenue (EGP)" value="0" percent="0%" bgClass="bg-[#ecfdf5]" iconBg="bg-[#d1fae5]" iconColor="text-[#10b981]" textClass="text-[#065f46]" Icon={BanknotesIcon} />
-        <KPICard title="Total Revenue (USD)" value="0" percent="0%" bgClass="bg-[#eff6ff]" iconBg="bg-[#dbeafe]" iconColor="text-[#3b82f6]" textClass="text-[#1e3a8a]" Icon={CurrencyDollarIcon} />
-        <KPICard title="Total Expenses" value="0" percent="0%" bgClass="bg-[#fef2f2]" iconBg="bg-[#fee2e2]" iconColor="text-[#ef4444]" textClass="text-[#991b1b]" Icon={CreditCardIcon} />
-        <KPICard title="Net Profit" value="0" percent="0%" bgClass="bg-[#faf5ff]" iconBg="bg-[#f3e8ff]" iconColor="text-[#a855f7]" textClass="text-[#4c1d95]" Icon={ChartPieIcon} />
-        <KPICard title="Total Passengers" value="0" percent="0%" bgClass="bg-[#fffbeb]" iconBg="bg-[#fef3c7]" iconColor="text-[#f59e0b]" textClass="text-[#92400e]" Icon={UsersIcon} />
-        <KPICard title="Total Flights" value="0" percent="0%" bgClass="bg-[#ecfeff]" iconBg="bg-[#cffafe]" iconColor="text-[#06b6d4]" textClass="text-[#155e75]" Icon={PaperAirplaneIcon} />
+        <KPICard title="Total Revenue (EGP)" value={summary?.totalGrossSales ? summary.totalGrossSales.toLocaleString(undefined, {minimumFractionDigits: 2}) : "0"} percent="0%" bgClass="bg-[#ecfdf5]" iconBg="bg-[#d1fae5]" iconColor="text-[#10b981]" textClass="text-[#065f46]" Icon={BanknotesIcon} />
+        <KPICard title="Net Payable" value={summary?.totalNetPayable ? summary.totalNetPayable.toLocaleString(undefined, {minimumFractionDigits: 2}) : "0"} percent="0%" bgClass="bg-[#eff6ff]" iconBg="bg-[#dbeafe]" iconColor="text-[#3b82f6]" textClass="text-[#1e3a8a]" Icon={CurrencyDollarIcon} />
+        <KPICard title="Agent Commissions" value={summary?.totalAgentCommissions ? summary.totalAgentCommissions.toLocaleString(undefined, {minimumFractionDigits: 2}) : "0"} percent="0%" bgClass="bg-[#fef2f2]" iconBg="bg-[#fee2e2]" iconColor="text-[#ef4444]" textClass="text-[#991b1b]" Icon={CreditCardIcon} />
+        <KPICard title="Base Fares" value={summary?.totalBaseFares ? summary.totalBaseFares.toLocaleString(undefined, {minimumFractionDigits: 2}) : "0"} percent="0%" bgClass="bg-[#faf5ff]" iconBg="bg-[#f3e8ff]" iconColor="text-[#a855f7]" textClass="text-[#4c1d95]" Icon={ChartPieIcon} />
+        <KPICard title="Total Taxes" value={summary?.totalTaxes ? summary.totalTaxes.toLocaleString(undefined, {minimumFractionDigits: 2}) : "0"} percent="0%" bgClass="bg-[#fffbeb]" iconBg="bg-[#fef3c7]" iconColor="text-[#f59e0b]" textClass="text-[#92400e]" Icon={UsersIcon} />
+        <KPICard title="Total Tickets" value={summary?.totalTickets || "0"} percent="0%" bgClass="bg-[#ecfeff]" iconBg="bg-[#cffafe]" iconColor="text-[#06b6d4]" textClass="text-[#155e75]" Icon={PaperAirplaneIcon} />
       </div>
 
       {/* Charts Row 1 */}

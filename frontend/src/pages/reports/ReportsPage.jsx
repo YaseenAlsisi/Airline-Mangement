@@ -12,7 +12,8 @@ export const ReportsPage = () => {
     setLoading(true);
     try {
       const res = await getSalesSummary(startDate, endDate);
-      setSummary(res.data?.content || null);
+      console.log('Report API Response:', res);
+      setSummary(res.data || null);
     } catch (e) {
       console.error(e);
     } finally {
