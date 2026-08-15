@@ -11,27 +11,21 @@ import {
 import MyAccountTab from './components/MyAccountTab';
 import UsersTab from './components/UsersTab';
 import RolesTab from './components/RolesTab';
-import SecurityTab from './components/SecurityTab';
-import SystemSettingsTab from './components/SystemSettingsTab';
 import NotificationsTab from './components/NotificationsTab';
+import { useAuthStore } from '../../store/authStore';
 
 const tabs = [
   { id: 'account', name: 'My Account', icon: UserCircleIcon, component: MyAccountTab },
   { id: 'users', name: 'Users', icon: UsersIcon, component: UsersTab, permission: 'USER_MANAGE' },
   { id: 'roles', name: 'Roles & Permissions', icon: ShieldCheckIcon, component: RolesTab, permission: 'ROLE_MANAGE' },
-  { id: 'security', name: 'Security', icon: LockClosedIcon, component: SecurityTab, permission: 'SETTINGS_MANAGE' },
-  { id: 'system', name: 'System', icon: Cog6ToothIcon, component: SystemSettingsTab, permission: 'SYSTEM_VIEW' },
   { id: 'notifications', name: 'Notifications', icon: BellAlertIcon, component: NotificationsTab },
-  { id: 'audit', name: 'Audit & Activity', icon: DocumentMagnifyingGlassIcon, component: () => <div className="p-6 text-slate-500">Audit logs coming soon...</div>, permission: 'AUDIT_VIEW' },
 ];
 
 export const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState('account');
-
-  // TODO: Replace with actual auth context to filter tabs by permission
-  const userPermissions = ['USER_MANAGE', 'ROLE_MANAGE', 'SETTINGS_MANAGE', 'SYSTEM_VIEW', 'AUDIT_VIEW']; 
+  const hasPermission = useAuthStore((state) => state.hasPermission);
   
-  const visibleTabs = tabs.filter(tab => !tab.permission || userPermissions.includes(tab.permission));
+  const visibleTabs = tabs.filter(tab => !tab.permission || hasPermission(tab.permission));
   
   const ActiveComponent = visibleTabs.find(t => t.id === activeTab)?.component || MyAccountTab;
 

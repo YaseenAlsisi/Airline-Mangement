@@ -23,14 +23,14 @@ public class PriceListEntry {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "price_list_id", nullable = false)
+    @JoinColumn(name = "price_list_id")
     @ToString.Exclude
     private PriceList priceList;
 
-    @Column(nullable = false, length = 100)
+    @Column(length = 100)
     private String departure;
 
-    @Column(nullable = false, length = 100)
+    @Column(length = 100)
     private String destination;
 
     @Column(name = "passenger_type", nullable = false, length = 50)

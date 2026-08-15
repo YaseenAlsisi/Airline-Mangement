@@ -24,6 +24,11 @@ public class RoleController {
         return ResponseEntity.ok(ApiResponse.success(roleService.getAllRoles()));
     }
 
+    @GetMapping("/permissions")
+    public ResponseEntity<ApiResponse<List<RoleDto.PermissionResponse>>> getAllPermissions() {
+        return ResponseEntity.ok(ApiResponse.success(roleService.getAllPermissions()));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<RoleDto.RoleResponse>> getRoleById(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success(roleService.getRoleById(id)));
@@ -44,8 +49,4 @@ public class RoleController {
         return ResponseEntity.ok(ApiResponse.success(roleService.assignPermissions(id, request)));
     }
 
-    @GetMapping("/permissions")
-    public ResponseEntity<ApiResponse<List<RoleDto.PermissionResponse>>> getAllPermissions() {
-        return ResponseEntity.ok(ApiResponse.success(roleService.getAllPermissions()));
-    }
 }

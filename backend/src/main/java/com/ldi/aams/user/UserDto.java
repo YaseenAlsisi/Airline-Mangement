@@ -20,6 +20,7 @@ public class UserDto {
         private String username;
         private String email;
         private String fullName;
+        @com.fasterxml.jackson.annotation.JsonProperty("isActive")
         private boolean isActive;
         private Set<RoleDto.RoleResponse> roles;
         private Instant createdAt;
@@ -54,6 +55,7 @@ public class UserDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UpdateUserStatusRequest {
+        @com.fasterxml.jackson.annotation.JsonProperty("isActive")
         private boolean isActive;
     }
 

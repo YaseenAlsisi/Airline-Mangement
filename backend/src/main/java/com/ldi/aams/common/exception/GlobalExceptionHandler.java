@@ -74,6 +74,15 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ErrorResponse.builder().error(detail).build(), HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(org.springframework.security.authentication.DisabledException.class)
+    public ResponseEntity<ErrorResponse> handleDisabledException(org.springframework.security.authentication.DisabledException ex) {
+        ErrorResponse.ErrorDetail detail = ErrorResponse.ErrorDetail.builder()
+                .code("ACCOUNT_DISABLED")
+                .message("Your account has been disabled. Please contact an administrator.")
+                .build();
+        return new ResponseEntity<>(ErrorResponse.builder().error(detail).build(), HttpStatus.UNAUTHORIZED);
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
         ErrorResponse.ErrorDetail detail = ErrorResponse.ErrorDetail.builder()

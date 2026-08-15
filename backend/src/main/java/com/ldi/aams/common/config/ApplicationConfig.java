@@ -63,9 +63,15 @@ public class ApplicationConfig {
     }
 
     @Bean
-    public CommandLineRunner testPassword(PasswordEncoder passwordEncoder) {
+    public CommandLineRunner testPassword(PasswordEncoder passwordEncoder, UserRepository userRepository) {
         return args -> {
             System.out.println("New BCrypt hash: " + passwordEncoder.encode("admin"));
+            userRepository.findByUsername("admin").ifPresent(user -> {
+                user.setActive(true);
+                user.setPasswordHash(passwordEncoder.encode("admin123"));
+                userRepository.save(user);
+                System.out.println("ADMIN USER RE-ENABLED SUCCESSFULLY! NEW PASSWORD: admin123");
+            });
         };
     }
 }

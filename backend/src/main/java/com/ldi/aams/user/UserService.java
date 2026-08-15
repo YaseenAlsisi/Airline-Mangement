@@ -110,4 +110,14 @@ public class UserService {
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
+
+    @Transactional
+    public void deleteUser(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        if (user.getUsername().equals("admin")) {
+            throw new BusinessException("Cannot delete the system admin user", "ADMIN_DELETE_NOT_ALLOWED");
+        }
+        userRepository.delete(user);
+    }
 }
