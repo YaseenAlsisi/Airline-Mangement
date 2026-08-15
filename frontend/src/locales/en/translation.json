@@ -31,37 +31,119 @@
     "recentTransactions": "Recent Transactions",
     "viewAll": "View all"
   },
+  "passengerType": {
+    "ADULT": "Adult",
+    "CHILD": "Child",
+    "CHILD_UNDER_8": "Child up to 8 years",
+    "LADIES": "Ladies",
+    "INFANT": "Infant"
+  },
   "priceList": {
+    "title": "Price Lists",
+    "subtitle": "Manage your price lists and display them in the required grid format.",
+    "add": "Add Price List",
+    "edit": "Edit",
+    "name": "Name",
+    "code": "Code",
+    "status": "Status",
+    "validFrom": "Valid From",
+    "validTo": "Valid To",
+    "saving": "Saving...",
+    "save": "Save",
+    "cancel": "Cancel",
     "departure": "Departure",
     "destination": "Destination",
     "passengerType": "Passenger Type",
-    "price": "Total Price",
+    "price": "Price",
     "commission": "Commission",
     "currency": "Currency",
     "addEntry": "Add Entry",
     "remove": "Remove",
-    "destinations": {
-      "Benghazi": "Benghazi",
-      "Tripoli": "Tripoli",
-      "Misrata": "Misrata",
-      "Sabha": "Sabha",
-      "Land": "Land Only"
+    "type": "Type",
+    "total": "Total",
+    "pricingGroups": "Pricing Groups",
+    "pricingGroup": "Pricing Group",
+    "addPricingGroup": "Add Pricing Group",
+    "removePricingGroup": "Remove Group",
+    "departureAirport": "Departure Airport / Port",
+    "departureAirportPlaceholder": "Type departure...",
+    "destinationPlaceholder": "Type destination...",
+    "passengerPricing": "Passenger Pricing",
+    "addPassengerType": "Add Passenger",
+    "removePassengerType": "Remove Passenger",
+    "selectType": "Select Type",
+    "empty": {
+      "title": "No price lists found.",
+      "description": "No pricing groups added yet."
     },
-    "departures": {
-      "Borg El Arab": "Borg El Arab",
-      "Cairo": "Cairo"
-    },
-    "passengerTypes": {
-      "Adult": "Adult",
-      "ChildTo8": "Child to 8 yrs",
-      "Child": "Child",
-      "Ladies": "Ladies",
-      "Infant": "Infant"
-    },
-    "currencies": {
-      "EGP": "EGP",
-      "USD": "USD",
-      "EUR": "EUR"
+    "validation": {
+      "duplicatePassengerType": "Duplicate passenger types within the same group are not allowed."
     }
+  },
+  "import": {
+    "title": "Import Passenger Manifest",
+    "subtitle": "Upload a daily Excel manifest. Preview data, correct any errors, and publish directly to Agent Data.",
+    "uploadFile": "Upload a file",
+    "dragAndDrop": "or drag and drop",
+    "fileLimit": "up to 10MB",
+    "selectedFile": "Selected file:",
+    "startImport": "Start Import",
+    "processing": "Processing...",
+    "errorTitle": "Error",
+    "previewTitle": "Manifest Preview",
+    "statusPublished": "This batch has been successfully published.",
+    "statusDraft": "Review rows and fix errors before publishing.",
+    "fixErrorsFirst": "Please fix invalid rows first",
+    "publishData": "Publish Data to Agents",
+    "publishing": "Publishing...",
+    "stat": {
+      "totalRows": "Total Rows",
+      "validRows": "Valid Rows",
+      "invalidRows": "Invalid Rows"
+    },
+    "viewInAgents": "Data is now live. View passenger manifests in the Agent Data page.",
+    "publishSuccess": "Successfully published manifest data!",
+    "saveError": "Failed to save row changes",
+    "editRow": "Edit",
+    "saveRow": "Save",
+    "cancelRow": "Cancel",
+    "error": {
+      "invalidFile": "Please select a valid Excel file (.xlsx or .xls)",
+      "uploadFailed": "An error occurred during import",
+      "publishFailed": "An error occurred during publish"
+    },
+    "col": {
+      "row": "#",
+      "status": "Status",
+      "passengerName": "Passenger Name",
+      "passport": "Passport",
+      "agent": "Agent (Excel)",
+      "departureDate": "Dep. Date",
+      "flight": "Flight",
+      "destination": "Destination",
+      "category": "Category",
+      "actions": "Actions"
+    }
+  },
+  "agent": {
+    "title": "Agents",
+    "subtitle": "A list of all travel agents in the system including their code, name, and passenger counts.",
+    "addAgent": "Add agent",
+    "noneFound": "No agents found.",
+    "passengers": {
+      "title": "Passengers for",
+      "none": "No passengers found for this agent."
+    },
+    "col": {
+      "code": "Code",
+      "name": "Name",
+      "email": "Email",
+      "status": "Status",
+      "passengers": "Total Passengers"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "edit": "Edit"
   }
 }

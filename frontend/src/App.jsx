@@ -33,7 +33,7 @@ function App() {
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             
-            <Route element={<ProtectedRoute requiredPermission="TRANSACTION_CREATE" />}>
+            <Route element={<ProtectedRoute requiredPermission="IMPORT_VIEW" />}>
               <Route path="/import" element={<ImportDataPage />} />
             </Route>
 

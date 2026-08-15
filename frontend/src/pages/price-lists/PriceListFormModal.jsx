@@ -1,9 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { createPriceList, updatePriceList } from '../../api/priceLists.api';
-import { getAgents } from '../../api/agents.api';
-import { getAirlines } from '../../api/airlines.api';
 import { useTranslation } from 'react-i18next';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+
+const generateId = () => Math.random().toString(36).substring(2, 15);
+
+const defaultEntry = () => ({
+  clientId: generateId(),
+  passengerType: '',
+  price: 0,
+  commission: 0,
+  currency: 'EGP'
+});
+
+const defaultGroup = () => ({
+  clientId: generateId(),
+  departureAirport: '',
+  destination: '',
+  entries: [defaultEntry()]
+});
+
+const PASSENGER_TYPES = ['ADULT', 'CHILD', 'CHILD_UNDER_8', 'LADIES', 'INFANT'];
 
 const PriceListFormModal = ({ isOpen, priceList, onClose }) => {
   const { t } = useTranslation();
@@ -11,88 +28,96 @@ const PriceListFormModal = ({ isOpen, priceList, onClose }) => {
   const [formData, setFormData] = useState({
     code: '',
     name: '',
-    airlineId: null,
-    agentId: null,
     status: 'ACTIVE',
-    validFrom: null,
-    validTo: null,
-    entries: []
+    validFrom: '',
+    validTo: '',
+    groups: [defaultGroup()]
   });
 
-  const [agents, setAgents] = useState([]);
-  const [airlines, setAirlines] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (isOpen) {
-      fetchDropdownData();
-    }
     if (priceList) {
       setFormData({
-        ...priceList,
-        entries: priceList.entries || []
+        code: priceList.code || '',
+        name: priceList.name || '',
+        status: priceList.status || 'ACTIVE',
+        validFrom: priceList.validFrom || '',
+        validTo: priceList.validTo || '',
+        groups: priceList.groups && priceList.groups.length > 0 
+          ? priceList.groups.map(g => ({
+              id: g.id,
+              clientId: generateId(),
+              departureAirport: g.departureAirport || '',
+              destination: g.destination || '',
+              entries: g.entries && g.entries.length > 0 
+                ? g.entries.map(e => ({
+                    id: e.id,
+                    clientId: generateId(),
+                    passengerType: e.passengerType || '',
+                    price: e.price || 0,
+                    commission: e.commission || 0,
+                    currency: e.currency || 'EGP'
+                  }))
+                : [defaultEntry()]
+            }))
+          : [defaultGroup()]
       });
     } else {
       setFormData({
         code: '',
         name: '',
-        airlineId: null,
-        agentId: null,
         status: 'ACTIVE',
-        validFrom: null,
-        validTo: null,
-        entries: []
+        validFrom: '',
+        validTo: '',
+        groups: [defaultGroup()]
       });
     }
   }, [priceList, isOpen]);
 
-  const fetchDropdownData = async () => {
-    try {
-      const [agentsRes, airlinesRes] = await Promise.all([
-        getAgents({ size: 1000 }), 
-        getAirlines({ size: 1000 })
-      ]);
-      setAgents(agentsRes.data?.content || []);
-      setAirlines(airlinesRes.data?.content || []);
-    } catch (e) {
-      console.error("Failed to load dropdown data", e);
-    }
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-    let finalValue = value === '' ? null : value;
-    setFormData((prev) => ({ ...prev, [name]: finalValue }));
+    setFormData((prev) => ({ ...prev, [name]: value === '' ? null : value }));
   };
 
-  const handleEntryChange = (index, field, value) => {
-    const newEntries = [...formData.entries];
-    newEntries[index] = { ...newEntries[index], [field]: value };
-    setFormData({ ...formData, entries: newEntries });
+  const handleGroupChange = (groupIndex, field, value) => {
+    const newGroups = [...formData.groups];
+    newGroups[groupIndex] = { ...newGroups[groupIndex], [field]: value };
+    setFormData({ ...formData, groups: newGroups });
   };
 
-  const addEntry = () => {
+  const handleEntryChange = (groupIndex, entryIndex, field, value) => {
+    const newGroups = [...formData.groups];
+    const newEntries = [...newGroups[groupIndex].entries];
+    newEntries[entryIndex] = { ...newEntries[entryIndex], [field]: value };
+    newGroups[groupIndex].entries = newEntries;
+    setFormData({ ...formData, groups: newGroups });
+  };
+
+  const addGroup = () => {
     setFormData({
       ...formData,
-      entries: [
-        ...formData.entries,
-        {
-          departure: '',
-          destination: '',
-          passengerType: '',
-          price: 0,
-          commission: 0,
-          currency: 'EGP'
-        }
-      ]
+      groups: [...formData.groups, defaultGroup()]
     });
   };
 
-  const removeEntry = (index) => {
-    const newEntries = [...formData.entries];
-    newEntries.splice(index, 1);
-    setFormData({ ...formData, entries: newEntries });
+  const removeGroup = (groupIndex) => {
+    const newGroups = [...formData.groups];
+    newGroups.splice(groupIndex, 1);
+    setFormData({ ...formData, groups: newGroups });
+  };
+
+  const addEntry = (groupIndex) => {
+    const newGroups = [...formData.groups];
+    newGroups[groupIndex].entries.push(defaultEntry());
+    setFormData({ ...formData, groups: newGroups });
+  };
+
+  const removeEntry = (groupIndex, entryIndex) => {
+    const newGroups = [...formData.groups];
+    newGroups[groupIndex].entries.splice(entryIndex, 1);
+    setFormData({ ...formData, groups: newGroups });
   };
 
   const handleSubmit = async (e) => {
@@ -101,14 +126,36 @@ const PriceListFormModal = ({ isOpen, priceList, onClose }) => {
     setLoading(true);
 
     try {
+      const dataToSubmit = { ...formData };
+      if (!dataToSubmit.code) {
+        dataToSubmit.code = `PL-${Date.now()}`;
+      }
+      if (!dataToSubmit.name) {
+        dataToSubmit.name = `Price List ${new Date().toLocaleString()}`;
+      }
+
+      // Basic Validation Check for duplicates
+      for (const group of dataToSubmit.groups) {
+        const types = group.entries.map(e => e.passengerType).filter(Boolean);
+        if (new Set(types).size !== types.length) {
+           throw new Error(t('priceList.validation.duplicatePassengerType', 'Duplicate passenger types within the same group are not allowed.'));
+        }
+      }
+
       if (priceList) {
-        await updatePriceList(priceList.id, formData);
+        await updatePriceList(priceList.id, dataToSubmit);
       } else {
-        await createPriceList(formData);
+        await createPriceList(dataToSubmit);
       }
       onClose(true);
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'An error occurred while saving.');
+      const apiError = err.response?.data;
+      const errorMessage = apiError?.error?.message || 
+                           (typeof apiError?.error === 'string' ? apiError.error : null) || 
+                           apiError?.message || 
+                           err.message || 
+                           'An error occurred while saving.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -121,233 +168,242 @@ const PriceListFormModal = ({ isOpen, priceList, onClose }) => {
       <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
       <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
         <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-          <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-start shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl sm:p-6">
-            <div>
-              <h3 className="text-base font-semibold leading-6 text-gray-900" id="modal-title">
-                {priceList ? 'Edit Price List' : 'Create Price List'}
-              </h3>
-              
-              {error && (
-                <div className="mt-2 rounded-md bg-red-50 p-4">
-                  <div className="text-sm text-red-700">{error}</div>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="code" className="block text-sm font-medium leading-6 text-gray-900">Code *</label>
-                    <input
-                      type="text"
-                      name="code"
-                      id="code"
-                      required
-                      disabled={!!priceList}
-                      value={formData.code || ''}
-                      onChange={handleChange}
-                      className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 disabled:bg-gray-100"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium leading-6 text-gray-900">Name / Description *</label>
-                    <input
-                      type="text"
-                      name="name"
-                      id="name"
-                      required
-                      value={formData.name || ''}
-                      onChange={handleChange}
-                      className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label htmlFor="agentId" className="block text-sm font-medium leading-6 text-gray-900">Applies To Agent</label>
-                    <select
-                      name="agentId"
-                      id="agentId"
-                      value={formData.agentId || ''}
-                      onChange={handleChange}
-                      className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    >
-                      <option value="">-- All Agents (Global) --</option>
-                      {agents.map((a) => <option key={a.id} value={a.id}>{a.name} ({a.code})</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label htmlFor="airlineId" className="block text-sm font-medium leading-6 text-gray-900">Applies To Airline</label>
-                    <select
-                      name="airlineId"
-                      id="airlineId"
-                      value={formData.airlineId || ''}
-                      onChange={handleChange}
-                      className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    >
-                      <option value="">-- All Airlines (Global) --</option>
-                      {airlines.map((a) => <option key={a.id} value={a.id}>{a.name} ({a.code})</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label htmlFor="status" className="block text-sm font-medium leading-6 text-gray-900">Status</label>
-                    <select
-                      name="status"
-                      id="status"
-                      value={formData.status}
-                      onChange={handleChange}
-                      className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    >
-                      <option value="ACTIVE">ACTIVE</option>
-                      <option value="INACTIVE">INACTIVE</option>
-                    </select>
-                  </div>
-                </div>
-                
-                {/* Pricing Matrix Section */}
-                <div className="mt-8 border-t border-gray-200 pt-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-sm font-medium leading-6 text-gray-900">Pricing Matrix</h4>
-                    <button
-                      type="button"
-                      onClick={addEntry}
-                      className="inline-flex items-center gap-x-1.5 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
-                    >
-                      <PlusIcon className="-ms-0.5 h-5 w-5" aria-hidden="true" />
-                      {t('priceList.addEntry')}
-                    </button>
-                  </div>
+          <div className="relative transform overflow-hidden rounded-lg bg-white text-start shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-5xl">
+            <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+              <div className="sm:flex sm:items-start">
+                <div className="mt-3 text-center sm:mt-0 sm:text-start w-full">
+                  <h3 className="text-xl font-semibold leading-6 text-gray-900" id="modal-title">
+                    {priceList ? t('priceList.edit', 'Edit Price List') : t('priceList.add', 'Create Price List')}
+                  </h3>
                   
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-300">
-                      <thead>
-                        <tr>
-                          <th className="py-3.5 pe-3 text-start text-sm font-semibold text-gray-900">{t('priceList.departure')}</th>
-                          <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('priceList.destination')}</th>
-                          <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('priceList.passengerType')}</th>
-                          <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('priceList.price')}</th>
-                          <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('priceList.commission')}</th>
-                          <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('priceList.currency')}</th>
-                          <th className="relative py-3.5 ps-3 pe-4 sm:pe-0">
-                            <span className="sr-only">{t('priceList.remove')}</span>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        {formData.entries.map((entry, index) => (
-                          <tr key={index}>
-                            <td className="whitespace-nowrap py-4 pe-3 text-sm">
-                              <input
-                                list="departures-list"
-                                value={entry.departure}
-                                onChange={(e) => handleEntryChange(index, 'departure', e.target.value)}
-                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                required
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-4 text-sm">
-                              <input
-                                list="destinations-list"
-                                value={entry.destination}
-                                onChange={(e) => handleEntryChange(index, 'destination', e.target.value)}
-                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                required
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-4 text-sm">
-                              <input
-                                list="passengers-list"
-                                value={entry.passengerType}
-                                onChange={(e) => handleEntryChange(index, 'passengerType', e.target.value)}
-                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                required
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-4 text-sm">
-                              <input
-                                type="number"
-                                step="0.01"
-                                value={entry.price}
-                                onChange={(e) => handleEntryChange(index, 'price', parseFloat(e.target.value))}
-                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                required
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-4 text-sm">
-                              <input
-                                type="number"
-                                step="0.01"
-                                value={entry.commission}
-                                onChange={(e) => handleEntryChange(index, 'commission', parseFloat(e.target.value))}
-                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                required
-                              />
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-4 text-sm">
-                              <select
-                                value={entry.currency}
-                                onChange={(e) => handleEntryChange(index, 'currency', e.target.value)}
-                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                              >
-                                <option value="EGP">{t('priceList.currencies.EGP')}</option>
-                                <option value="USD">{t('priceList.currencies.USD')}</option>
-                                <option value="EUR">{t('priceList.currencies.EUR')}</option>
-                              </select>
-                            </td>
-                            <td className="relative whitespace-nowrap py-4 ps-3 pe-4 text-end text-sm font-medium sm:pe-0">
-                              <button
-                                type="button"
-                                onClick={() => removeEntry(index)}
-                                className="text-red-600 hover:text-red-900"
-                              >
-                                <TrashIcon className="h-5 w-5" aria-hidden="true" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  {error && (
+                    <div className="mt-4 rounded-md bg-red-50 p-4">
+                      <div className="text-sm text-red-700">{error}</div>
+                    </div>
+                  )}
+
+                  <form id="priceListForm" onSubmit={handleSubmit} className="mt-6 space-y-6">
+                    {/* Basic Info Section */}
+                    <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2 bg-gray-50 p-4 rounded-md border border-gray-200">
+                      <div>
+                        <label className="block text-sm font-medium leading-6 text-gray-900">{t('priceList.name', 'Name')}</label>
+                        <div className="mt-2">
+                          <input
+                            type="text"
+                            name="name"
+                            value={formData.name || ''}
+                            onChange={handleChange}
+                            className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            placeholder="Optional: Auto-generated if empty"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium leading-6 text-gray-900">{t('priceList.code', 'Code')}</label>
+                        <div className="mt-2">
+                          <input
+                            type="text"
+                            name="code"
+                            value={formData.code || ''}
+                            onChange={handleChange}
+                            className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            placeholder="Optional: Auto-generated if empty"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Pricing Groups Builder */}
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-lg font-semibold leading-6 text-gray-900">{t('priceList.pricingGroups', 'Pricing Groups')}</h4>
+                        <button
+                          type="button"
+                          onClick={addGroup}
+                          className="inline-flex items-center gap-x-1.5 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
+                        >
+                          <PlusIcon className="-ml-0.5 h-5 w-5" aria-hidden="true" />
+                          {t('priceList.addPricingGroup', 'Add Pricing Group')}
+                        </button>
+                      </div>
+
+                      {formData.groups.length === 0 && (
+                        <div className="text-center py-6 text-gray-500 bg-gray-50 rounded-md border border-gray-200">
+                          {t('priceList.empty.description', 'No pricing groups added yet.')}
+                        </div>
+                      )}
+
+                      {formData.groups.map((group, groupIndex) => (
+                        <div key={group.clientId} className="bg-white border border-gray-300 rounded-md shadow-sm overflow-hidden">
+                          {/* Group Header */}
+                          <div className="bg-gray-100 px-4 py-3 flex justify-between items-center border-b border-gray-300">
+                            <span className="font-semibold text-gray-700">{t('priceList.pricingGroup', 'Pricing Group')} #{groupIndex + 1}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeGroup(groupIndex)}
+                              className="text-red-600 hover:text-red-800 text-sm font-medium"
+                            >
+                              {t('priceList.removePricingGroup', 'Remove Group')}
+                            </button>
+                          </div>
+                          
+                          <div className="p-4 space-y-4">
+                            {/* Route Inputs */}
+                            <div className="grid grid-cols-1 gap-y-4 sm:grid-cols-2 sm:gap-x-4">
+                              <div>
+                                <label className="block text-sm font-medium leading-6 text-gray-900">
+                                  {t('priceList.departureAirport', 'Departure Airport / Port')}
+                                </label>
+                                <input
+                                  type="text"
+                                  value={group.departureAirport}
+                                  onChange={(e) => handleGroupChange(groupIndex, 'departureAirport', e.target.value)}
+                                  className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                  placeholder={t('priceList.departureAirportPlaceholder', 'Type departure...')}
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium leading-6 text-gray-900">
+                                  {t('priceList.destination', 'Destination')}
+                                </label>
+                                <input
+                                  type="text"
+                                  value={group.destination}
+                                  onChange={(e) => handleGroupChange(groupIndex, 'destination', e.target.value)}
+                                  className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                  placeholder={t('priceList.destinationPlaceholder', 'Type destination...')}
+                                  required
+                                />
+                              </div>
+                            </div>
+
+                            {/* Passenger Pricing Table */}
+                            <div className="mt-6">
+                              <div className="flex justify-between items-center mb-2">
+                                <label className="block text-sm font-medium leading-6 text-gray-900">
+                                  {t('priceList.passengerPricing', 'Passenger Pricing')}
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => addEntry(groupIndex)}
+                                  className="text-indigo-600 hover:text-indigo-800 text-sm font-medium inline-flex items-center"
+                                >
+                                  <PlusIcon className="h-4 w-4 mr-1" />
+                                  {t('priceList.addPassengerType', 'Add Passenger')}
+                                </button>
+                              </div>
+                              <div className="overflow-x-auto ring-1 ring-gray-300 sm:rounded-lg">
+                                <table className="min-w-full divide-y divide-gray-300">
+                                  <thead className="bg-gray-50">
+                                    <tr>
+                                      <th scope="col" className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('priceList.passengerType', 'Passenger Type')}</th>
+                                      <th scope="col" className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('priceList.price', 'Price')}</th>
+                                      <th scope="col" className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('priceList.commission', 'Commission')}</th>
+                                      <th scope="col" className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('priceList.currency', 'Currency')}</th>
+                                      <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6"><span className="sr-only">Actions</span></th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-gray-200 bg-white">
+                                    {group.entries.map((entry, entryIndex) => {
+                                      // Determine disabled passenger types
+                                      const selectedTypes = group.entries.map(e => e.passengerType).filter(Boolean);
+                                      return (
+                                        <tr key={entry.clientId}>
+                                          <td className="whitespace-nowrap px-3 py-4 text-sm">
+                                            <select
+                                              value={entry.passengerType}
+                                              onChange={(e) => handleEntryChange(groupIndex, entryIndex, 'passengerType', e.target.value)}
+                                              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                              required
+                                            >
+                                              <option value="">{t('priceList.selectType', 'Select Type')}</option>
+                                              {PASSENGER_TYPES.map(type => (
+                                                <option 
+                                                  key={type} 
+                                                  value={type} 
+                                                  disabled={selectedTypes.includes(type) && entry.passengerType !== type}
+                                                >
+                                                  {t(`passengerType.${type}`, type)}
+                                                </option>
+                                              ))}
+                                            </select>
+                                          </td>
+                                          <td className="whitespace-nowrap px-3 py-4 text-sm">
+                                            <input
+                                              type="number"
+                                              min="0"
+                                              step="0.01"
+                                              value={entry.price}
+                                              onChange={(e) => handleEntryChange(groupIndex, entryIndex, 'price', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                              required
+                                            />
+                                          </td>
+                                          <td className="whitespace-nowrap px-3 py-4 text-sm">
+                                            <input
+                                              type="number"
+                                              min="0"
+                                              step="0.01"
+                                              value={entry.commission}
+                                              onChange={(e) => handleEntryChange(groupIndex, entryIndex, 'commission', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                              required
+                                            />
+                                          </td>
+                                          <td className="whitespace-nowrap px-3 py-4 text-sm">
+                                            <select
+                                              value={entry.currency}
+                                              onChange={(e) => handleEntryChange(groupIndex, entryIndex, 'currency', e.target.value)}
+                                              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                            >
+                                              <option value="EGP">EGP</option>
+                                              <option value="USD">USD</option>
+                                              <option value="EUR">EUR</option>
+                                            </select>
+                                          </td>
+                                          <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                            <button
+                                              type="button"
+                                              onClick={() => removeEntry(groupIndex, entryIndex)}
+                                              className="text-red-600 hover:text-red-900"
+                                              title={t('priceList.removePassengerType', 'Remove')}
+                                            >
+                                              <TrashIcon className="h-5 w-5" />
+                                            </button>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                  </form>
                 </div>
-
-                <datalist id="departures-list">
-                  <option value={t('priceList.departures.Borg El Arab')} />
-                  <option value={t('priceList.departures.Cairo')} />
-                </datalist>
-                
-                <datalist id="destinations-list">
-                  <option value={t('priceList.destinations.Benghazi')} />
-                  <option value={t('priceList.destinations.Tripoli')} />
-                  <option value={t('priceList.destinations.Misrata')} />
-                  <option value={t('priceList.destinations.Sabha')} />
-                  <option value={t('priceList.destinations.Land')} />
-                </datalist>
-
-                <datalist id="passengers-list">
-                  <option value={t('priceList.passengerTypes.Adult')} />
-                  <option value={t('priceList.passengerTypes.ChildTo8')} />
-                  <option value={t('priceList.passengerTypes.Child')} />
-                  <option value={t('priceList.passengerTypes.Ladies')} />
-                  <option value={t('priceList.passengerTypes.Infant')} />
-                </datalist>
-
-                <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:col-start-2 disabled:bg-indigo-400"
-                  >
-                    {loading ? 'Saving...' : 'Save'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onClose(false)}
-                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
+              </div>
+            </div>
+            <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-gray-200">
+              <button
+                type="submit"
+                form="priceListForm"
+                disabled={loading}
+                className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:ml-3 sm:w-auto disabled:bg-indigo-400"
+              >
+                {loading ? t('priceList.saving', 'Saving...') : t('priceList.save', 'Save')}
+              </button>
+              <button
+                type="button"
+                onClick={() => onClose(false)}
+                className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+              >
+                {t('priceList.cancel', 'Cancel')}
+              </button>
             </div>
           </div>
         </div>

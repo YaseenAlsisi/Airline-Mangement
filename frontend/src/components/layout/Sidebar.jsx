@@ -14,21 +14,27 @@ import {
   RectangleGroupIcon
 } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
+import { useAuthStore } from '../../store/authStore';
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'Excel Import', href: '/import', icon: ArrowUpTrayIcon },
-  { name: 'Price Lists', href: '/price-lists', icon: CurrencyDollarIcon },
-  { name: 'Agent Data', href: '/agents', icon: UsersIcon },
-  { name: 'Airlines', href: '/airlines', icon: PaperAirplaneIcon },
-  { name: 'Transactions', href: '/transactions', icon: CreditCardIcon },
-  { name: 'Reports', href: '/sales-reports', icon: ChartBarIcon },
-  { name: 'Notes', href: '/notes', icon: ChatBubbleLeftRightIcon },
-  { name: 'Settings', href: '/settings', icon: Cog6ToothIcon }
+  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, requiredPermission: null },
+  { name: 'Excel Import', href: '/import', icon: ArrowUpTrayIcon, requiredPermission: 'IMPORT_VIEW' },
+  { name: 'Price Lists', href: '/price-lists', icon: CurrencyDollarIcon, requiredPermission: 'PRICE_VIEW' },
+  { name: 'Agent Data', href: '/agents', icon: UsersIcon, requiredPermission: 'AGENT_VIEW' },
+  { name: 'Airlines', href: '/airlines', icon: PaperAirplaneIcon, requiredPermission: 'AIRLINE_VIEW' },
+  { name: 'Transactions', href: '/transactions', icon: CreditCardIcon, requiredPermission: 'TRANSACTION_VIEW' },
+  { name: 'Reports', href: '/sales-reports', icon: ChartBarIcon, requiredPermission: 'REPORT_VIEW' },
+  { name: 'Notes', href: '/notes', icon: ChatBubbleLeftRightIcon, requiredPermission: 'NOTE_VIEW' },
+  { name: 'Settings', href: '/settings', icon: Cog6ToothIcon, requiredPermission: 'SYSTEM_VIEW' }
 ];
 
 export const Sidebar = () => {
   const { t } = useTranslation();
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  
+  const filteredNavigation = navigation.filter(
+    (item) => !item.requiredPermission || hasPermission(item.requiredPermission)
+  );
 
   return (
     <div className="flex grow flex-col overflow-hidden bg-[#0B1121] relative h-full w-full">
@@ -61,7 +67,7 @@ export const Sidebar = () => {
           <ul role="list" className="flex flex-1 flex-col gap-y-7">
             <li>
               <ul role="list" className="space-y-2">
-                {navigation.map((item) => (
+                {filteredNavigation.map((item) => (
                   <li key={item.name}>
                     <NavLink
                       to={item.href}
