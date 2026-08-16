@@ -282,6 +282,11 @@ public class ManifestImportService {
 
     @Transactional(readOnly = true)
     public org.springframework.data.domain.Page<ManifestPassenger> getRows(UUID batchId, org.springframework.data.domain.Pageable pageable) {
+        if (pageable.getSort().isUnsorted()) {
+            int page = pageable.isPaged() ? pageable.getPageNumber() : 0;
+            int size = pageable.isPaged() ? pageable.getPageSize() : Integer.MAX_VALUE;
+            pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by("rowNumber").ascending());
+        }
         return passengerRepository.findByBatchId(batchId, pageable);
     }
 

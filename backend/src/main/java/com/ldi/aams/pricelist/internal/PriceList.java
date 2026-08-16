@@ -27,6 +27,9 @@ public class PriceList {
     @Column(name = "agent_id")
     private UUID agentId;
 
+    @Column(name = "airline_id")
+    private UUID airlineId;
+
     @Column(name = "commission_percentage", precision = 5, scale = 2)
     private BigDecimal commissionPercentage = BigDecimal.ZERO;
 
@@ -53,7 +56,7 @@ public class PriceList {
 
     public PriceList() {}
 
-    public PriceList(UUID id, String code, String name, UUID agentId,
+    public PriceList(UUID id, String code, String name, UUID agentId, UUID airlineId,
                      BigDecimal commissionPercentage, BigDecimal markupAmount, String status,
                      LocalDate validFrom, LocalDate validTo, Instant createdAt, Instant updatedAt,
                      List<PricingGroup> groups) {
@@ -61,6 +64,7 @@ public class PriceList {
         this.code = code;
         this.name = name;
         this.agentId = agentId;
+        this.airlineId = airlineId;
         this.commissionPercentage = commissionPercentage != null ? commissionPercentage : BigDecimal.ZERO;
         this.markupAmount = markupAmount != null ? markupAmount : BigDecimal.ZERO;
         this.status = status != null ? status : "ACTIVE";
@@ -81,6 +85,7 @@ public class PriceList {
     public String getCode() { return code; }
     public String getName() { return name; }
     public UUID getAgentId() { return agentId; }
+    public UUID getAirlineId() { return airlineId; }
     public BigDecimal getCommissionPercentage() { return commissionPercentage; }
     public BigDecimal getMarkupAmount() { return markupAmount; }
     public String getStatus() { return status; }
@@ -95,6 +100,7 @@ public class PriceList {
     public void setCode(String code) { this.code = code; }
     public void setName(String name) { this.name = name; }
     public void setAgentId(UUID agentId) { this.agentId = agentId; }
+    public void setAirlineId(UUID airlineId) { this.airlineId = airlineId; }
     public void setCommissionPercentage(BigDecimal commissionPercentage) { this.commissionPercentage = commissionPercentage; }
     public void setMarkupAmount(BigDecimal markupAmount) { this.markupAmount = markupAmount; }
     public void setStatus(String status) { this.status = status; }
@@ -112,6 +118,7 @@ public class PriceList {
         private String code;
         private String name;
         private UUID agentId;
+        private UUID airlineId;
         private BigDecimal commissionPercentage = BigDecimal.ZERO;
         private BigDecimal markupAmount = BigDecimal.ZERO;
         private String status = "ACTIVE";
@@ -125,6 +132,7 @@ public class PriceList {
         public Builder code(String code) { this.code = code; return this; }
         public Builder name(String name) { this.name = name; return this; }
         public Builder agentId(UUID agentId) { this.agentId = agentId; return this; }
+        public Builder airlineId(UUID airlineId) { this.airlineId = airlineId; return this; }
         public Builder commissionPercentage(BigDecimal v) { this.commissionPercentage = v; return this; }
         public Builder markupAmount(BigDecimal v) { this.markupAmount = v; return this; }
         public Builder status(String status) { this.status = status; return this; }
@@ -135,7 +143,7 @@ public class PriceList {
         public Builder groups(List<PricingGroup> groups) { this.groups = groups; return this; }
 
         public PriceList build() {
-            return new PriceList(id, code, name, agentId, commissionPercentage,
+            return new PriceList(id, code, name, agentId, airlineId, commissionPercentage,
                     markupAmount, status, validFrom, validTo, createdAt, updatedAt, groups);
         }
     }

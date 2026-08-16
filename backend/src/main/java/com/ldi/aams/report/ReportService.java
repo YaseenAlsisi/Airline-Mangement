@@ -1,7 +1,7 @@
 package com.ldi.aams.report;
 
-import com.ldi.aams.transaction.internal.Transaction;
-import com.ldi.aams.transaction.internal.TransactionRepository;
+import com.ldi.aams.manifest.internal.ManifestPassenger;
+import com.ldi.aams.manifest.internal.ManifestPassengerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,23 +15,30 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReportService {
 
-    private final TransactionRepository transactionRepository;
+    private final ManifestPassengerRepository manifestPassengerRepository;
 
     @Transactional(readOnly = true)
     public ReportDto.SalesSummaryResponse getSalesSummary(LocalDate startDate, LocalDate endDate) {
-        // Fetch all transactions and filter in memory for simplicity in this MVP.
-        // In a real production system with millions of rows, this should be done via a highly optimized JPQL/SQL GROUP BY query.
-        List<Transaction> transactions = transactionRepository.findAll().stream()
-                .filter(t -> (startDate == null || !t.getIssueDate().isBefore(startDate)) &&
-                             (endDate == null || !t.getIssueDate().isAfter(endDate)))
+        List<ManifestPassenger> passengers = manifestPassengerRepository.findAll().stream()
+                .filter(p -> (startDate == null || (p.getDepartureDate() != null && !p.getDepartureDate().isBefore(startDate))) &&
+                             (endDate == null || (p.getDepartureDate() != null && !p.getDepartureDate().isAfter(endDate))))
                 .collect(Collectors.toList());
 
-        long totalTickets = transactions.size();
-        BigDecimal totalBaseFares = transactions.stream().map(Transaction::getBaseFare).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal totalTaxes = transactions.stream().map(Transaction::getTax).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal totalGrossSales = transactions.stream().map(Transaction::getTotalFare).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal totalAgentCommissions = transactions.stream().map(Transaction::getAgentCommission).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal totalNetPayable = transactions.stream().map(Transaction::getNetPayable).reduce(BigDecimal.ZERO, BigDecimal::add);
+        long totalTickets = passengers.size();
+        BigDecimal totalBaseFares = passengers.stream()
+                .map(ManifestPassenger::getDebitEgp)
+                .filter(v -> v != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalTaxes = BigDecimal.ZERO;
+        BigDecimal totalGrossSales = passengers.stream()
+                .map(ManifestPassenger::getDebitEgp)
+                .filter(v -> v != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalAgentCommissions = passengers.stream()
+                .map(ManifestPassenger::getCreditEgp)
+                .filter(v -> v != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalNetPayable = totalGrossSales.subtract(totalAgentCommissions);
 
         return ReportDto.SalesSummaryResponse.builder()
                 .totalTickets(totalTickets)
