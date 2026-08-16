@@ -14,6 +14,7 @@ public class PriceListMapper {
                 .code(priceList.getCode())
                 .name(priceList.getName())
                 .agentId(priceList.getAgentId())
+                .airlineId(priceList.getAirlineId())
                 .commissionPercentage(priceList.getCommissionPercentage())
                 .markupAmount(priceList.getMarkupAmount())
                 .status(priceList.getStatus())

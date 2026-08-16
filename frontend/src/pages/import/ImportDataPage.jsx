@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { previewManifestImport, publishManifestImport, getBatchPreview, deleteManifestRowsBulk } from '../../api/manifestImport.api';
-import { DocumentArrowUpIcon, CheckCircleIcon, ExclamationTriangleIcon, CheckIcon, FunnelIcon, ArrowUpTrayIcon, TrashIcon, ChevronLeftIcon, TagIcon, BuildingOfficeIcon, CalendarDaysIcon, PaperAirplaneIcon, MapPinIcon, MapIcon, ClockIcon, BriefcaseIcon } from '@heroicons/react/24/outline';
+import { DocumentArrowUpIcon, CheckCircleIcon, ExclamationTriangleIcon, CheckIcon, FunnelIcon, ArrowUpTrayIcon, TrashIcon, ChevronLeftIcon, TagIcon, BuildingOfficeIcon, CalendarDaysIcon, PaperAirplaneIcon, MapPinIcon, MapIcon, ClockIcon, BriefcaseIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import { ManifestEditableGrid } from './components/ManifestEditableGrid';
 import { ManifestEditableTable } from './components/ManifestEditableTable';
@@ -23,6 +23,7 @@ export const ImportDataPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedRows, setSelectedRows] = useState(new Set());
+  const [searchTerm, setSearchTerm] = useState('');
   
   const [filters, setFilters] = useState({
     passengerCategory: '',
@@ -266,6 +267,7 @@ export const ImportDataPage = () => {
     setFile(null);
     setError(null);
     setSelectedRows(new Set());
+    setSearchTerm('');
     sessionStorage.removeItem('activeManifestBatchId');
     if (searchParams.has('batchId')) {
       searchParams.delete('batchId');
@@ -274,6 +276,7 @@ export const ImportDataPage = () => {
   };
 
   const filteredRows = rows.filter(row => {
+    if (searchTerm && row.passengerName && !row.passengerName.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     if (filters.passengerCategory && row.passengerCategory !== filters.passengerCategory) return false;
     if (filters.agentNameRaw && row.agentNameRaw !== filters.agentNameRaw) return false;
     if (filters.departureDate && row.departureDate !== filters.departureDate) return false;
@@ -443,6 +446,22 @@ export const ImportDataPage = () => {
                         <option value={50}>50</option>
                         <option value={100}>100</option>
                       </select>
+                    </div>
+
+                    <div className="relative">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <MagnifyingGlassIcon className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder={t('import.searchPassenger', 'بحث باسم المسافر...')}
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          setCurrentPage(1);
+                        }}
+                        className="block w-full sm:w-64 rounded-lg border-0 py-2 pl-9 pr-3 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 transition-all bg-white"
+                      />
                     </div>
 
                     {selectedRows.size > 0 && (

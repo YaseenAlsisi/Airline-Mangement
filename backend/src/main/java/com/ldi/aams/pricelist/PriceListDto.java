@@ -113,6 +113,7 @@ public class PriceListDto {
         private String code;
         private String name;
         private UUID agentId;
+        private UUID airlineId;
         private BigDecimal commissionPercentage;
         private BigDecimal markupAmount;
         private String status;
@@ -124,7 +125,7 @@ public class PriceListDto {
 
         public PriceListResponse() {}
 
-        public PriceListResponse(UUID id, String code, String name, UUID agentId,
+        public PriceListResponse(UUID id, String code, String name, UUID agentId, UUID airlineId,
                                   BigDecimal commissionPercentage, BigDecimal markupAmount, String status,
                                   LocalDate validFrom, LocalDate validTo, Instant createdAt,
                                   Instant updatedAt, List<PricingGroupResponse> groups) {
@@ -132,6 +133,7 @@ public class PriceListDto {
             this.code = code;
             this.name = name;
             this.agentId = agentId;
+            this.airlineId = airlineId;
             this.commissionPercentage = commissionPercentage;
             this.markupAmount = markupAmount;
             this.status = status;
@@ -177,6 +179,7 @@ public class PriceListDto {
             private String code;
             private String name;
             private UUID agentId;
+            private UUID airlineId;
             private BigDecimal commissionPercentage;
             private BigDecimal markupAmount;
             private String status;
@@ -190,6 +193,7 @@ public class PriceListDto {
             public Builder code(String code) { this.code = code; return this; }
             public Builder name(String name) { this.name = name; return this; }
             public Builder agentId(UUID agentId) { this.agentId = agentId; return this; }
+            public Builder airlineId(UUID airlineId) { this.airlineId = airlineId; return this; }
             public Builder commissionPercentage(BigDecimal v) { this.commissionPercentage = v; return this; }
             public Builder markupAmount(BigDecimal v) { this.markupAmount = v; return this; }
             public Builder status(String status) { this.status = status; return this; }
@@ -200,7 +204,7 @@ public class PriceListDto {
             public Builder groups(List<PricingGroupResponse> groups) { this.groups = groups; return this; }
 
             public PriceListResponse build() {
-                return new PriceListResponse(id, code, name, agentId, commissionPercentage,
+                return new PriceListResponse(id, code, name, agentId, airlineId, commissionPercentage,
                         markupAmount, status, validFrom, validTo, createdAt, updatedAt, groups);
             }
         }
