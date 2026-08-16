@@ -599,7 +599,18 @@ public class ManifestImportService {
         passenger.setDebitUsd(request.getDebitUsd() != null ? request.getDebitUsd() : BigDecimal.ZERO);
         passenger.setCreditUsd(request.getCreditUsd() != null ? request.getCreditUsd() : BigDecimal.ZERO);
         passenger.setDebitEgp(request.getDebitEgp() != null ? request.getDebitEgp() : BigDecimal.ZERO);
-        passenger.setCreditEgp(request.getCreditEgp() != null ? request.getCreditEgp() : BigDecimal.ZERO);
+        
+        BigDecimal newCreditEgp = request.getCreditEgp() != null ? request.getCreditEgp() : BigDecimal.ZERO;
+        BigDecimal oldCreditEgp = passenger.getCreditEgp() != null ? passenger.getCreditEgp() : BigDecimal.ZERO;
+        
+        if (newCreditEgp.compareTo(oldCreditEgp) != 0) {
+            passenger.setCreditEgp(newCreditEgp);
+            if (newCreditEgp.compareTo(BigDecimal.ZERO) > 0) {
+                passenger.setCreditEgpDate(Instant.now());
+            } else {
+                passenger.setCreditEgpDate(null);
+            }
+        }
 
         String agentNameRaw = request.getAgentNameRaw();
         passenger.setAgentNameRaw(agentNameRaw);
