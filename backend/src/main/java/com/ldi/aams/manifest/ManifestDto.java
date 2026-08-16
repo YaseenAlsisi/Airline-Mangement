@@ -72,6 +72,7 @@ public class ManifestDto {
         private BigDecimal creditUsd;
         private BigDecimal debitEgp;
         private BigDecimal creditEgp;
+        private Instant creditEgpDate;
         private BigDecimal regularPrice;
         private BigDecimal commission;
         private BigDecimal totalPrice;

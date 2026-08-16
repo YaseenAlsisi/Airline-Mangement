@@ -672,7 +672,18 @@ public class ManifestImportService {
         passenger.setDebitUsd(request.getDebitUsd() != null ? request.getDebitUsd() : BigDecimal.ZERO);
         passenger.setCreditUsd(request.getCreditUsd() != null ? request.getCreditUsd() : BigDecimal.ZERO);
         passenger.setDebitEgp(request.getDebitEgp() != null ? request.getDebitEgp() : BigDecimal.ZERO);
-        passenger.setCreditEgp(request.getCreditEgp() != null ? request.getCreditEgp() : BigDecimal.ZERO);
+        
+        BigDecimal newCreditEgp = request.getCreditEgp() != null ? request.getCreditEgp() : BigDecimal.ZERO;
+        BigDecimal oldCreditEgp = passenger.getCreditEgp() != null ? passenger.getCreditEgp() : BigDecimal.ZERO;
+        
+        if (newCreditEgp.compareTo(oldCreditEgp) != 0) {
+            passenger.setCreditEgp(newCreditEgp);
+            if (newCreditEgp.compareTo(BigDecimal.ZERO) > 0) {
+                passenger.setCreditEgpDate(Instant.now());
+            } else {
+                passenger.setCreditEgpDate(null);
+            }
+        }
 
         String agentNameRaw = request.getAgentNameRaw();
         passenger.setAgentNameRaw(agentNameRaw);
@@ -814,12 +825,12 @@ public class ManifestImportService {
             org.apache.poi.xssf.usermodel.XSSFSheet sheet = workbook.createSheet("Manifest Export");
             sheet.setRightToLeft(true);
             
-            // Columns order: name, passport, category, agent, depDate, flightNo, dest, depPort, birthDate, arrivalTime, serviceType, debitUsd, creditUsd, regularPrice, commission, debitEgp, creditEgp
+            // Columns order: name, passport, category, agent, depDate, flightNo, dest, depPort, birthDate, arrivalTime, serviceType, debitUsd, creditUsd, regularPrice, commission, debitEgp, creditEgp, creditEgpDate
             String[] headers = {
                 "الاسم", "رقم الجواز", "النوع", "الوكيل", "تاريخ المغادرة", 
                 "رقم الرحلة", "جهة الوصول", "جهة المغادرة", "تاريخ الميلاد", 
                 "ميعاد الوصول", "نوع الخدمة", "مدين دولار", "دائن دولار",
-                "السعر الأساسي", "العمولة", "مدين مصري", "دائن مصري"
+                "السعر الأساسي", "العمولة", "مدين مصري", "دائن مصري", "تاريخ دائن مصري"
             };
 
             // ---- Shared colors ----
@@ -955,6 +966,13 @@ public class ManifestImportService {
                 } else {
                     cells[16].setCellValue("-");
                 }
+
+                // تاريخ دائن مصري
+                if (p.getCreditEgpDate() != null) {
+                    cells[17].setCellValue(p.getCreditEgpDate().atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                } else {
+                    cells[17].setCellValue("-");
+                }
             }
 
             // ---- Total row ----
@@ -970,6 +988,7 @@ public class ManifestImportService {
             totalRow.getCell(14).setCellValue(sumCommission.doubleValue());
             totalRow.getCell(15).setCellValue(sumDebitEgp.doubleValue());
             totalRow.getCell(16).setCellValue(sumCreditEgp.doubleValue());
+            totalRow.getCell(17).setCellValue("");
             
             workbook.write(out);
             return out.toByteArray();

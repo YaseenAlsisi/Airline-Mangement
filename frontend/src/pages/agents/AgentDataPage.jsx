@@ -113,6 +113,7 @@ export const AgentDataPage = () => {
         'دائن دولار': p.creditUsd || 0,
         'مدين مصري': p.debitEgp || 0,
         'دائن مصري': p.creditEgp || 0,
+        'تاريخ دائن مصري': p.creditEgpDate ? new Date(p.creditEgpDate).toLocaleString() : '-',
       }));
 
       // Add total row at the end
@@ -133,6 +134,7 @@ export const AgentDataPage = () => {
         'دائن دولار': totalCreditUsd,
         'مدين مصري': totalDebitEgp,
         'دائن مصري': totalCreditEgp,
+        'تاريخ دائن مصري': '',
       });
 
       const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -417,6 +419,7 @@ export const AgentDataPage = () => {
                     <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.netUsd', 'صافي دولار')}</th>
                     <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.debitEgp', 'مدين مصري')}</th>
                     <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.creditEgp', 'دائن مصري')}</th>
+                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.creditEgpDate', 'تاريخ دائن مصري')}</th>
                     <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.netEgp', 'صافي مصري')}</th>
                     <th className="relative py-3.5 pl-3 pr-4 sm:pr-6">
                       <span className="sr-only">Edit</span>
@@ -480,6 +483,9 @@ export const AgentDataPage = () => {
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                             {isEditing ? <input type="number" step="0.01" name="creditEgp" value={editFormData.creditEgp} onChange={handleInlineChange} className="block w-24 rounded-md border-0 py-1 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" /> : p.creditEgp}
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                            {p.creditEgpDate ? new Date(p.creditEgpDate).toLocaleString() : '-'}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm font-bold text-gray-900">
                             {isEditing ? ((parseFloat(editFormData.debitEgp) || 0) - (parseFloat(editFormData.creditEgp) || 0)) : ((p.debitEgp || 0) - (p.creditEgp || 0))}
