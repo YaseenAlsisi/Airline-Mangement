@@ -222,6 +222,12 @@ public class ManifestImportService {
         return batchRepository.save(batch);
     }
 
+    private Agent matchOrCreateAgent(String rawName) {
+        Map<String, Agent> agentCache = new HashMap<>();
+        agentRepository.findAll().forEach(a -> agentCache.put(a.getName().trim().toLowerCase(), a));
+        return matchOrCreateAgent(rawName, agentCache);
+    }
+
     private Agent matchOrCreateAgent(String rawName, Map<String, Agent> agentCache) {
         String normalized = rawName.replaceAll("\\s+", " ").trim();
         String lower = normalized.toLowerCase();
@@ -593,9 +599,14 @@ public class ManifestImportService {
         }
 
         List<ManifestPassenger> passengers = passengerRepository.findByBatchId(batchId);
+        
+        // Use local cache for optimization during publish
+        Map<String, Agent> agentCache = new HashMap<>();
+        agentRepository.findAll().forEach(a -> agentCache.put(a.getName().trim().toLowerCase(), a));
+
         for (ManifestPassenger p : passengers) {
             if ("VALID".equals(p.getValidationStatus()) && p.getAgentNameRaw() != null && !p.getAgentNameRaw().isBlank()) {
-                Agent agent = matchOrCreateAgent(p.getAgentNameRaw());
+                Agent agent = matchOrCreateAgent(p.getAgentNameRaw(), agentCache);
                 p.setAgent(agent);
                 passengerRepository.save(p);
             }

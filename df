@@ -1,0 +1,83 @@
+[33mcommit e670ffb684daa40b4c2fe02187cd1c11bc5b6f94[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mMERGE-DASHBOARD-AGENTS[m[33m, [m[1;31morigin/MERGE-DASHBOARD-AGENTS[m[33m, [m[1;31morigin/EyadMoneim[m[33m, [m[1;32mEyadMoneim[m[33m)[m
+Author: EyadMoneim <Iyad.Abdel-Moneim.2240027@CIT.hnu.edu.eg>
+Date:   Sun Aug 16 07:35:31 2026 +0300
+
+    Dashboard , Excel Import and Files History are DONE
+
+[33mcommit 0b7a4acb694149f33823e1bb09c9958c657c4848[m
+Author: EyadMoneim <Iyad.Abdel-Moneim.2240027@CIT.hnu.edu.eg>
+Date:   Sun Aug 16 06:53:34 2026 +0300
+
+    fixing database 2.0
+
+[33mcommit f439ab8308194cbcfea7e2473c73e652f46d5811[m
+Author: EyadMoneim <Iyad.Abdel-Moneim.2240027@CIT.hnu.edu.eg>
+Date:   Sun Aug 16 06:46:03 2026 +0300
+
+    database fixing 1.0
+
+[33mcommit 20c04c35dd0a98a33a7f7c06624b02b8e4284ed2[m
+Author: EyadMoneim <Iyad.Abdel-Moneim.2240027@CIT.hnu.edu.eg>
+Date:   Sun Aug 16 05:01:07 2026 +0300
+
+    stable before 'THE METION'
+
+[33mcommit c8079d13033665103bcf66a604dab0573b022814[m
+Author: EyadMoneim <Iyad.Abdel-Moneim.2240027@CIT.hnu.edu.eg>
+Date:   Sun Aug 16 03:43:40 2026 +0300
+
+    fixing the database
+
+[33mcommit be3ca02c878d01459f8e19d27c5871d20da17a99[m
+Author: EyadMoneim <Iyad.Abdel-Moneim.2240027@CIT.hnu.edu.eg>
+Date:   Sun Aug 16 03:12:31 2026 +0300
+
+    delete all airlines & transactions from scarch
+
+[33mcommit cab7dd45416ef4d07b31bf8ba9641430dee4fa91[m
+Author: EyadMoneim <Iyad.Abdel-Moneim.2240027@CIT.hnu.edu.eg>
+Date:   Sun Aug 16 02:36:00 2026 +0300
+
+    for farah
+
+[33mcommit a9716462b206956958ff455a336b06243e54db96[m
+Author: EyadMoneim <Iyad.Abdel-Moneim.2240027@CIT.hnu.edu.eg>
+Date:   Sat Aug 15 23:04:12 2026 +0300
+
+    l 3eyoon yaseen
+
+[33mcommit b382ab55745daa4de7ebc4636f80e8613475677b[m
+Author: Mohamed Abdelmegeed <mohamed1742006ahmedd@gmail.com>
+Date:   Sat Aug 15 14:49:16 2026 +0300
+
+    implement dashboard module with backend API, summary DTO, and multilingual frontend components
+
+[33mcommit 4db1aa49541f02fb6b9a58cc674f9858613117da[m
+Author: EyadMoneim <Iyad.Abdel-Moneim.2240027@CIT.hnu.edu.eg>
+Date:   Sat Aug 15 04:15:27 2026 +0300
+
+    Add price list v2 and agent manifest import features
+
+[33mcommit 01273a0b5359882d7d83dea6980ec6ab8cd08025[m[33m ([m[1;31morigin/Fixing-the-settings-to-confirm-it-working[m[33m, [m[1;31morigin/Creating-Settings-page[m[33m)[m
+Author: Mohamed Abdelmegeed <mohamed1742006ahmedd@gmail.com>
+Date:   Fri Aug 14 23:12:57 2026 +0300
+
+    Create settings page
+
+[33mcommit 51bc51401c78cc7e62e721be07354bcc3355436a[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Author: EyadMoneim <Iyad.Abdel-Moneim.2240027@CIT.hnu.edu.eg>
+Date:   Fri Aug 14 19:51:04 2026 +0300
+
+    HERE WO GO 2
+
+[33mcommit 447c63d22115952013a9b5a30535cf2951efeccb[m
+Author: EyadMoneim <Iyad.Abdel-Moneim.2240027@CIT.hnu.edu.eg>
+Date:   Fri Aug 14 18:48:48 2026 +0300
+
+    HERE WE GO
+
+[33mcommit 66b8d8b8d0ad872dd56014dd5c295c7efaf00a13[m
+Author: EyadMoneim <Iyad.Abdel-Moneim.2240027@CIT.hnu.edu.eg>
+Date:   Fri Aug 14 16:37:24 2026 +0300
+
+    first commit
