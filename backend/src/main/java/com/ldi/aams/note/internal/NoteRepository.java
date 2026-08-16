@@ -9,6 +9,8 @@ import java.util.UUID;
 
 @Repository
 public interface NoteRepository extends JpaRepository<Note, UUID> {
-    Page<Note> findByEntityTypeAndEntityId(String entityType, UUID entityId, Pageable pageable);
-    Page<Note> findByEntityType(String entityType, Pageable pageable);
+    Page<Note> findByEntityTypeAndEntityIdAndParentIdIsNull(String entityType, UUID entityId, Pageable pageable);
+    Page<Note> findByEntityTypeAndParentIdIsNull(String entityType, Pageable pageable);
+    Page<Note> findByParentIdIsNull(Pageable pageable);
+    java.util.List<Note> findByParentIdIn(java.util.List<UUID> parentIds);
 }

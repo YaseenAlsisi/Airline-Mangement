@@ -15,6 +15,8 @@ public class NoteMapper {
                 .createdBy(note.getCreatedBy())
                 .createdAt(note.getCreatedAt())
                 .updatedAt(note.getUpdatedAt())
+                .parentId(note.getParentId())
+                .replies(new java.util.ArrayList<>())
                 .build();
     }
 }

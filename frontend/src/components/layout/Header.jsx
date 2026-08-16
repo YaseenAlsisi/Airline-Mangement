@@ -1,22 +1,81 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { logout as logoutApi } from '../../api/auth.api';
+import { getNotifications, getUnreadNotificationCount, markNotificationAsRead } from '../../api/notifications.api';
 import { useTranslation } from 'react-i18next';
 import { 
   MagnifyingGlassIcon, 
   BellIcon, 
   ChevronDownIcon,
   LanguageIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  CheckCircleIcon
 } from '@heroicons/react/24/outline';
-import { Squares2X2Icon } from '@heroicons/react/24/solid'; // Or outline
+import { Squares2X2Icon } from '@heroicons/react/24/solid';
 
 export const Header = ({ onMenuClick }) => {
   const { user, logout, refreshToken } = useAuthStore();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  
+  // Notifications state
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const notifRef = useRef(null);
+
+  useEffect(() => {
+    fetchUnreadCount();
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setIsNotificationsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await getUnreadNotificationCount();
+      setUnreadCount(res.data?.count || 0);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await getNotifications({ size: 10 });
+      setNotifications(res.data?.content || []);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleNotificationClick = async () => {
+    if (!isNotificationsOpen) {
+      await fetchNotifications();
+    }
+    setIsNotificationsOpen(!isNotificationsOpen);
+  };
+
+  const handleMarkAsRead = async (id, e) => {
+    e.stopPropagation();
+    try {
+      await markNotificationAsRead(id);
+      setNotifications(notifications.map(n => n.id === id ? { ...n, isRead: true } : n));
+      fetchUnreadCount();
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const toggleLanguage = () => {
     const newLang = i18n.language === 'ar' ? 'en' : 'ar';
@@ -73,21 +132,72 @@ export const Header = ({ onMenuClick }) => {
           <LanguageIcon className="h-6 w-6" />
         </button>
 
-        {/* Icons */}
-        <div className="flex items-center gap-3 border-r border-slate-200 pr-6 mr-2">
-          <button className="text-slate-400 hover:text-slate-600 transition-colors relative">
+        {/* Notifications */}
+        <div className="flex items-center gap-3 border-r border-slate-200 pr-6 mr-2 relative" ref={notifRef}>
+          <button 
+            onClick={handleNotificationClick}
+            className="text-slate-400 hover:text-slate-600 transition-colors relative focus:outline-none"
+          >
             <BellIcon className="h-6 w-6" />
-            <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
+            {unreadCount > 0 && (
+              <span className="absolute top-0 right-0 flex h-4 w-4 -mt-1 -mr-1 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
+
+          {/* Notifications Dropdown */}
+          {isNotificationsOpen && (
+            <div className="absolute right-0 top-10 mt-2 w-80 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+              <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-slate-50 rounded-t-xl">
+                <h3 className="text-sm font-semibold text-slate-800">Notifications</h3>
+                {unreadCount > 0 && (
+                  <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-medium">{unreadCount} New</span>
+                )}
+              </div>
+              <div className="max-h-80 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-gray-500">No notifications</div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {notifications.map((notif) => (
+                      <div 
+                        key={notif.id} 
+                        className={`p-4 flex gap-3 hover:bg-slate-50 transition-colors ${!notif.isRead ? 'bg-blue-50/30' : ''}`}
+                      >
+                        <div className={`mt-1 h-2 w-2 rounded-full shrink-0 ${!notif.isRead ? 'bg-blue-500' : 'bg-transparent'}`}></div>
+                        <div className="flex-1">
+                          <p className="text-sm text-slate-800">{notif.message}</p>
+                          <p className="text-xs text-slate-400 mt-1">{new Date(notif.createdAt).toLocaleString()}</p>
+                        </div>
+                        {!notif.isRead && (
+                          <button 
+                            onClick={(e) => handleMarkAsRead(notif.id, e)}
+                            className="text-slate-400 hover:text-indigo-600 transition-colors"
+                            title="Mark as read"
+                          >
+                            <CheckCircleIcon className="h-5 w-5" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="p-3 border-t border-gray-100 text-center bg-slate-50 rounded-b-xl hover:bg-slate-100 cursor-pointer transition-colors">
+                <span className="text-sm font-medium text-indigo-600">View all notifications</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Profile */}
         <div className="relative">
           <div 
             onClick={() => setIsProfileOpen(!isProfileOpen)}
-            className="flex items-center gap-x-3 cursor-pointer hover:bg-white/50 p-1.5 rounded-full transition-colors"
+            className="flex items-center gap-x-3 cursor-pointer hover:bg-slate-50 p-1.5 rounded-full transition-colors"
           >
-            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg shrink-0">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-inner">
               {user?.fullName?.charAt(0) || 'U'}
             </div>
             <div className="hidden lg:flex lg:flex-col lg:items-start">
