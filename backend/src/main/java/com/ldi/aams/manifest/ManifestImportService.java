@@ -103,6 +103,40 @@ public class ManifestImportService {
                 }
             }
 
+            // Pre-collect all passports and names to minimize queries
+            Set<String> passportsToFind = new HashSet<>();
+            Set<String> namesToFind = new HashSet<>();
+            for (Row row : sheet) {
+                if (row.getRowNum() <= headerRow.getRowNum()) continue;
+                if (isRowEmpty(row)) continue;
+                
+                String ppt = getStringValue(row, headerMap.get("passportNumber"));
+                String nm = getStringValue(row, headerMap.get("passengerName"));
+                if (ppt != null && !ppt.isEmpty()) passportsToFind.add(ppt);
+                if (nm != null && !nm.isEmpty()) namesToFind.add(nm);
+            }
+
+            Set<String> existingKeys = new HashSet<>();
+            List<String> passportList = new ArrayList<>(passportsToFind);
+            for(int i = 0; i < passportList.size(); i += 1000) {
+                List<ManifestPassenger> passengers = passengerRepository.findByPassportNumberIn(
+                    passportList.subList(i, Math.min(i + 1000, passportList.size()))
+                );
+                for(ManifestPassenger p : passengers) {
+                     existingKeys.add("PPT_" + p.getPassportNumber() + "_" + p.getDepartureDate());
+                }
+            }
+            
+            List<String> nameList = new ArrayList<>(namesToFind);
+            for(int i = 0; i < nameList.size(); i += 1000) {
+                List<ManifestPassenger> passengers = passengerRepository.findByPassengerNameIn(
+                    nameList.subList(i, Math.min(i + 1000, nameList.size()))
+                );
+                for(ManifestPassenger p : passengers) {
+                     existingKeys.add("NAME_" + p.getPassengerName() + "_" + p.getDepartureDate());
+                }
+            }
+
             Set<String> processedKeys = new HashSet<>();
             for (Row row : sheet) {
                 if (row.getRowNum() <= headerRow.getRowNum()) continue;
@@ -117,33 +151,19 @@ public class ManifestImportService {
 
                 if (passportNumber != null && !passportNumber.isEmpty()) {
                     String uniqueKey = "PPT_" + passportNumber + "_" + departureDate;
-                    if (processedKeys.contains(uniqueKey)) {
+                    if (existingKeys.contains(uniqueKey) || processedKeys.contains(uniqueKey)) {
                         isDuplicate = true;
                     } else {
-                        List<ManifestPassenger> existing = passengerRepository.findByPassportNumber(passportNumber);
-                        for (ManifestPassenger ep : existing) {
-                            if (Objects.equals(ep.getDepartureDate(), departureDate)) {
-                                isDuplicate = true;
-                                break;
-                            }
-                        }
-                        if (!isDuplicate) processedKeys.add(uniqueKey);
+                        processedKeys.add(uniqueKey);
                     }
                 }
 
                 if (!isDuplicate && passengerName != null && !passengerName.isEmpty()) {
                     String uniqueKey = "NAME_" + passengerName + "_" + departureDate;
-                    if (processedKeys.contains(uniqueKey)) {
+                    if (existingKeys.contains(uniqueKey) || processedKeys.contains(uniqueKey)) {
                         isDuplicate = true;
                     } else {
-                        List<ManifestPassenger> existing = passengerRepository.findByPassengerName(passengerName);
-                        for (ManifestPassenger ep : existing) {
-                            if (Objects.equals(ep.getDepartureDate(), departureDate)) {
-                                isDuplicate = true;
-                                break;
-                            }
-                        }
-                        if (!isDuplicate) processedKeys.add(uniqueKey);
+                        processedKeys.add(uniqueKey);
                     }
                 }
 

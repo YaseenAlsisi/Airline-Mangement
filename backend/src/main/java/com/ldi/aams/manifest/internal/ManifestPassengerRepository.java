@@ -21,4 +21,6 @@ public interface ManifestPassengerRepository extends JpaRepository<ManifestPasse
 
     List<ManifestPassenger> findByPassportNumber(String passportNumber);
     List<ManifestPassenger> findByPassengerName(String passengerName);
+    List<ManifestPassenger> findByPassportNumberIn(java.util.Collection<String> passportNumbers);
+    List<ManifestPassenger> findByPassengerNameIn(java.util.Collection<String> passengerNames);
 }
