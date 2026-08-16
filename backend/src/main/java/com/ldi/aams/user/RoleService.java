@@ -93,4 +93,15 @@ public class RoleService {
                 .map(userMapper::toPermissionResponse)
                 .collect(Collectors.toList());
     }
+    @Transactional
+    public void deleteRole(UUID id) {
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Role", "id", id));
+
+        if (role.isSystem()) {
+            throw new BusinessException("System roles cannot be deleted", "SYSTEM_ROLE");
+        }
+
+        roleRepository.delete(role);
+    }
 }

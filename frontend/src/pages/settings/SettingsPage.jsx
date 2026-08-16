@@ -3,43 +3,36 @@ import {
   UserCircleIcon, 
   UsersIcon, 
   ShieldCheckIcon, 
-  LockClosedIcon, 
-  Cog6ToothIcon, 
   BellAlertIcon,
-  DocumentMagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import MyAccountTab from './components/MyAccountTab';
 import UsersTab from './components/UsersTab';
 import RolesTab from './components/RolesTab';
-import SecurityTab from './components/SecurityTab';
-import SystemSettingsTab from './components/SystemSettingsTab';
-import NotificationsTab from './components/NotificationsTab';
-
-const tabs = [
-  { id: 'account', name: 'My Account', icon: UserCircleIcon, component: MyAccountTab },
-  { id: 'users', name: 'Users', icon: UsersIcon, component: UsersTab, permission: 'USER_MANAGE' },
-  { id: 'roles', name: 'Roles & Permissions', icon: ShieldCheckIcon, component: RolesTab, permission: 'ROLE_MANAGE' },
-  { id: 'security', name: 'Security', icon: LockClosedIcon, component: SecurityTab, permission: 'SETTINGS_MANAGE' },
-  { id: 'system', name: 'System', icon: Cog6ToothIcon, component: SystemSettingsTab, permission: 'SYSTEM_VIEW' },
-  { id: 'notifications', name: 'Notifications', icon: BellAlertIcon, component: NotificationsTab },
-  { id: 'audit', name: 'Audit & Activity', icon: DocumentMagnifyingGlassIcon, component: () => <div className="p-6 text-slate-500">Audit logs coming soon...</div>, permission: 'AUDIT_VIEW' },
-];
+import { useDocumentTitle } from '../../hooks/useDocumentTitle';
+import { useAuthStore } from '../../store/authStore';
+import { useTranslation } from 'react-i18next';
 
 export const SettingsPage = () => {
+  const { t } = useTranslation();
+  useDocumentTitle(t('Settings'));
   const [activeTab, setActiveTab] = useState('account');
-
-  // TODO: Replace with actual auth context to filter tabs by permission
-  const userPermissions = ['USER_MANAGE', 'ROLE_MANAGE', 'SETTINGS_MANAGE', 'SYSTEM_VIEW', 'AUDIT_VIEW']; 
+  const { hasPermission } = useAuthStore();
   
-  const visibleTabs = tabs.filter(tab => !tab.permission || userPermissions.includes(tab.permission));
+  const tabs = [
+    { id: 'account', name: t('My Account'), icon: UserCircleIcon, component: MyAccountTab },
+    { id: 'users', name: t('Users'), icon: UsersIcon, component: UsersTab, permission: 'USER_MANAGE' },
+    { id: 'roles', name: t('Roles & Permissions'), icon: ShieldCheckIcon, component: RolesTab, permission: 'ROLE_MANAGE' }
+  ];
+
+  const visibleTabs = tabs.filter(tab => !tab.permission || hasPermission(tab.permission));
   
   const ActiveComponent = visibleTabs.find(t => t.id === activeTab)?.component || MyAccountTab;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Settings & Administration</h1>
-        <p className="mt-2 text-sm text-slate-500">Manage your account settings, users, and system preferences.</p>
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{t('Settings & Administration')}</h1>
+        <p className="mt-2 text-sm text-slate-500">{t('Manage your account settings, users, and system preferences.')}</p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">

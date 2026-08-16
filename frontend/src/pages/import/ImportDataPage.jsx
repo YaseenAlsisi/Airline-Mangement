@@ -9,7 +9,10 @@ import { PlaneLoader } from './components/PlaneLoader';
 import { Squares2X2Icon, ListBulletIcon } from '@heroicons/react/24/outline';
 import { Pagination } from '../../components/ui/Pagination';
 
+import { useDocumentTitle } from '../../hooks/useDocumentTitle';
+
 export const ImportDataPage = () => {
+  useDocumentTitle('Excel Import');
   const { t } = useTranslation();
   const [file, setFile] = useState(null);
   const [dragging, setDragging] = useState(false);

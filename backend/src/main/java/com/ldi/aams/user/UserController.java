@@ -50,4 +50,10 @@ public class UserController {
         userService.resetPassword(id, request);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable UUID id) {
+        userService.deleteUser(id);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
 }

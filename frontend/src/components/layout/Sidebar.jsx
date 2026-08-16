@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '../../store/authStore';
 import {
   HomeIcon,
   ArrowUpTrayIcon,
@@ -16,18 +17,20 @@ import {
 import clsx from 'clsx';
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'Excel Import', href: '/import', icon: ArrowUpTrayIcon },
-  { name: 'Files History', href: '/files', icon: FolderIcon },
-  { name: 'Price Lists', href: '/price-lists', icon: CurrencyDollarIcon },
-  { name: 'Agent Data', href: '/agents', icon: UsersIcon },
-  { name: 'Reports', href: '/reports', icon: ChartBarIcon },
-  { name: 'Notes', href: '/notes', icon: ChatBubbleLeftRightIcon },
-  { name: 'Settings', href: '/settings', icon: Cog6ToothIcon }
+  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, permission: 'REPORT_VIEW' },
+  { name: 'Excel Import', href: '/import', icon: ArrowUpTrayIcon, permission: 'IMPORT_CREATE' },
+  { name: 'Files History', href: '/files', icon: FolderIcon, permission: 'IMPORT_VIEW' },
+  { name: 'Price Lists', href: '/price-lists', icon: CurrencyDollarIcon, permission: 'PRICE_VIEW' },
+  { name: 'Agent Data', href: '/agents', icon: UsersIcon, permission: 'AGENT_VIEW' },
+  { name: 'Reports', href: '/reports', icon: ChartBarIcon, permission: 'REPORT_VIEW' },
+  { name: 'Notes', href: '/notes', icon: ChatBubbleLeftRightIcon, permission: 'NOTE_VIEW' },
+  { name: 'Settings', href: '/settings', icon: Cog6ToothIcon, permission: 'USER_MANAGE' }
 ];
 
 export const Sidebar = () => {
   const { t } = useTranslation();
+  const { hasPermission } = useAuthStore();
+  const visibleNavigation = navigation.filter(item => !item.permission || hasPermission(item.permission));
 
   return (
     <div className="relative flex grow flex-col overflow-y-auto overflow-x-hidden bg-[#0f172a] border-r border-gray-800/50">
@@ -56,7 +59,7 @@ export const Sidebar = () => {
           <ul role="list" className="flex flex-1 flex-col gap-y-7">
             <li>
               <ul role="list" className="-mx-2 space-y-1">
-                {navigation.map((item) => (
+                {visibleNavigation.map((item) => (
                   <li key={item.name}>
                     <NavLink
                       to={item.href}
@@ -70,7 +73,7 @@ export const Sidebar = () => {
                       }
                     >
                       <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
-                      {t(`navigation.${item.name}`, item.name)}
+                      {t(item.name)}
                     </NavLink>
                   </li>
                 ))}

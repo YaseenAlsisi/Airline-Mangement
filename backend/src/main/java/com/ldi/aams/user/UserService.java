@@ -7,6 +7,7 @@ import com.ldi.aams.user.internal.RoleRepository;
 import com.ldi.aams.user.internal.User;
 import com.ldi.aams.user.internal.UserMapper;
 import com.ldi.aams.user.internal.UserRepository;
+import com.ldi.aams.auth.internal.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +27,7 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Transactional(readOnly = true)
     public Page<UserDto.UserResponse> getAllUsers(Pageable pageable) {
@@ -109,5 +111,46 @@ public class UserService {
         
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+    }
+
+    @Transactional
+    public UserDto.UserResponse updateProfile(String username, UserDto.UpdateProfileRequest request) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+
+        if (!user.getEmail().equals(request.getEmail()) && userRepository.existsByEmail(request.getEmail())) {
+            throw new BusinessException("Email already exists", "EMAIL_EXISTS");
+        }
+
+        user.setEmail(request.getEmail());
+        user.setFullName(request.getFullName());
+
+        return userMapper.toResponse(userRepository.save(user));
+    }
+
+    @Transactional
+    public void changePassword(String username, UserDto.ChangePasswordRequest request) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+            throw new BusinessException("Incorrect current password", "INCORRECT_PASSWORD");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+    @Transactional
+    public void deleteUser(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        
+        // Prevent deleting the initial admin user (username: admin)
+        if ("admin".equals(user.getUsername())) {
+            throw new BusinessException("Cannot delete the system administrator", "SYSTEM_USER");
+        }
+
+        refreshTokenRepository.deleteByUser(user);
+        userRepository.delete(user);
     }
 }

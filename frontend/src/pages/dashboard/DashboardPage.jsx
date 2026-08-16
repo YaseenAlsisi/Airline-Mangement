@@ -14,7 +14,10 @@ import { KPICard, CustomDonutChart, CustomBarChart } from './DashboardComponents
 import { getDashboardSummary } from '../../api/dashboard.api';
 import * as XLSX from 'xlsx';
 
+import { useDocumentTitle } from '../../hooks/useDocumentTitle';
+
 export const DashboardPage = () => {
+  useDocumentTitle('Dashboard');
   const { t } = useTranslation();
   
   const [loading, setLoading] = useState(true);

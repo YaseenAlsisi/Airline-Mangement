@@ -4,7 +4,10 @@ import { useAuthStore } from '../../store/authStore';
 import NoteFormModal from './NoteFormModal';
 import { DocumentTextIcon, TrashIcon, ArrowUturnLeftIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 
+import { useDocumentTitle } from '../../hooks/useDocumentTitle';
+
 export const NotesDataPage = () => {
+  useDocumentTitle('Notes');
   const { hasPermission, user } = useAuthStore();
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(false);

@@ -39,4 +39,18 @@ public class AuthController {
         String currentUsername = authentication.getName();
         return ResponseEntity.ok(ApiResponse.success(userService.getUserByUsername(currentUsername)));
     }
+    @PutMapping("/me/profile")
+    public ResponseEntity<ApiResponse<UserDto.UserResponse>> updateProfile(@RequestBody UserDto.UpdateProfileRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        return ResponseEntity.ok(ApiResponse.success(userService.updateProfile(currentUsername, request)));
+    }
+
+    @PutMapping("/me/password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(@RequestBody UserDto.ChangePasswordRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        userService.changePassword(currentUsername, request);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
 }

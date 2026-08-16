@@ -5,7 +5,10 @@ import PriceListFormModal from './PriceListFormModal';
 import { useTranslation } from 'react-i18next';
 import { FunnelIcon, PaperAirplaneIcon, MapPinIcon, ChevronLeftIcon, CheckIcon } from '@heroicons/react/24/outline';
 
+import { useDocumentTitle } from '../../hooks/useDocumentTitle';
+
 export const PriceListDataPage = () => {
+  useDocumentTitle('Price Lists');
   const { t } = useTranslation();
   const { hasPermission } = useAuthStore();
   const [priceLists, setPriceLists] = useState([]);

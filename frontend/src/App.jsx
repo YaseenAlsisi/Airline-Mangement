@@ -28,9 +28,12 @@ function App() {
 
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
-            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route element={<ProtectedRoute requiredPermission="REPORT_VIEW" />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/reports" element={<ReportsPage />} />
+            </Route>
 
-            <Route element={<ProtectedRoute requiredPermission="AGENT_VIEW" />}>
+            <Route element={<ProtectedRoute requiredPermission="IMPORT_VIEW" />}>
               <Route path="/import" element={<ImportDataPage />} />
               <Route path="/files" element={<ManifestFilesPage />} />
             </Route>
@@ -43,13 +46,7 @@ function App() {
               <Route path="/agents" element={<AgentDataPage />} />
             </Route>
 
-
-
-            <Route element={<ProtectedRoute requiredPermission="REPORT_VIEW" />}>
-              <Route path="/reports" element={<ReportsPage />} />
-            </Route>
-
-            <Route element={<ProtectedRoute requiredPermission="NOTE_MANAGE" />}>
+            <Route element={<ProtectedRoute requiredPermission="NOTE_VIEW" />}>
               <Route path="/notes" element={<NotesDataPage />} />
             </Route>
 

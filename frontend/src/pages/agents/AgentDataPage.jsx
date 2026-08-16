@@ -6,7 +6,10 @@ import AgentFormModal from './AgentFormModal';
 import AgentPassengersModal from './AgentPassengersModal';
 import { useTranslation } from 'react-i18next';
 
+import { useDocumentTitle } from '../../hooks/useDocumentTitle';
+
 export const AgentDataPage = () => {
+  useDocumentTitle('Agent Data');
   const { t } = useTranslation();
   const { hasPermission } = useAuthStore();
   const [selectedFilterName, setSelectedFilterName] = useState('');

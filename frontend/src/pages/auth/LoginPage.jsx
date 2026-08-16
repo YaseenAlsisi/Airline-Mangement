@@ -5,7 +5,10 @@ import { login, getMe } from '../../api/auth.api';
 import { useTranslation } from 'react-i18next';
 import { Squares2X2Icon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 
+import { useDocumentTitle } from '../../hooks/useDocumentTitle';
+
 export const LoginPage = () => {
+  useDocumentTitle('Login');
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();

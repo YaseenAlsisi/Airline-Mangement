@@ -48,4 +48,9 @@ public class RoleController {
     public ResponseEntity<ApiResponse<List<RoleDto.PermissionResponse>>> getAllPermissions() {
         return ResponseEntity.ok(ApiResponse.success(roleService.getAllPermissions()));
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteRole(@PathVariable UUID id) {
+        roleService.deleteRole(id);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
 }

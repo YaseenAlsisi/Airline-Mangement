@@ -6,7 +6,10 @@ import { DocumentTextIcon, PencilSquareIcon, CheckCircleIcon, ExclamationTriangl
 import { PlaneLoader } from './components/PlaneLoader';
 import { Pagination } from '../../components/ui/Pagination';
 
+import { useDocumentTitle } from '../../hooks/useDocumentTitle';
+
 export const ManifestFilesPage = () => {
+  useDocumentTitle('Files History');
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [batches, setBatches] = useState([]);
