@@ -103,6 +103,7 @@ public class ManifestImportService {
                 }
             }
 
+<<<<<<< HEAD
             // Pre-collect all passports and names to minimize queries
             Set<String> passportsToFind = new HashSet<>();
             Set<String> namesToFind = new HashSet<>();
@@ -137,6 +138,8 @@ public class ManifestImportService {
                 }
             }
 
+=======
+>>>>>>> origin/Fix-Agent-page
             Set<String> processedKeys = new HashSet<>();
             for (Row row : sheet) {
                 if (row.getRowNum() <= headerRow.getRowNum()) continue;
@@ -151,19 +154,47 @@ public class ManifestImportService {
 
                 if (passportNumber != null && !passportNumber.isEmpty()) {
                     String uniqueKey = "PPT_" + passportNumber + "_" + departureDate;
+<<<<<<< HEAD
                     if (existingKeys.contains(uniqueKey) || processedKeys.contains(uniqueKey)) {
                         isDuplicate = true;
                     } else {
                         processedKeys.add(uniqueKey);
+=======
+                    if (processedKeys.contains(uniqueKey)) {
+                        isDuplicate = true;
+                    } else {
+                        List<ManifestPassenger> existing = passengerRepository.findByPassportNumber(passportNumber);
+                        for (ManifestPassenger ep : existing) {
+                            if (Objects.equals(ep.getDepartureDate(), departureDate)) {
+                                isDuplicate = true;
+                                break;
+                            }
+                        }
+                        if (!isDuplicate) processedKeys.add(uniqueKey);
+>>>>>>> origin/Fix-Agent-page
                     }
                 }
 
                 if (!isDuplicate && passengerName != null && !passengerName.isEmpty()) {
                     String uniqueKey = "NAME_" + passengerName + "_" + departureDate;
+<<<<<<< HEAD
                     if (existingKeys.contains(uniqueKey) || processedKeys.contains(uniqueKey)) {
                         isDuplicate = true;
                     } else {
                         processedKeys.add(uniqueKey);
+=======
+                    if (processedKeys.contains(uniqueKey)) {
+                        isDuplicate = true;
+                    } else {
+                        List<ManifestPassenger> existing = passengerRepository.findByPassengerName(passengerName);
+                        for (ManifestPassenger ep : existing) {
+                            if (Objects.equals(ep.getDepartureDate(), departureDate)) {
+                                isDuplicate = true;
+                                break;
+                            }
+                        }
+                        if (!isDuplicate) processedKeys.add(uniqueKey);
+>>>>>>> origin/Fix-Agent-page
                     }
                 }
 
@@ -619,7 +650,6 @@ public class ManifestImportService {
         }
 
         List<ManifestPassenger> passengers = passengerRepository.findByBatchId(batchId);
-        
         // Use local cache for optimization during publish
         Map<String, Agent> agentCache = new HashMap<>();
         agentRepository.findAll().forEach(a -> agentCache.put(a.getName().trim().toLowerCase(), a));
