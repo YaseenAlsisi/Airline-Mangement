@@ -64,7 +64,6 @@ public class PriceListService {
         PriceList priceList = PriceList.builder()
                 .code(request.getCode())
                 .name(request.getName())
-                .airlineId(request.getAirlineId())
                 .agentId(request.getAgentId())
                 .commissionPercentage(request.getCommissionPercentage() != null ? request.getCommissionPercentage() : BigDecimal.ZERO)
                 .markupAmount(request.getMarkupAmount() != null ? request.getMarkupAmount() : BigDecimal.ZERO)
@@ -125,7 +124,6 @@ public class PriceListService {
         }
 
         priceList.setName(request.getName());
-        priceList.setAirlineId(request.getAirlineId());
         priceList.setAgentId(request.getAgentId());
         priceList.setValidFrom(request.getValidFrom());
         priceList.setValidTo(request.getValidTo());

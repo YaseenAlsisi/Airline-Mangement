@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { previewManifestImport, publishManifestImport, getBatchPreview, deleteManifestRowsBulk } from '../../api/manifestImport.api';
-import { DocumentArrowUpIcon, CheckCircleIcon, ExclamationTriangleIcon, CheckIcon, FunnelIcon, ArrowUpTrayIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { DocumentArrowUpIcon, CheckCircleIcon, ExclamationTriangleIcon, CheckIcon, FunnelIcon, ArrowUpTrayIcon, TrashIcon, ChevronLeftIcon, TagIcon, BuildingOfficeIcon, CalendarDaysIcon, PaperAirplaneIcon, MapPinIcon, MapIcon, ClockIcon, BriefcaseIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import { ManifestEditableGrid } from './components/ManifestEditableGrid';
 import { ManifestEditableTable } from './components/ManifestEditableTable';
@@ -23,6 +23,20 @@ export const ImportDataPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedRows, setSelectedRows] = useState(new Set());
+  
+  const [filters, setFilters] = useState({
+    passengerCategory: '',
+    agentNameRaw: '',
+    departureDate: '',
+    flightNumber: '',
+    destination: '',
+    departurePort: '',
+    arrivalTime: '',
+    serviceType: ''
+  });
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filterView, setFilterView] = useState('main');
+  const filterRef = useRef(null);
   
   const fileInputRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -54,6 +68,22 @@ export const ImportDataPage = () => {
       loadBatch(sessionBatchId);
     }
   }, [searchParams.get('batchId')]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setIsFilterOpen(false);
+      }
+    }
+    
+    if (isFilterOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isFilterOpen]);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -243,6 +273,18 @@ export const ImportDataPage = () => {
     }
   };
 
+  const filteredRows = rows.filter(row => {
+    if (filters.passengerCategory && row.passengerCategory !== filters.passengerCategory) return false;
+    if (filters.agentNameRaw && row.agentNameRaw !== filters.agentNameRaw) return false;
+    if (filters.departureDate && row.departureDate !== filters.departureDate) return false;
+    if (filters.flightNumber && row.flightNumber !== filters.flightNumber) return false;
+    if (filters.destination && row.destination !== filters.destination) return false;
+    if (filters.departurePort && row.departurePort !== filters.departurePort) return false;
+    if (filters.arrivalTime && row.arrivalTime !== filters.arrivalTime) return false;
+    if (filters.serviceType && row.serviceType !== filters.serviceType) return false;
+    return true;
+  });
+
   const handleClear = () => {
     if (window.confirm(t('import.confirmClear', 'Are you sure you want to discard this entire file and start over?'))) {
       resetState();
@@ -413,10 +455,95 @@ export const ImportDataPage = () => {
                       </button>
                     )}
 
-                    <button type="button" className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 hover:bg-slate-50 transition-colors">
-                      <FunnelIcon className="h-4 w-4 text-slate-500" />
-                      {t('import.filter', 'Filter')}
-                    </button>
+                    <div className="relative inline-block text-left" ref={filterRef}>
+                      <button
+                        type="button"
+                        onClick={() => setIsFilterOpen(!isFilterOpen)}
+                        className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 hover:bg-slate-50 transition-colors"
+                      >
+                        <FunnelIcon className="h-4 w-4 text-slate-500" />
+                        {t('import.filter', 'Filter')}
+                        {Object.values(filters).some(Boolean) && (
+                          <span className="flex h-2 w-2 rounded-full bg-indigo-600 absolute top-1.5 right-1.5"></span>
+                        )}
+                      </button>
+
+                      {isFilterOpen && (
+                        <div className="absolute left-0 z-50 mt-2 w-80 origin-top-left rounded-xl bg-white shadow-xl ring-1 ring-slate-200 focus:outline-none p-3 transition-all overflow-hidden">
+                          
+                          {filterView === 'main' && (
+                            <div>
+                              <h3 className="text-xs font-bold text-slate-800 mb-2">{t('import.addFilter', 'Add Filter')}</h3>
+                              <div className="grid grid-cols-2 gap-2">
+                                {[
+                                  { key: 'passengerCategory', label: 'Category', icon: TagIcon },
+                                  { key: 'agentNameRaw', label: 'Agent', icon: BuildingOfficeIcon },
+                                  { key: 'departureDate', label: 'Dep. Date', icon: CalendarDaysIcon },
+                                  { key: 'flightNumber', label: 'Flight', icon: PaperAirplaneIcon },
+                                  { key: 'destination', label: 'Destination', icon: MapPinIcon },
+                                  { key: 'departurePort', label: 'Dep. Port', icon: MapIcon },
+                                  { key: 'arrivalTime', label: 'Arrival Time', icon: ClockIcon },
+                                  { key: 'serviceType', label: 'Service Type', icon: BriefcaseIcon }
+                                ].map((item) => (
+                                  <button 
+                                    key={item.key}
+                                    onClick={() => setFilterView(item.key)}
+                                    className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${filters[item.key] ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 hover:border-indigo-200 hover:bg-slate-50'}`}
+                                  >
+                                    <item.icon className={`w-5 h-5 mb-1 ${filters[item.key] ? 'text-indigo-600' : 'text-slate-500'}`} />
+                                    <span className={`text-[11px] font-semibold ${filters[item.key] ? 'text-indigo-700' : 'text-slate-600'}`}>
+                                      {t(`import.col.${item.key}`, item.label)}
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                              {Object.values(filters).some(Boolean) && (
+                                <div className="mt-4 pt-3 border-t border-slate-100">
+                                  <button
+                                    onClick={() => {
+                                      setFilters({
+                                        passengerCategory: '', agentNameRaw: '', departureDate: '', flightNumber: '', destination: '', departurePort: '', arrivalTime: '', serviceType: ''
+                                      });
+                                    }}
+                                    className="w-full py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg text-center font-bold transition-colors"
+                                  >
+                                    {t('import.clearFilters', 'مسح الفلاتر')}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {filterView !== 'main' && (
+                            <div>
+                              <div className="flex items-center gap-2 mb-4">
+                                <button onClick={() => setFilterView('main')} className="p-1 hover:bg-slate-100 rounded-lg text-slate-500"><ChevronLeftIcon className="w-5 h-5"/></button>
+                                <h3 className="text-sm font-bold text-slate-800">{t(`import.col.${filterView}`, filterView)}</h3>
+                              </div>
+                              <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                                <button 
+                                  onClick={() => { setFilters({...filters, [filterView]: ''}); setFilterView('main'); }}
+                                  className={`w-full text-start px-3 py-2 rounded-lg text-sm font-medium ${!filters[filterView] ? 'bg-indigo-500 text-white' : 'text-slate-700 hover:bg-slate-100'}`}
+                                >
+                                  {t('import.all', 'الكل (All)')}
+                                </button>
+                                {[...new Set(rows.map(r => r[filterView]?.trim()).filter(Boolean))].sort().map(val => (
+                                  <button 
+                                    key={val}
+                                    onClick={() => { setFilters({...filters, [filterView]: val}); setFilterView('main'); }}
+                                    className={`w-full text-start px-3 py-2 rounded-lg text-sm font-medium ${filters[filterView] === val ? 'bg-indigo-500 text-white' : 'text-slate-700 hover:bg-slate-100'}`}
+                                  >
+                                    {val}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                        </div>
+                      )}
+                    </div>
+
                     <button type="button" className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 hover:bg-slate-50 transition-colors">
                       <ArrowUpTrayIcon className="h-4 w-4 text-slate-500" />
                       {t('import.export', 'Export')}
@@ -444,7 +571,7 @@ export const ImportDataPage = () => {
                 {viewMode === 'grid' ? (
                   <ManifestEditableGrid 
                     batchId={batch.id} 
-                    rows={rows.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)} 
+                    rows={filteredRows.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)} 
                     onRowUpdated={handleRowUpdated} 
                     selectedRows={selectedRows}
                     setSelectedRows={setSelectedRows}
@@ -452,7 +579,7 @@ export const ImportDataPage = () => {
                 ) : (
                   <ManifestEditableTable 
                     batchId={batch.id} 
-                    rows={rows.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)} 
+                    rows={filteredRows.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)} 
                     onRowUpdated={handleRowUpdated} 
                     selectedRows={selectedRows}
                     setSelectedRows={setSelectedRows}
@@ -461,7 +588,7 @@ export const ImportDataPage = () => {
                 
                 <Pagination 
                   currentPage={currentPage} 
-                  totalPages={Math.ceil(rows.length / rowsPerPage)} 
+                  totalPages={Math.ceil(filteredRows.length / rowsPerPage)} 
                   onPageChange={setCurrentPage} 
                 />
               </>

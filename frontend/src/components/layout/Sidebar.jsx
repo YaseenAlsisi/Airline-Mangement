@@ -6,11 +6,9 @@ import {
   ArrowUpTrayIcon,
   CurrencyDollarIcon,
   UsersIcon,
-  CreditCardIcon,
   ChartBarIcon,
   ChatBubbleLeftRightIcon,
   Cog6ToothIcon,
-  PaperAirplaneIcon,
   FolderIcon,
   ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline';
@@ -22,8 +20,6 @@ const navigation = [
   { name: 'Files History', href: '/files', icon: FolderIcon },
   { name: 'Price Lists', href: '/price-lists', icon: CurrencyDollarIcon },
   { name: 'Agent Data', href: '/agents', icon: UsersIcon },
-  { name: 'Airlines', href: '/airlines', icon: PaperAirplaneIcon },
-  { name: 'Transactions', href: '/transactions', icon: CreditCardIcon },
   { name: 'Reports', href: '/reports', icon: ChartBarIcon },
   { name: 'Notes', href: '/notes', icon: ChatBubbleLeftRightIcon },
   { name: 'Settings', href: '/settings', icon: Cog6ToothIcon }

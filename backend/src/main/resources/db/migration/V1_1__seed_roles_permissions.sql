@@ -10,19 +10,12 @@ INSERT INTO permissions (id, code, description, module) VALUES
 (gen_random_uuid(), 'PRICE_DELETE', 'Delete price lists', 'pricelist'),
 (gen_random_uuid(), 'IMPORT_VIEW', 'View import history', 'excelimport'),
 (gen_random_uuid(), 'IMPORT_CREATE', 'Upload/import files', 'excelimport'),
-(gen_random_uuid(), 'TRANSACTION_VIEW', 'View transactions', 'transaction'),
-(gen_random_uuid(), 'TRANSACTION_CREATE', 'Create transactions', 'transaction'),
-(gen_random_uuid(), 'TRANSACTION_EDIT', 'Edit transactions', 'transaction'),
 (gen_random_uuid(), 'REPORT_VIEW', 'View reports', 'report'),
 (gen_random_uuid(), 'USER_MANAGE', 'Manage users', 'user'),
 (gen_random_uuid(), 'ROLE_MANAGE', 'Manage roles and permissions', 'user'),
 (gen_random_uuid(), 'NOTE_CREATE', 'Create notes', 'note'),
 (gen_random_uuid(), 'NOTE_REPLY', 'Reply to notes', 'note'),
-(gen_random_uuid(), 'AUDIT_VIEW', 'View audit logs', 'auditlog'),
-(gen_random_uuid(), 'AIRLINE_VIEW', 'View airlines', 'airline'),
-(gen_random_uuid(), 'AIRLINE_CREATE', 'Create airlines', 'airline'),
-(gen_random_uuid(), 'AIRLINE_EDIT', 'Edit airlines', 'airline'),
-(gen_random_uuid(), 'AIRLINE_DELETE', 'Delete airlines', 'airline');
+(gen_random_uuid(), 'AUDIT_VIEW', 'View audit logs', 'auditlog');
 
 -- Insert initial roles
 INSERT INTO roles (id, name, description, is_system) VALUES 

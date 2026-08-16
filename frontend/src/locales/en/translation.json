@@ -4,8 +4,6 @@
     "Excel Import": "Excel Import",
     "Price Lists": "Price Lists",
     "Agent Data": "Agent Data",
-    "Airlines": "Airlines",
-    "Transactions": "Transactions",
     "Reports": "Reports",
     "Notes": "Notes",
     "Settings": "Settings"
@@ -45,7 +43,6 @@
     "charts": {
       "passengersByDestination": "Passengers by Destination",
       "revenueByService": "Revenue by Service Type",
-      "passengersByAirline": "Passengers by Airline",
       "notes": "Notes",
       "adult": "Adult",
       "female": "Female",

@@ -13,7 +13,7 @@ export const MainLayout = () => {
   }, [location]);
 
   return (
-    <div className="flex min-h-screen w-full bg-slate-50 overflow-hidden relative">
+    <div className="flex h-screen w-full bg-slate-50 overflow-hidden relative">
       
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (

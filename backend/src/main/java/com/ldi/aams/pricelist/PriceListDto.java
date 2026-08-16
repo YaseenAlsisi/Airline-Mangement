@@ -112,7 +112,6 @@ public class PriceListDto {
         private UUID id;
         private String code;
         private String name;
-        private UUID airlineId;
         private UUID agentId;
         private BigDecimal commissionPercentage;
         private BigDecimal markupAmount;
@@ -125,14 +124,13 @@ public class PriceListDto {
 
         public PriceListResponse() {}
 
-        public PriceListResponse(UUID id, String code, String name, UUID airlineId, UUID agentId,
+        public PriceListResponse(UUID id, String code, String name, UUID agentId,
                                   BigDecimal commissionPercentage, BigDecimal markupAmount, String status,
                                   LocalDate validFrom, LocalDate validTo, Instant createdAt,
                                   Instant updatedAt, List<PricingGroupResponse> groups) {
             this.id = id;
             this.code = code;
             this.name = name;
-            this.airlineId = airlineId;
             this.agentId = agentId;
             this.commissionPercentage = commissionPercentage;
             this.markupAmount = markupAmount;
@@ -178,7 +176,6 @@ public class PriceListDto {
             private UUID id;
             private String code;
             private String name;
-            private UUID airlineId;
             private UUID agentId;
             private BigDecimal commissionPercentage;
             private BigDecimal markupAmount;
@@ -192,7 +189,6 @@ public class PriceListDto {
             public Builder id(UUID id) { this.id = id; return this; }
             public Builder code(String code) { this.code = code; return this; }
             public Builder name(String name) { this.name = name; return this; }
-            public Builder airlineId(UUID airlineId) { this.airlineId = airlineId; return this; }
             public Builder agentId(UUID agentId) { this.agentId = agentId; return this; }
             public Builder commissionPercentage(BigDecimal v) { this.commissionPercentage = v; return this; }
             public Builder markupAmount(BigDecimal v) { this.markupAmount = v; return this; }
@@ -204,7 +200,7 @@ public class PriceListDto {
             public Builder groups(List<PricingGroupResponse> groups) { this.groups = groups; return this; }
 
             public PriceListResponse build() {
-                return new PriceListResponse(id, code, name, airlineId, agentId, commissionPercentage,
+                return new PriceListResponse(id, code, name, agentId, commissionPercentage,
                         markupAmount, status, validFrom, validTo, createdAt, updatedAt, groups);
             }
         }
@@ -290,13 +286,12 @@ public class PriceListDto {
 
         public CreatePriceListRequest() {}
 
-        public CreatePriceListRequest(String code, String name, UUID airlineId, UUID agentId,
+        public CreatePriceListRequest(String code, String name, UUID agentId,
                                        BigDecimal commissionPercentage, BigDecimal markupAmount,
                                        String status, LocalDate validFrom, LocalDate validTo,
                                        List<CreatePricingGroupRequest> groups) {
             this.code = code;
             this.name = name;
-            this.airlineId = airlineId;
             this.agentId = agentId;
             this.commissionPercentage = commissionPercentage;
             this.markupAmount = markupAmount;
@@ -346,12 +341,11 @@ public class PriceListDto {
 
         public UpdatePriceListRequest() {}
 
-        public UpdatePriceListRequest(String name, UUID airlineId, UUID agentId,
+        public UpdatePriceListRequest(String name, UUID agentId,
                                        BigDecimal commissionPercentage, BigDecimal markupAmount,
                                        String status, LocalDate validFrom, LocalDate validTo,
                                        List<CreatePricingGroupRequest> groups) {
             this.name = name;
-            this.airlineId = airlineId;
             this.agentId = agentId;
             this.commissionPercentage = commissionPercentage;
             this.markupAmount = markupAmount;

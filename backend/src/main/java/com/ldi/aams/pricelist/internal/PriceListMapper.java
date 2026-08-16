@@ -13,7 +13,6 @@ public class PriceListMapper {
                 .id(priceList.getId())
                 .code(priceList.getCode())
                 .name(priceList.getName())
-                .airlineId(priceList.getAirlineId())
                 .agentId(priceList.getAgentId())
                 .commissionPercentage(priceList.getCommissionPercentage())
                 .markupAmount(priceList.getMarkupAmount())

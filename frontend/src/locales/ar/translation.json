@@ -5,8 +5,6 @@
     "Files History": "تاريخ الكشوف",
     "Price Lists": "قوائم الأسعار",
     "Agent Data": "بيانات الوكلاء",
-    "Airlines": "شركات الطيران",
-    "Transactions": "المعاملات",
     "Reports": "التقارير",
     "Notes": "الملاحظات",
     "Settings": "الإعدادات"
@@ -46,7 +44,6 @@
     "charts": {
       "passengersByDestination": "المسافرون حسب الوجهة",
       "revenueByService": "الإيرادات حسب نوع الخدمة",
-      "passengersByAirline": "المسافرون حسب شركة الطيران",
       "notes": "الملاحظات",
       "adult": "بالغ",
       "female": "أنثى",

@@ -7,9 +7,7 @@ import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { SettingsPage } from './pages/settings/SettingsPage';
 import AgentDataPage from './pages/agents/AgentDataPage';
-import AirlineDataPage from './pages/airlines/AirlineDataPage';
 import PriceListDataPage from './pages/price-lists/PriceListDataPage';
-import TransactionDataPage from './pages/transactions/TransactionDataPage';
 import ImportDataPage from './pages/import/ImportDataPage';
 import ManifestFilesPage from './pages/import/ManifestFilesPage';
 import ReportsPage from './pages/reports/ReportsPage';
@@ -45,13 +43,7 @@ function App() {
               <Route path="/agents" element={<AgentDataPage />} />
             </Route>
 
-            <Route element={<ProtectedRoute requiredPermission="AIRLINE_VIEW" />}>
-              <Route path="/airlines" element={<AirlineDataPage />} />
-            </Route>
 
-            <Route element={<ProtectedRoute requiredPermission="TRANSACTION_VIEW" />}>
-              <Route path="/transactions" element={<TransactionDataPage />} />
-            </Route>
 
             <Route element={<ProtectedRoute requiredPermission="REPORT_VIEW" />}>
               <Route path="/reports" element={<ReportsPage />} />
