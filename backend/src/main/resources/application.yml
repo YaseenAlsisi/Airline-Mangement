@@ -23,8 +23,8 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
-    clean-on-validation-error: true
-    clean-disabled: false
+    clean-on-validation-error: false
+    clean-disabled: true
 
 logging:
   level:
