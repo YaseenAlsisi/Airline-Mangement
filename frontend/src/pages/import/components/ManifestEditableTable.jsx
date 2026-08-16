@@ -114,7 +114,7 @@ export const ManifestEditableTable = ({ batchId, rows, onRowUpdated, selectedRow
               <th className="py-4 px-4">{t('import.col.serviceType', 'Service Type')}</th>
               <th className="py-4 px-4">{t('import.col.regularPrice', 'Regular Price')}</th>
               <th className="py-4 px-4">{t('import.col.commission', 'Commission')}</th>
-              <th className="py-4 px-4">{t('import.col.total', 'Total')}</th>
+              <th className="py-4 px-4">{t('import.col.debitEgp', 'مدين مصري')}</th>
               <th className="py-4 px-4">{t('import.col.status', 'Status')}</th>
               <th className="py-4 px-4 text-center">{t('import.col.actions', 'Action')}</th>
             </tr>
@@ -255,8 +255,8 @@ export const ManifestEditableTable = ({ batchId, rows, onRowUpdated, selectedRow
                   <td className="py-3 px-4 text-sm font-medium text-slate-700 text-right">
                     {row.commission != null ? row.commission.toLocaleString() : '-'}
                   </td>
-                  <td className="py-3 px-4 text-sm font-bold text-indigo-700 text-right">
-                    {row.totalPrice != null ? row.totalPrice.toLocaleString() : '-'}
+                  <td className="py-3 px-4 text-sm font-bold text-green-700 text-right">
+                    {row.debitEgp != null ? row.debitEgp.toLocaleString() : '0'}
                   </td>
 
                   {/* Status */}
