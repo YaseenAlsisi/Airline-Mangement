@@ -73,7 +73,7 @@ export const Sidebar = () => {
                       }
                     >
                       <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
-                      {t(item.name)}
+                      {t(`navigation.${item.name}`, item.name)}
                     </NavLink>
                   </li>
                 ))}

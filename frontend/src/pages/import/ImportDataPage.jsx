@@ -507,7 +507,6 @@ export const ImportDataPage = () => {
               </div>
             </dl>
 
-            {batch.status === 'DRAFT' && rows.length > 0 && (
               <>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
                   {/* Left Controls */}
@@ -654,15 +653,17 @@ export const ImportDataPage = () => {
                       <ArrowUpTrayIcon className="h-4 w-4 text-slate-500" />
                       {exporting ? t('import.exporting', 'جاري التصدير...') : t('import.export', 'Export')}
                     </button>
-                    <button 
-                      type="button" 
-                      onClick={handleCalculate}
-                      disabled={calculating}
-                      className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 shadow-sm ring-1 ring-inset ring-emerald-200 hover:bg-emerald-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <CalculatorIcon className="h-4 w-4 text-emerald-600" />
-                      {calculating ? t('import.calculating', 'جاري الحساب...') : t('import.calculate', 'Calculate')}
-                    </button>
+                    {batch.status === 'DRAFT' && (
+                      <button 
+                        type="button" 
+                        onClick={handleCalculate}
+                        disabled={calculating}
+                        className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 shadow-sm ring-1 ring-inset ring-emerald-200 hover:bg-emerald-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <CalculatorIcon className="h-4 w-4 text-emerald-600" />
+                        {calculating ? t('import.calculating', 'جاري الحساب...') : t('import.calculate', 'Calculate')}
+                      </button>
+                    )}
                   </div>
 
                   {/* Right Controls */}
@@ -707,9 +708,9 @@ export const ImportDataPage = () => {
                   onPageChange={setCurrentPage} 
                 />
               </>
-            )}
+            
             {batch.status === 'PUBLISHED' && (
-               <div className="text-center py-10 bg-gray-50 rounded-lg text-gray-600 flex flex-col items-center justify-center gap-4 border border-gray-200 mt-6">
+               <div className="text-center py-6 bg-gray-50 rounded-lg text-gray-600 flex flex-col items-center justify-center gap-4 border border-gray-200 mt-6">
                  <p className="text-lg font-medium">{t('import.viewInAgents', 'Data is now live. View passenger manifests in the Agent Data page.')}</p>
                  <button 
                    onClick={resetState}

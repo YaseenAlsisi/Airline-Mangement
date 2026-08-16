@@ -166,9 +166,10 @@ public class ManifestImportService {
                     }
                 }
 
-                if (isDuplicate) {
-                    continue; // Skip because it already exists
-                }
+                // We won't skip duplicates anymore so they appear in the UI with an error status
+                // if (isDuplicate) {
+                //     continue; // Skip because it already exists
+                // }
 
                 totalRows++;
 
@@ -218,6 +219,9 @@ public class ManifestImportService {
                 }
                 if (passenger.getDepartureDate() == null) {
                     errors.add("Departure date is required");
+                }
+                if (isDuplicate) {
+                    errors.add("مسافر مكرر (Duplicate)");
                 }
 
                 if (errors.isEmpty()) {
@@ -358,6 +362,31 @@ public class ManifestImportService {
         List<com.ldi.aams.pricelist.PriceListDto.PriceListResponse> allPriceLists = 
             priceListService.getAllPriceLists(org.springframework.data.domain.PageRequest.of(0, 1000)).getContent();
 
+        // Pre-cache normalized strings for all price list groups to avoid N*M regex operations
+        class CachedGroup {
+            com.ldi.aams.pricelist.PriceListDto.PricingGroupResponse group;
+            String normalizedDep;
+            String normalizedDest;
+        }
+        class CachedPriceList {
+            com.ldi.aams.pricelist.PriceListDto.PriceListResponse pl;
+            List<CachedGroup> cachedGroups = new ArrayList<>();
+        }
+
+        List<CachedPriceList> cachedPriceLists = new ArrayList<>();
+        for (com.ldi.aams.pricelist.PriceListDto.PriceListResponse pl : allPriceLists) {
+            CachedPriceList cpl = new CachedPriceList();
+            cpl.pl = pl;
+            for (com.ldi.aams.pricelist.PriceListDto.PricingGroupResponse group : pl.getGroups()) {
+                CachedGroup cg = new CachedGroup();
+                cg.group = group;
+                cg.normalizedDep = normalizeArabicString(group.getDepartureAirport());
+                cg.normalizedDest = normalizeArabicString(group.getDestination());
+                cpl.cachedGroups.add(cg);
+            }
+            cachedPriceLists.add(cpl);
+        }
+
         for (ManifestPassenger p : passengers) {
             String pDep = normalizeArabicString(p.getDeparturePort());
             String pDest = normalizeArabicString(p.getDestination());
@@ -374,17 +403,14 @@ public class ManifestImportService {
             BigDecimal foundPrice = null;
             BigDecimal foundCommission = null;
 
-            for (com.ldi.aams.pricelist.PriceListDto.PriceListResponse pl : allPriceLists) {
-                if (pl.getAgentId() != null && p.getAgent() != null && !pl.getAgentId().equals(p.getAgent().getId())) {
+            for (CachedPriceList cpl : cachedPriceLists) {
+                if (cpl.pl.getAgentId() != null && p.getAgent() != null && !cpl.pl.getAgentId().equals(p.getAgent().getId())) {
                     continue;
                 }
-                for (com.ldi.aams.pricelist.PriceListDto.PricingGroupResponse group : pl.getGroups()) {
-                    String gDep = normalizeArabicString(group.getDepartureAirport());
-                    String gDest = normalizeArabicString(group.getDestination());
-                    
-                    if ((isMatch(pDep, gDep) && isMatch(pDest, gDest)) || 
-                        (isMatch(pDep, gDest) && isMatch(pDest, gDep))) {
-                        for (com.ldi.aams.pricelist.PriceListDto.PriceListEntryResponse entry : group.getEntries()) {
+                for (CachedGroup cg : cpl.cachedGroups) {
+                    if ((isMatch(pDep, cg.normalizedDep) && isMatch(pDest, cg.normalizedDest)) || 
+                        (isMatch(pDep, cg.normalizedDest) && isMatch(pDest, cg.normalizedDep))) {
+                        for (com.ldi.aams.pricelist.PriceListDto.PriceListEntryResponse entry : cg.group.getEntries()) {
                             if (entry.getPassengerType() != null && entry.getPassengerType().name().equalsIgnoreCase(targetCat)) {
                                 foundPrice = entry.getPrice();
                                 foundCommission = entry.getCommission();
@@ -392,7 +418,7 @@ public class ManifestImportService {
                             }
                         }
                         if (foundPrice == null && !targetCat.equals(originalCat)) {
-                            for (com.ldi.aams.pricelist.PriceListDto.PriceListEntryResponse entry : group.getEntries()) {
+                            for (com.ldi.aams.pricelist.PriceListDto.PriceListEntryResponse entry : cg.group.getEntries()) {
                                 if (entry.getPassengerType() != null && entry.getPassengerType().name().equalsIgnoreCase(originalCat)) {
                                     foundPrice = entry.getPrice();
                                     foundCommission = entry.getCommission();
@@ -424,10 +450,12 @@ public class ManifestImportService {
         return s1.contains(s2) || s2.contains(s1);
     }
 
+    private static final java.util.regex.Pattern ARABIC_NORMALIZE_PATTERN = java.util.regex.Pattern.compile("(?i)(مطار|ميناء|م\\.|الدولي|دولي|مدينة|محطة|منفذ)");
+    private static final java.util.regex.Pattern SPACE_NORMALIZE_PATTERN = java.util.regex.Pattern.compile("[\\s\\-_]+");
+
     private String normalizeArabicString(String input) {
         if (input == null) return "";
-        return input
-                .replaceAll("(?i)(مطار|ميناء|م\\.|الدولي|دولي|مدينة|محطة|منفذ)", "")
+        String s1 = ARABIC_NORMALIZE_PATTERN.matcher(input).replaceAll("")
                 .replace("ة", "ه")
                 .replace("أ", "ا")
                 .replace("إ", "ا")
@@ -435,9 +463,8 @@ public class ManifestImportService {
                 .replace("ى", "ي")
                 .replace("ؤ", "و")
                 .replace("ئ", "ي")
-                .replace("ء", "")
-                .replaceAll("[\\s\\-_]+", "")
-                .trim();
+                .replace("ء", "");
+        return SPACE_NORMALIZE_PATTERN.matcher(s1).replaceAll("").trim();
     }
 
     private String normalizePassengerCategory(String rawType) {
@@ -622,12 +649,17 @@ public class ManifestImportService {
         Map<String, Agent> agentCache = new HashMap<>();
         agentRepository.findAll().forEach(a -> agentCache.put(a.getName().trim().toLowerCase(), a));
 
+        boolean anyUpdated = false;
         for (ManifestPassenger p : passengers) {
             if ("VALID".equals(p.getValidationStatus()) && p.getAgentNameRaw() != null && !p.getAgentNameRaw().isBlank()) {
                 Agent agent = matchOrCreateAgent(p.getAgentNameRaw(), agentCache);
                 p.setAgent(agent);
-                passengerRepository.save(p);
+                anyUpdated = true;
             }
+        }
+        
+        if (anyUpdated) {
+            passengerRepository.saveAll(passengers);
         }
 
         batch.setStatus("PUBLISHED");

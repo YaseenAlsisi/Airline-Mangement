@@ -22,7 +22,7 @@ export const MainLayout = () => {
             className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
             onClick={() => setIsSidebarOpen(false)}
           ></div>
-          <div className="relative flex w-full max-w-[280px] flex-1 flex-col bg-white pt-5 pb-4 transition-transform shadow-2xl">
+          <div className="relative flex w-full max-w-[280px] flex-1 flex-col bg-[#0f172a] transition-transform shadow-2xl">
             <div className="absolute top-0 right-0 -mr-14 pt-4">
               <button
                 type="button"
@@ -36,7 +36,7 @@ export const MainLayout = () => {
               </button>
             </div>
             {/* The Sidebar component automatically handles its own layout, but we need it to fill the height */}
-            <div className="h-full overflow-y-auto">
+            <div className="h-full flex flex-col">
               <Sidebar />
             </div>
           </div>

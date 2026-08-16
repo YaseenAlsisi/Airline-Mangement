@@ -206,15 +206,22 @@ export const ManifestFilesPage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      {batch.status === 'DRAFT' && (
                         <button
                           onClick={() => handleContinueEditing(batch.id)}
-                          className="inline-flex items-center gap-1.5 text-indigo-600 hover:text-indigo-900"
+                          className="inline-flex items-center gap-1.5 text-indigo-600 hover:text-indigo-900 transition-colors"
                         >
-                          <PencilSquareIcon className="w-5 h-5" />
-                          {t('files.continueEditing', 'Continue Editing')}
+                          {batch.status === 'DRAFT' ? (
+                            <>
+                              <PencilSquareIcon className="w-5 h-5" />
+                              {t('files.continueEditing', 'Continue Editing')}
+                            </>
+                          ) : (
+                            <>
+                              <DocumentTextIcon className="w-5 h-5" />
+                              {t('files.viewEdit', 'عرض / تعديل')}
+                            </>
+                          )}
                         </button>
-                      )}
                     </td>
                   </tr>
                 ))

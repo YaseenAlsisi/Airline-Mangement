@@ -1,8 +1,8 @@
 {
   "navigation": {
-    "Dashboard": "لوحة التحكم",
-    "Excel Import": "رفع الإكسيل",
-    "Files History": "تاريخ الكشوف",
+    "Dashboard": "الرئيسية",
+    "Excel Import": "استيراد الكشوف",
+    "Files History": "سجل الملفات",
     "Price Lists": "قوائم الأسعار",
     "Agent Data": "بيانات الوكلاء",
     "Reports": "التقارير",
@@ -156,16 +156,20 @@
       "row": "م",
       "status": "الحالة",
       "passengerName": "اسم الراكب",
-      "passport": "الجواز",
-      "agent": "الوكيل (إكسيل)",
+      "passport": "رقم الجواز",
+      "agent": "الوكيل",
       "departureDate": "تاريخ المغادرة",
-      "flight": "الرحلة",
+      "flight": "رقم الرحلة",
       "destination": "الوجهة",
-      "category": "الفئة",
+      "category": "النوع",
       "regularPrice": "السعر الأساسي",
       "commission": "العمولة",
       "total": "الإجمالي",
-      "actions": "إجراءات"
+      "actions": "إجراءات",
+      "departurePort": "جهة المغادرة",
+      "birthDate": "تاريخ الميلاد",
+      "arrivalTime": "ميعاد الوصول",
+      "serviceType": "نوع الخدمة"
     },
     "calculate": "حسابات"
   },

@@ -115,8 +115,8 @@ export const ManifestEditableTable = ({ batchId, rows, onRowUpdated, selectedRow
               <th className="py-4 px-4">{t('import.col.regularPrice', 'Regular Price')}</th>
               <th className="py-4 px-4">{t('import.col.commission', 'Commission')}</th>
               <th className="py-4 px-4">{t('import.col.total', 'Total')}</th>
-              <th className="py-4 px-4">Status</th>
-              <th className="py-4 px-4 text-center">Action</th>
+              <th className="py-4 px-4">{t('import.col.status', 'Status')}</th>
+              <th className="py-4 px-4 text-center">{t('import.col.actions', 'Action')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100/80">
