@@ -579,100 +579,131 @@ public class ManifestImportService {
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             
             org.apache.poi.xssf.usermodel.XSSFSheet sheet = workbook.createSheet("Manifest Export");
+            sheet.setRightToLeft(true);
             
-            // Header Row
+            // Columns order: name, birthDate, passport, depPort, dest, flightNo, depDate, arrivalTime, agent, serviceType, category, price, commission, total
             String[] headers = {
-                "اسم الراكب", "الجواز", "الفئة", "الوكيل (إكسيل)", "تاريخ المغادرة", 
-                "الرحلة", "الوجهة", "Dep. Port", "Birth Date", "Arrival Time", 
-                "Service Type", "السعر الأساسي", "العمولة", "الإجمالي", "Status"
+                "الاسم", "تاريخ الميلاد", "رقم الجواز", "جهة المغادرة", "جهة الوصول", 
+                "رقم الرحلة", "تاريخ المغادرة", "ميعاد الوصول", "الوكيل", "نوع الخدمة", "النوع",
+                "السعر الأساسي", "العمولة", "الإجمالي"
             };
-            
-            org.apache.poi.xssf.usermodel.XSSFRow headerRow = sheet.createRow(0);
-            
-            // Header styling
-            CellStyle headerStyle = workbook.createCellStyle();
-            Font headerFont = workbook.createFont();
-            headerFont.setBold(true);
-            headerStyle.setFont(headerFont);
-            headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
+            // ---- Shared colors ----
+            org.apache.poi.xssf.usermodel.DefaultIndexedColorMap colorMap = new org.apache.poi.xssf.usermodel.DefaultIndexedColorMap();
+            org.apache.poi.xssf.usermodel.XSSFColor accentBkg = new org.apache.poi.xssf.usermodel.XSSFColor(new byte[]{(byte)218,(byte)234,(byte)255}, colorMap);
+            org.apache.poi.xssf.usermodel.XSSFColor accentFont = new org.apache.poi.xssf.usermodel.XSSFColor(new byte[]{(byte)48,(byte)74,(byte)206}, colorMap);
+
+            // ---- Header style ----
+            org.apache.poi.xssf.usermodel.XSSFCellStyle headerStyle = workbook.createCellStyle();
+            org.apache.poi.xssf.usermodel.XSSFFont headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerFont.setFontName("Cairo");
+            headerFont.setFontHeightInPoints((short) 14);
+            headerFont.setColor(accentFont);
+            headerStyle.setFont(headerFont);
+            headerStyle.setFillForegroundColor(accentBkg);
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setAlignment(HorizontalAlignment.CENTER);
+            headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+
+            // ---- Data style ----
+            org.apache.poi.xssf.usermodel.XSSFCellStyle dataStyle = workbook.createCellStyle();
+            org.apache.poi.xssf.usermodel.XSSFFont dataFont = workbook.createFont();
+            dataFont.setFontName("Cairo");
+            dataFont.setFontHeightInPoints((short) 12);
+            dataStyle.setFont(dataFont);
+            dataStyle.setAlignment(HorizontalAlignment.CENTER);
+            dataStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+
+            // ---- Total style ----
+            org.apache.poi.xssf.usermodel.XSSFCellStyle totalStyle = workbook.createCellStyle();
+            org.apache.poi.xssf.usermodel.XSSFFont totalFont = workbook.createFont();
+            totalFont.setBold(true);
+            totalFont.setFontName("Cairo");
+            totalFont.setFontHeightInPoints((short) 14);
+            totalFont.setColor(accentFont);
+            totalStyle.setFont(totalFont);
+            totalStyle.setFillForegroundColor(accentBkg);
+            totalStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            totalStyle.setAlignment(HorizontalAlignment.CENTER);
+            totalStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+
+            // ---- Create header row ----
+            org.apache.poi.xssf.usermodel.XSSFRow headerRow = sheet.createRow(0);
+            headerRow.setHeightInPoints(30);
             for (int i = 0; i < headers.length; i++) {
                 org.apache.poi.xssf.usermodel.XSSFCell cell = headerRow.createCell(i);
                 cell.setCellValue(headers[i]);
                 cell.setCellStyle(headerStyle);
-                sheet.setColumnWidth(i, 4000); // 4000 is ~15 characters wide
+                sheet.setColumnWidth(i, 5000);
             }
             
+            // ---- Data rows ----
             BigDecimal sumRegular = BigDecimal.ZERO;
             BigDecimal sumCommission = BigDecimal.ZERO;
             BigDecimal sumTotal = BigDecimal.ZERO;
-            
+
             int rowIdx = 1;
             for (ManifestPassenger p : passengers) {
                 org.apache.poi.xssf.usermodel.XSSFRow row = sheet.createRow(rowIdx++);
+                row.setHeightInPoints(25);
                 
-                row.createCell(0).setCellValue(p.getPassengerName() != null ? p.getPassengerName() : "");
-                row.createCell(1).setCellValue(p.getPassportNumber() != null ? p.getPassportNumber() : "");
-                row.createCell(2).setCellValue(p.getPassengerCategory() != null ? p.getPassengerCategory() : "");
-                row.createCell(3).setCellValue(p.getAgentNameRaw() != null ? p.getAgentNameRaw() : "");
-                row.createCell(4).setCellValue(p.getDepartureDate() != null ? p.getDepartureDate().toString() : "");
-                row.createCell(5).setCellValue(p.getFlightNumber() != null ? p.getFlightNumber() : "");
-                row.createCell(6).setCellValue(p.getDestination() != null ? p.getDestination() : "");
-                row.createCell(7).setCellValue(p.getDeparturePort() != null ? p.getDeparturePort() : "");
-                row.createCell(8).setCellValue(p.getBirthDate() != null ? p.getBirthDate().toString() : "");
-                row.createCell(9).setCellValue(p.getArrivalTime() != null ? p.getArrivalTime().toString() : "");
-                row.createCell(10).setCellValue(p.getServiceType() != null ? p.getServiceType() : "");
+                org.apache.poi.xssf.usermodel.XSSFCell[] cells = new org.apache.poi.xssf.usermodel.XSSFCell[headers.length];
+                for (int i = 0; i < headers.length; i++) {
+                    cells[i] = row.createCell(i);
+                    cells[i].setCellStyle(dataStyle);
+                }
+
+                cells[0].setCellValue(p.getPassengerName() != null ? p.getPassengerName() : "");
+                cells[1].setCellValue(p.getBirthDate() != null ? p.getBirthDate().toString() : "");
+                cells[2].setCellValue(p.getPassportNumber() != null ? p.getPassportNumber() : "");
+                cells[3].setCellValue(p.getDeparturePort() != null ? p.getDeparturePort() : "");
+                cells[4].setCellValue(p.getDestination() != null ? p.getDestination() : "");
+                cells[5].setCellValue(p.getFlightNumber() != null ? p.getFlightNumber() : "");
+                cells[6].setCellValue(p.getDepartureDate() != null ? p.getDepartureDate().toString() : "");
                 
+                String arrivalTimeStr = "";
+                if (p.getArrivalTime() != null) {
+                    arrivalTimeStr = p.getArrivalTime().format(DateTimeFormatter.ofPattern("HH:mm"));
+                }
+                cells[7].setCellValue(arrivalTimeStr);
+                
+                cells[8].setCellValue(p.getAgentNameRaw() != null ? p.getAgentNameRaw() : "");
+                cells[9].setCellValue(p.getServiceType() != null ? p.getServiceType() : "");
+                cells[10].setCellValue(p.getPassengerCategory() != null ? p.getPassengerCategory() : "");
+
                 if (p.getRegularPrice() != null) {
-                    row.createCell(11).setCellValue(p.getRegularPrice().doubleValue());
+                    cells[11].setCellValue(p.getRegularPrice().doubleValue());
                     sumRegular = sumRegular.add(p.getRegularPrice());
                 } else {
-                    row.createCell(11).setCellValue("-");
+                    cells[11].setCellValue("-");
                 }
                 
                 if (p.getCommission() != null) {
-                    row.createCell(12).setCellValue(p.getCommission().doubleValue());
+                    cells[12].setCellValue(p.getCommission().doubleValue());
                     sumCommission = sumCommission.add(p.getCommission());
                 } else {
-                    row.createCell(12).setCellValue("-");
+                    cells[12].setCellValue("-");
                 }
                 
                 if (p.getTotalPrice() != null) {
-                    row.createCell(13).setCellValue(p.getTotalPrice().doubleValue());
+                    cells[13].setCellValue(p.getTotalPrice().doubleValue());
                     sumTotal = sumTotal.add(p.getTotalPrice());
                 } else {
-                    row.createCell(13).setCellValue("-");
+                    cells[13].setCellValue("-");
                 }
-                
-                row.createCell(14).setCellValue(p.getValidationStatus() != null ? p.getValidationStatus() : "");
             }
-            
-            // Total Row
+
+            // ---- Total row ----
             org.apache.poi.xssf.usermodel.XSSFRow totalRow = sheet.createRow(rowIdx);
-            
-            CellStyle totalStyle = workbook.createCellStyle();
-            Font totalFont = workbook.createFont();
-            totalFont.setBold(true);
-            totalStyle.setFont(totalFont);
-            totalStyle.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
-            totalStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            
-            org.apache.poi.xssf.usermodel.XSSFCell totalLabelCell = totalRow.createCell(0);
-            totalLabelCell.setCellValue("الإجمالي");
-            totalLabelCell.setCellStyle(totalStyle);
-            
-            org.apache.poi.xssf.usermodel.XSSFCell totalRegCell = totalRow.createCell(11);
-            totalRegCell.setCellValue(sumRegular.doubleValue());
-            totalRegCell.setCellStyle(totalStyle);
-            
-            org.apache.poi.xssf.usermodel.XSSFCell totalComCell = totalRow.createCell(12);
-            totalComCell.setCellValue(sumCommission.doubleValue());
-            totalComCell.setCellStyle(totalStyle);
-            
-            org.apache.poi.xssf.usermodel.XSSFCell totalTotalCell = totalRow.createCell(13);
-            totalTotalCell.setCellValue(sumTotal.doubleValue());
-            totalTotalCell.setCellStyle(totalStyle);
+            totalRow.setHeightInPoints(30);
+            for (int i = 0; i < headers.length; i++) {
+                totalRow.createCell(i).setCellStyle(totalStyle);
+            }
+            totalRow.getCell(0).setCellValue("المجموع");
+            totalRow.getCell(11).setCellValue(sumRegular.doubleValue());
+            totalRow.getCell(12).setCellValue(sumCommission.doubleValue());
+            totalRow.getCell(13).setCellValue(sumTotal.doubleValue());
             
             workbook.write(out);
             return out.toByteArray();
@@ -682,3 +713,6 @@ public class ManifestImportService {
         }
     }
 }
+
+
+

@@ -42,7 +42,7 @@ export const DashboardPage = () => {
       }
       
       const res = await getDashboardSummary(start, end, agentFilter, destFilter);
-      setData(res.data);
+      setData(res);
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
       setError('Failed to load dashboard data. Please check backend connection.');

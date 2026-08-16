@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { previewManifestImport, publishManifestImport, getBatchPreview, deleteManifestRowsBulk, calculateManifestPrices, exportManifestBatch } from '../../api/manifestImport.api';
-import { DocumentArrowUpIcon, CheckCircleIcon, ExclamationTriangleIcon, CheckIcon, FunnelIcon, ArrowUpTrayIcon, TrashIcon, ChevronLeftIcon, TagIcon, BuildingOfficeIcon, CalendarDaysIcon, PaperAirplaneIcon, MapPinIcon, MapIcon, ClockIcon, BriefcaseIcon, MagnifyingGlassIcon, CalculatorIcon } from '@heroicons/react/24/outline';
+import { DocumentArrowUpIcon, CheckCircleIcon, ExclamationTriangleIcon, CheckIcon, FunnelIcon, ArrowUpTrayIcon, TrashIcon, ChevronLeftIcon, TagIcon, BuildingOfficeIcon, CalendarDaysIcon, PaperAirplaneIcon, MapPinIcon, MapIcon, ClockIcon, BriefcaseIcon, MagnifyingGlassIcon, CalculatorIcon, BanknotesIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import { ManifestEditableGrid } from './components/ManifestEditableGrid';
 import { ManifestEditableTable } from './components/ManifestEditableTable';
@@ -242,7 +242,8 @@ export const ImportDataPage = () => {
       setTimeout(() => {
         setToast(null);
         resetState();
-      }, 4000);
+        navigate('/dashboard');
+      }, 2000);
     } catch (err) {
       let errorObj = err.response?.data?.error;
       let apiMsg = err.response?.data?.message || err.response?.data?.detail;
@@ -336,6 +337,10 @@ export const ImportDataPage = () => {
       resetState();
     }
   };
+
+  const totalRegularPrice = rows.reduce((sum, row) => sum + (Number(row.regularPrice) || 0), 0);
+  const totalCommission = rows.reduce((sum, row) => sum + (Number(row.commission) || 0), 0);
+  const totalOverallPrice = rows.reduce((sum, row) => sum + (Number(row.totalPrice) || 0), 0);
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -438,7 +443,7 @@ export const ImportDataPage = () => {
                   className="inline-flex items-center rounded-xl bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/30 hover:bg-blue-600 disabled:bg-blue-300 disabled:shadow-none disabled:cursor-not-allowed transition-all"
                   title={batch.invalidRows > 0 ? t('import.fixErrorsFirst', 'Please fix invalid rows first') : ''}
                 >
-                  {publishing ? t('import.publishing', 'Publishing...') : t('import.publishData', 'Publish Data to Agents')}
+                  {publishing ? t('import.publishing', 'Publishing...') : t('import.publishData', 'Publish Data')}
                 </button>
               </div>
             )}
@@ -464,6 +469,37 @@ export const ImportDataPage = () => {
                 </dt>
                 <dd className={`mt-1 text-3xl font-semibold tracking-tight ${batch.invalidRows > 0 ? 'text-red-900' : 'text-gray-900'}`}>
                   {batch.invalidRows}
+                </dd>
+              </div>
+            </dl>
+
+            {/* Financial Stats */}
+            <dl className="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-6">
+              <div className="overflow-hidden rounded-lg bg-blue-50 px-4 py-5 shadow border border-blue-200">
+                <dt className="truncate text-sm font-medium text-blue-800 flex items-center gap-2">
+                  <BanknotesIcon className="w-5 h-5" />
+                  {t('import.stat.totalRegular', 'إجمالي السعر (بدون عمولة)')}
+                </dt>
+                <dd className="mt-1 text-3xl font-semibold tracking-tight text-blue-900">
+                  {totalRegularPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </dd>
+              </div>
+              <div className="overflow-hidden rounded-lg bg-purple-50 px-4 py-5 shadow border border-purple-200">
+                <dt className="truncate text-sm font-medium text-purple-800 flex items-center gap-2">
+                  <BanknotesIcon className="w-5 h-5" />
+                  {t('import.stat.totalCommission', 'إجمالي العمولة')}
+                </dt>
+                <dd className="mt-1 text-3xl font-semibold tracking-tight text-purple-900">
+                  {totalCommission.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </dd>
+              </div>
+              <div className="overflow-hidden rounded-lg bg-indigo-50 px-4 py-5 shadow border border-indigo-200">
+                <dt className="truncate text-sm font-medium text-indigo-800 flex items-center gap-2">
+                  <BanknotesIcon className="w-5 h-5" />
+                  {t('import.stat.totalOverall', 'الإجمالي العام (بالعمولة)')}
+                </dt>
+                <dd className="mt-1 text-3xl font-semibold tracking-tight text-indigo-900">
+                  {totalOverallPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </dd>
               </div>
             </dl>

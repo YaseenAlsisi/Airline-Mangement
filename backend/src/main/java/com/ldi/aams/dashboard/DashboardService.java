@@ -41,11 +41,15 @@ public class DashboardService {
         }
 
         long totalPassengers = getSingleLongResult("SELECT COUNT(p) FROM ManifestPassenger p " + whereClause, startDate, endDate, agent, destination);
+        long totalDraftPassengers = getSingleLongResult("SELECT COUNT(p) FROM ManifestPassenger p WHERE p.batch.status = 'DRAFT'", null, null, null, null);
+        long allPassengers = getSingleLongResult("SELECT COUNT(p) FROM ManifestPassenger p", null, null, null, null);
+        
+        log.info("DASHBOARD DEBUG: totalPublished={}, totalDraft={}, allPassengers={}", totalPassengers, totalDraftPassengers, allPassengers);
         long totalFlights = getSingleLongResult("SELECT COUNT(DISTINCT p.flightNumber) FROM ManifestPassenger p " + whereClause, startDate, endDate, agent, destination);
         long totalAgents = getSingleLongResult("SELECT COUNT(DISTINCT p.agentNameRaw) FROM ManifestPassenger p " + whereClause, startDate, endDate, agent, destination);
         
-        BigDecimal totalRevenue = getSingleBigDecimalResult("SELECT SUM(p.debitEgp) FROM ManifestPassenger p " + whereClause, startDate, endDate, agent, destination);
-        BigDecimal totalExpenses = getSingleBigDecimalResult("SELECT SUM(p.creditEgp) FROM ManifestPassenger p " + whereClause, startDate, endDate, agent, destination);
+        BigDecimal totalRevenue = getSingleBigDecimalResult("SELECT SUM(p.totalPrice) FROM ManifestPassenger p " + whereClause, startDate, endDate, agent, destination);
+        BigDecimal totalExpenses = getSingleBigDecimalResult("SELECT SUM(p.commission) FROM ManifestPassenger p " + whereClause, startDate, endDate, agent, destination);
         
         BigDecimal netProfit = totalRevenue.subtract(totalExpenses);
         Double profitMargin = 0.0;
@@ -55,7 +59,7 @@ public class DashboardService {
 
         // Charts
         List<DashboardDto.ChartItem> destinationChart = getChartData("SELECT p.destination, COUNT(p) FROM ManifestPassenger p " + whereClause + " GROUP BY p.destination ORDER BY COUNT(p) DESC", startDate, endDate, agent, destination, totalPassengers);
-        List<DashboardDto.ChartItem> serviceChart = getChartData("SELECT p.serviceType, SUM(p.debitEgp) FROM ManifestPassenger p " + whereClause + " GROUP BY p.serviceType ORDER BY SUM(p.debitEgp) DESC", startDate, endDate, agent, destination, totalRevenue.longValue());
+        List<DashboardDto.ChartItem> serviceChart = getChartData("SELECT p.serviceType, SUM(p.totalPrice) FROM ManifestPassenger p " + whereClause + " GROUP BY p.serviceType ORDER BY SUM(p.totalPrice) DESC", startDate, endDate, agent, destination, totalRevenue.longValue());
         List<DashboardDto.ChartItem> airlineChart = getChartData("SELECT p.flightNumber, COUNT(p) FROM ManifestPassenger p " + whereClause + " GROUP BY p.flightNumber ORDER BY COUNT(p) DESC", startDate, endDate, agent, destination, totalPassengers);
         List<DashboardDto.ChartItem> categoryChart = getChartData("SELECT p.passengerCategory, COUNT(p) FROM ManifestPassenger p " + whereClause + " GROUP BY p.passengerCategory ORDER BY COUNT(p) DESC", startDate, endDate, agent, destination, totalPassengers);
         List<DashboardDto.ChartItem> topAgents = getChartData("SELECT p.agentNameRaw, COUNT(p) FROM ManifestPassenger p " + whereClause + " GROUP BY p.agentNameRaw ORDER BY COUNT(p) DESC", startDate, endDate, agent, destination, totalPassengers);
