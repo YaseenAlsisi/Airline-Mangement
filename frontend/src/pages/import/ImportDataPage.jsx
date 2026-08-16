@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { previewManifestImport, publishManifestImport, getBatchPreview, deleteManifestRowsBulk } from '../../api/manifestImport.api';
-import { DocumentArrowUpIcon, CheckCircleIcon, ExclamationTriangleIcon, CheckIcon, FunnelIcon, ArrowUpTrayIcon, TrashIcon, ChevronLeftIcon, TagIcon, BuildingOfficeIcon, CalendarDaysIcon, PaperAirplaneIcon, MapPinIcon, MapIcon, ClockIcon, BriefcaseIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { previewManifestImport, publishManifestImport, getBatchPreview, deleteManifestRowsBulk, calculateManifestPrices, exportManifestBatch } from '../../api/manifestImport.api';
+import { DocumentArrowUpIcon, CheckCircleIcon, ExclamationTriangleIcon, CheckIcon, FunnelIcon, ArrowUpTrayIcon, TrashIcon, ChevronLeftIcon, TagIcon, BuildingOfficeIcon, CalendarDaysIcon, PaperAirplaneIcon, MapPinIcon, MapIcon, ClockIcon, BriefcaseIcon, MagnifyingGlassIcon, CalculatorIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import { ManifestEditableGrid } from './components/ManifestEditableGrid';
 import { ManifestEditableTable } from './components/ManifestEditableTable';
@@ -15,6 +15,8 @@ export const ImportDataPage = () => {
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [calculating, setCalculating] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [batch, setBatch] = useState(null);
   const [rows, setRows] = useState([]);
   const [error, setError] = useState(null);
@@ -257,6 +259,47 @@ export const ImportDataPage = () => {
       setError(finalError);
     } finally {
       setPublishing(false);
+    }
+  };
+
+  const handleCalculate = async () => {
+    if (!batch) return;
+    setCalculating(true);
+    setError(null);
+    try {
+      const res = await calculateManifestPrices(batch.id);
+      const batchData = res.data || res;
+      setBatch(batchData);
+      setRows(batchData.rows || []);
+      setToast(t('import.calculateSuccess', 'تم حساب الأسعار بنجاح / Prices calculated successfully!'));
+      setTimeout(() => setToast(null), 3000);
+    } catch (err) {
+      console.error(err);
+      setError(t('import.error.calculateFailed', 'حدث خطأ أثناء حساب الأسعار'));
+    } finally {
+      setCalculating(false);
+    }
+  };
+
+  const handleExport = async () => {
+    if (!batch) return;
+    setExporting(true);
+    try {
+      const blob = await exportManifestBatch(batch.id);
+      const url = window.URL.createObjectURL(new Blob([blob.data || blob]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `manifest_export_${batch.originalFilename || 'data'}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      setToast(t('import.exportSuccess', 'تم تصدير البيانات بنجاح / Exported successfully!'));
+      setTimeout(() => setToast(null), 3000);
+    } catch (err) {
+      console.error(err);
+      setError(t('import.error.exportFailed', 'حدث خطأ أثناء التصدير'));
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -563,9 +606,23 @@ export const ImportDataPage = () => {
                       )}
                     </div>
 
-                    <button type="button" className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 hover:bg-slate-50 transition-colors">
+                    <button 
+                      type="button" 
+                      onClick={handleExport}
+                      disabled={exporting}
+                      className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                       <ArrowUpTrayIcon className="h-4 w-4 text-slate-500" />
-                      {t('import.export', 'Export')}
+                      {exporting ? t('import.exporting', 'جاري التصدير...') : t('import.export', 'Export')}
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={handleCalculate}
+                      disabled={calculating}
+                      className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 shadow-sm ring-1 ring-inset ring-emerald-200 hover:bg-emerald-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <CalculatorIcon className="h-4 w-4 text-emerald-600" />
+                      {calculating ? t('import.calculating', 'جاري الحساب...') : t('import.calculate', 'Calculate')}
                     </button>
                   </div>
 

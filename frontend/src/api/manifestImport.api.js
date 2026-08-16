@@ -48,6 +48,11 @@ export const publishManifestImport = async (batchId) => {
   return response;
 };
 
+export const calculateManifestPrices = async (batchId) => {
+  const response = await axiosInstance.post(`${API_BASE}/${batchId}/calculate-prices`);
+  return response;
+};
+
 export const deleteManifestBatch = async (batchId) => {
   const response = await axiosInstance.delete(`${API_BASE}/${batchId}`);
   return response;
@@ -55,6 +60,13 @@ export const deleteManifestBatch = async (batchId) => {
 
 export const deleteManifestBatches = async (batchIds) => {
   const response = await axiosInstance.delete(`${API_BASE}/bulk`, { data: batchIds });
+  return response;
+};
+
+export const exportManifestBatch = async (batchId) => {
+  const response = await axiosInstance.get(`${API_BASE}/${batchId}/export`, {
+    responseType: 'blob'
+  });
   return response;
 };
 

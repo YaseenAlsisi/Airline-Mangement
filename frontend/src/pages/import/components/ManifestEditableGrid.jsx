@@ -267,6 +267,22 @@ export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated, selectedRows
                 )}
               </div>
 
+              {/* Pricing */}
+              <div className="sm:col-span-2 bg-indigo-50/30 rounded-lg p-3 grid grid-cols-3 gap-2 border border-indigo-100">
+                 <div>
+                   <label className="block text-xs font-medium text-slate-500 mb-1">{t('import.col.regularPrice', 'Regular Price')}</label>
+                   <div className="text-sm font-semibold text-slate-700">{row.regularPrice != null ? row.regularPrice.toLocaleString() : '-'}</div>
+                 </div>
+                 <div>
+                   <label className="block text-xs font-medium text-slate-500 mb-1">{t('import.col.commission', 'Commission')}</label>
+                   <div className="text-sm font-semibold text-slate-700">{row.commission != null ? row.commission.toLocaleString() : '-'}</div>
+                 </div>
+                 <div>
+                   <label className="block text-xs font-bold text-indigo-700 mb-1">{t('import.col.total', 'Total')}</label>
+                   <div className="text-sm font-bold text-indigo-700">{row.totalPrice != null ? row.totalPrice.toLocaleString() : '-'}</div>
+                 </div>
+              </div>
+
             </div>
           </div>
         );

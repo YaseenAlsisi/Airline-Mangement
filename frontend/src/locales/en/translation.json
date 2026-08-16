@@ -161,8 +161,12 @@
       "flight": "Flight",
       "destination": "Destination",
       "category": "Category",
+      "regularPrice": "Regular Price",
+      "commission": "Commission",
+      "total": "Total",
       "actions": "Actions"
-    }
+    },
+    "calculate": "Calculate"
   },
   "agent": {
     "title": "Agents",

@@ -99,6 +99,15 @@ public class ManifestPassenger {
     @Builder.Default
     private BigDecimal creditEgp = BigDecimal.ZERO;
 
+    @Column(name = "regular_price", precision = 15, scale = 2)
+    private BigDecimal regularPrice;
+
+    @Column(name = "commission", precision = 15, scale = 2)
+    private BigDecimal commission;
+
+    @Column(name = "total_price", precision = 15, scale = 2)
+    private BigDecimal totalPrice;
+
     @Column(name = "validation_status", nullable = false, length = 50)
     @Builder.Default
     private String validationStatus = "VALID"; // VALID, WARNING, ERROR

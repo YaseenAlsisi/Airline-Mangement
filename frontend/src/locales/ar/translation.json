@@ -162,8 +162,12 @@
       "flight": "الرحلة",
       "destination": "الوجهة",
       "category": "الفئة",
+      "regularPrice": "السعر الأساسي",
+      "commission": "العمولة",
+      "total": "الإجمالي",
       "actions": "إجراءات"
-    }
+    },
+    "calculate": "حسابات"
   },
   "agent": {
     "title": "الوكلاء",

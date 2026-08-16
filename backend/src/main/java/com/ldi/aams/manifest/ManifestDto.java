@@ -72,6 +72,9 @@ public class ManifestDto {
         private BigDecimal creditUsd;
         private BigDecimal debitEgp;
         private BigDecimal creditEgp;
+        private BigDecimal regularPrice;
+        private BigDecimal commission;
+        private BigDecimal totalPrice;
         private String validationStatus;
         private String validationErrors;
     }

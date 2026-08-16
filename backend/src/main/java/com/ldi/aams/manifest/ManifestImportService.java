@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -30,6 +31,7 @@ public class ManifestImportService {
     private final ManifestImportBatchRepository batchRepository;
     private final ManifestPassengerRepository passengerRepository;
     private final AgentRepository agentRepository;
+    private final com.ldi.aams.pricelist.PriceListService priceListService;
 
     @Transactional
     public ManifestImportBatch previewManifestImport(MultipartFile file, UUID uploaderId) throws Exception {
@@ -280,6 +282,131 @@ public class ManifestImportService {
         return batchRepository.findAll(pageable);
     }
 
+    @Transactional
+    public void calculatePrices(UUID batchId) {
+        ManifestImportBatch batch = getBatch(batchId);
+        List<ManifestPassenger> passengers = passengerRepository.findByBatchId(batchId, org.springframework.data.domain.PageRequest.of(0, Integer.MAX_VALUE, org.springframework.data.domain.Sort.by("rowNumber").ascending())).getContent();
+        
+        List<com.ldi.aams.pricelist.PriceListDto.PriceListResponse> allPriceLists = 
+            priceListService.getAllPriceLists(org.springframework.data.domain.PageRequest.of(0, 1000)).getContent();
+
+        for (ManifestPassenger p : passengers) {
+            String pDep = normalizeArabicString(p.getDeparturePort());
+            String pDest = normalizeArabicString(p.getDestination());
+            String originalCat = normalizePassengerCategory(p.getPassengerCategory());
+            String targetCat = originalCat;
+
+            if ("CHILD".equals(originalCat) && p.getBirthDate() != null && p.getDepartureDate() != null) {
+                int age = java.time.Period.between(p.getBirthDate(), p.getDepartureDate()).getYears();
+                if (age <= 8) {
+                    targetCat = "CHILD_UNDER_8";
+                }
+            }
+
+            BigDecimal foundPrice = null;
+            BigDecimal foundCommission = null;
+
+            for (com.ldi.aams.pricelist.PriceListDto.PriceListResponse pl : allPriceLists) {
+                if (pl.getAgentId() != null && p.getAgent() != null && !pl.getAgentId().equals(p.getAgent().getId())) {
+                    continue;
+                }
+                for (com.ldi.aams.pricelist.PriceListDto.PricingGroupResponse group : pl.getGroups()) {
+                    String gDep = normalizeArabicString(group.getDepartureAirport());
+                    String gDest = normalizeArabicString(group.getDestination());
+                    
+                    if ((isMatch(pDep, gDep) && isMatch(pDest, gDest)) || 
+                        (isMatch(pDep, gDest) && isMatch(pDest, gDep))) {
+                        for (com.ldi.aams.pricelist.PriceListDto.PriceListEntryResponse entry : group.getEntries()) {
+                            if (entry.getPassengerType() != null && entry.getPassengerType().name().equalsIgnoreCase(targetCat)) {
+                                foundPrice = entry.getPrice();
+                                foundCommission = entry.getCommission();
+                                break;
+                            }
+                        }
+                        if (foundPrice == null && !targetCat.equals(originalCat)) {
+                            for (com.ldi.aams.pricelist.PriceListDto.PriceListEntryResponse entry : group.getEntries()) {
+                                if (entry.getPassengerType() != null && entry.getPassengerType().name().equalsIgnoreCase(originalCat)) {
+                                    foundPrice = entry.getPrice();
+                                    foundCommission = entry.getCommission();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (foundPrice != null) break;
+                }
+                if (foundPrice != null) break;
+            }
+
+            p.setRegularPrice(foundPrice);
+            p.setCommission(foundCommission);
+            if (foundPrice != null && foundCommission != null) {
+                p.setTotalPrice(foundPrice.add(foundCommission));
+            } else if (foundPrice != null) {
+                p.setTotalPrice(foundPrice);
+            } else {
+                p.setTotalPrice(null);
+            }
+        }
+        passengerRepository.saveAll(passengers);
+    }
+
+    private boolean isMatch(String s1, String s2) {
+        if (s1 == null || s2 == null || s1.isEmpty() || s2.isEmpty()) return false;
+        return s1.contains(s2) || s2.contains(s1);
+    }
+
+    private String normalizeArabicString(String input) {
+        if (input == null) return "";
+        return input
+                .replaceAll("(?i)(مطار|ميناء|م\\.|الدولي|دولي|مدينة|محطة|منفذ)", "")
+                .replace("ة", "ه")
+                .replace("أ", "ا")
+                .replace("إ", "ا")
+                .replace("آ", "ا")
+                .replace("ى", "ي")
+                .replace("ؤ", "و")
+                .replace("ئ", "ي")
+                .replace("ء", "")
+                .replaceAll("[\\s\\-_]+", "")
+                .trim();
+    }
+
+    private String normalizePassengerCategory(String rawType) {
+        if (rawType == null) return "";
+        String type = rawType.trim().toUpperCase();
+        switch (type) {
+            case "ADULT":
+            case "بالغ":
+            case "بالغ - ADULT":
+                return "ADULT";
+            case "CHILD":
+            case "طفل":
+            case "اطفال":
+            case "طفل - CHILD":
+                return "CHILD";
+            case "INFANT":
+            case "رضيع":
+            case "رضع":
+            case "رضيع - INFANT":
+                return "INFANT";
+            case "LADIES":
+            case "سيدات":
+            case "سيدة":
+            case "انثى":
+            case "انثي":
+            case "سيدة - LADIES":
+                return "LADIES";
+            case "CHILD_UNDER_8":
+            case "طفل تحت 8 سنوات":
+            case "طفل تحت 8":
+            case "طفل تحت 8 سنوات - CHILD UNDER 8":
+                return "CHILD_UNDER_8";
+            default:
+                return type;
+        }
+    }
+
     @Transactional(readOnly = true)
     public org.springframework.data.domain.Page<ManifestPassenger> getRows(UUID batchId, org.springframework.data.domain.Pageable pageable) {
         if (pageable.getSort().isUnsorted()) {
@@ -438,6 +565,120 @@ public class ManifestImportService {
     public void deleteBatches(List<UUID> batchIds) {
         for (UUID id : batchIds) {
             deleteBatch(id);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] exportToExcel(UUID batchId) {
+        List<ManifestPassenger> passengers = passengerRepository.findByBatchId(
+            batchId, 
+            org.springframework.data.domain.PageRequest.of(0, Integer.MAX_VALUE, org.springframework.data.domain.Sort.by("rowNumber").ascending())
+        ).getContent();
+
+        try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook(); 
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            
+            org.apache.poi.xssf.usermodel.XSSFSheet sheet = workbook.createSheet("Manifest Export");
+            
+            // Header Row
+            String[] headers = {
+                "اسم الراكب", "الجواز", "الفئة", "الوكيل (إكسيل)", "تاريخ المغادرة", 
+                "الرحلة", "الوجهة", "Dep. Port", "Birth Date", "Arrival Time", 
+                "Service Type", "السعر الأساسي", "العمولة", "الإجمالي", "Status"
+            };
+            
+            org.apache.poi.xssf.usermodel.XSSFRow headerRow = sheet.createRow(0);
+            
+            // Header styling
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+            headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+            for (int i = 0; i < headers.length; i++) {
+                org.apache.poi.xssf.usermodel.XSSFCell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+                sheet.setColumnWidth(i, 4000); // 4000 is ~15 characters wide
+            }
+            
+            BigDecimal sumRegular = BigDecimal.ZERO;
+            BigDecimal sumCommission = BigDecimal.ZERO;
+            BigDecimal sumTotal = BigDecimal.ZERO;
+            
+            int rowIdx = 1;
+            for (ManifestPassenger p : passengers) {
+                org.apache.poi.xssf.usermodel.XSSFRow row = sheet.createRow(rowIdx++);
+                
+                row.createCell(0).setCellValue(p.getPassengerName() != null ? p.getPassengerName() : "");
+                row.createCell(1).setCellValue(p.getPassportNumber() != null ? p.getPassportNumber() : "");
+                row.createCell(2).setCellValue(p.getPassengerCategory() != null ? p.getPassengerCategory() : "");
+                row.createCell(3).setCellValue(p.getAgentNameRaw() != null ? p.getAgentNameRaw() : "");
+                row.createCell(4).setCellValue(p.getDepartureDate() != null ? p.getDepartureDate().toString() : "");
+                row.createCell(5).setCellValue(p.getFlightNumber() != null ? p.getFlightNumber() : "");
+                row.createCell(6).setCellValue(p.getDestination() != null ? p.getDestination() : "");
+                row.createCell(7).setCellValue(p.getDeparturePort() != null ? p.getDeparturePort() : "");
+                row.createCell(8).setCellValue(p.getBirthDate() != null ? p.getBirthDate().toString() : "");
+                row.createCell(9).setCellValue(p.getArrivalTime() != null ? p.getArrivalTime().toString() : "");
+                row.createCell(10).setCellValue(p.getServiceType() != null ? p.getServiceType() : "");
+                
+                if (p.getRegularPrice() != null) {
+                    row.createCell(11).setCellValue(p.getRegularPrice().doubleValue());
+                    sumRegular = sumRegular.add(p.getRegularPrice());
+                } else {
+                    row.createCell(11).setCellValue("-");
+                }
+                
+                if (p.getCommission() != null) {
+                    row.createCell(12).setCellValue(p.getCommission().doubleValue());
+                    sumCommission = sumCommission.add(p.getCommission());
+                } else {
+                    row.createCell(12).setCellValue("-");
+                }
+                
+                if (p.getTotalPrice() != null) {
+                    row.createCell(13).setCellValue(p.getTotalPrice().doubleValue());
+                    sumTotal = sumTotal.add(p.getTotalPrice());
+                } else {
+                    row.createCell(13).setCellValue("-");
+                }
+                
+                row.createCell(14).setCellValue(p.getValidationStatus() != null ? p.getValidationStatus() : "");
+            }
+            
+            // Total Row
+            org.apache.poi.xssf.usermodel.XSSFRow totalRow = sheet.createRow(rowIdx);
+            
+            CellStyle totalStyle = workbook.createCellStyle();
+            Font totalFont = workbook.createFont();
+            totalFont.setBold(true);
+            totalStyle.setFont(totalFont);
+            totalStyle.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+            totalStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            
+            org.apache.poi.xssf.usermodel.XSSFCell totalLabelCell = totalRow.createCell(0);
+            totalLabelCell.setCellValue("الإجمالي");
+            totalLabelCell.setCellStyle(totalStyle);
+            
+            org.apache.poi.xssf.usermodel.XSSFCell totalRegCell = totalRow.createCell(11);
+            totalRegCell.setCellValue(sumRegular.doubleValue());
+            totalRegCell.setCellStyle(totalStyle);
+            
+            org.apache.poi.xssf.usermodel.XSSFCell totalComCell = totalRow.createCell(12);
+            totalComCell.setCellValue(sumCommission.doubleValue());
+            totalComCell.setCellStyle(totalStyle);
+            
+            org.apache.poi.xssf.usermodel.XSSFCell totalTotalCell = totalRow.createCell(13);
+            totalTotalCell.setCellValue(sumTotal.doubleValue());
+            totalTotalCell.setCellStyle(totalStyle);
+            
+            workbook.write(out);
+            return out.toByteArray();
+        } catch (Exception e) {
+            log.error("Failed to export excel", e);
+            throw new RuntimeException("Failed to export Excel", e);
         }
     }
 }

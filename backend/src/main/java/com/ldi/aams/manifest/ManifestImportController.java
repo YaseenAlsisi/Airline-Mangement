@@ -6,6 +6,8 @@ import com.ldi.aams.manifest.internal.ManifestPassenger;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -90,6 +92,15 @@ public class ManifestImportController {
         return ResponseEntity.ok(mapper.toBatchResponse(batch));
     }
 
+    @PostMapping("/{batchId}/calculate-prices")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ManifestDto.BatchPreviewResponse> calculatePrices(@PathVariable UUID batchId) {
+        service.calculatePrices(batchId);
+        ManifestImportBatch batch = service.getBatch(batchId);
+        Page<ManifestPassenger> rowsPage = service.getRows(batchId, Pageable.unpaged());
+        return ResponseEntity.ok(mapper.toBatchPreviewResponse(batch, rowsPage.getContent()));
+    }
+
     @DeleteMapping("/bulk")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteBatches(@RequestBody List<UUID> batchIds) {
@@ -102,5 +113,15 @@ public class ManifestImportController {
     public ResponseEntity<Void> deleteBatch(@PathVariable UUID batchId) {
         service.deleteBatch(batchId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{batchId}/export")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<byte[]> exportToExcel(@PathVariable UUID batchId) {
+        byte[] excelData = service.exportToExcel(batchId);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"manifest_export.xlsx\"")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(excelData);
     }
 }
