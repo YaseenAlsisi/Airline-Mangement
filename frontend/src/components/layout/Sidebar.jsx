@@ -10,7 +10,8 @@ import {
   ChatBubbleLeftRightIcon,
   Cog6ToothIcon,
   FolderIcon,
-  ArrowRightOnRectangleIcon
+  Squares2X2Icon,
+  PaperAirplaneIcon
 } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 
@@ -29,44 +30,66 @@ export const Sidebar = () => {
   const { t } = useTranslation();
 
   return (
-    <div className="flex grow flex-col gap-y-8 overflow-y-auto bg-white px-6 pb-4">
-      <div className="flex h-24 shrink-0 items-center">
-        {/* Logo matching the Puzzler aesthetic */}
-        <div className="flex items-center gap-2">
-          <div className="flex -space-x-1">
-            <div className="w-4 h-6 bg-blue-500 rounded-sm transform skew-x-[-20deg]"></div>
-            <div className="w-4 h-6 bg-orange-400 rounded-sm transform skew-x-[-20deg]"></div>
-          </div>
-          <h1 className="text-slate-900 font-bold text-2xl tracking-tight">AAMS</h1>
-        </div>
-      </div>
+    <div className="relative flex grow flex-col overflow-y-auto overflow-x-hidden bg-[#0f172a] border-r border-gray-800/50">
       
-      <nav className="flex flex-1 flex-col">
-        <ul role="list" className="flex flex-1 flex-col gap-y-7">
-          <li>
-            <ul role="list" className="-mx-2 space-y-2">
-              {navigation.map((item) => (
-                <li key={item.name}>
-                  <NavLink
-                    to={item.href}
-                    className={({ isActive }) =>
-                      clsx(
-                        isActive
-                          ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30'
-                          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700',
-                        'group flex gap-x-3 rounded-xl p-3 text-sm font-semibold leading-6 transition-all'
-                      )
-                    }
-                  >
-                    <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
-                    {t(`navigation.${item.name}`, item.name)}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-          </li>
-        </ul>
-      </nav>
+      {/* Realistic Starry/Cloud/Airplane Background */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center opacity-70"
+        style={{ backgroundImage: 'url(/sidebar-bg.png)' }}
+      ></div>
+
+      {/* Dark Overlay for better contrast */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#0f172a]/95 via-[#0f172a]/60 to-[#0f172a]/95"></div>
+
+      <div className="relative z-10 flex flex-col h-full px-6">
+        <div className="flex h-24 shrink-0 items-center">
+          {/* Logo matching the dark theme */}
+          <div className="flex items-center gap-3">
+            <div className="bg-[#f0f4f8] rounded-xl p-2 shadow-lg">
+              <Squares2X2Icon className="w-6 h-6 text-[#0f172a]" strokeWidth={2.5} />
+            </div>
+            <h1 className="text-white font-bold text-2xl tracking-tight">AAMS</h1>
+          </div>
+        </div>
+        
+        <nav className="flex flex-1 flex-col pb-4">
+          <ul role="list" className="flex flex-1 flex-col gap-y-7">
+            <li>
+              <ul role="list" className="-mx-2 space-y-1">
+                {navigation.map((item) => (
+                  <li key={item.name}>
+                    <NavLink
+                      to={item.href}
+                      className={({ isActive }) =>
+                        clsx(
+                          isActive
+                            ? 'bg-[#1c2438] text-white shadow-md border border-white/5'
+                            : 'text-gray-300 hover:bg-white/5 hover:text-white',
+                          'group flex gap-x-3 rounded-xl p-3 text-sm font-semibold leading-6 transition-all'
+                        )
+                      }
+                    >
+                      <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                      {t(`navigation.${item.name}`, item.name)}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          </ul>
+        </nav>
+
+        {/* Bottom branding card */}
+        <div className="mt-auto pb-6 pt-4">
+          <div className="flex items-center gap-3 bg-[#1c2438]/80 backdrop-blur-md rounded-xl p-4 border border-white/5 shadow-lg">
+            <PaperAirplaneIcon className="w-6 h-6 text-indigo-300 -rotate-45 shrink-0" strokeWidth={1.5} />
+            <span className="text-xs font-semibold text-gray-300 leading-tight">
+              Airline Accounting<br/>Management System
+            </span>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 };

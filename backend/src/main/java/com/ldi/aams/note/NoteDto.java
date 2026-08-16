@@ -23,6 +23,8 @@ public class NoteDto {
         private String createdBy;
         private Instant createdAt;
         private Instant updatedAt;
+        private UUID parentId;
+        private java.util.List<NoteResponse> replies;
     }
 
     @Data
@@ -35,5 +37,6 @@ public class NoteDto {
 
         private String entityType;
         private UUID entityId;
+        private UUID parentId;
     }
 }

@@ -42,6 +42,9 @@ public class Note {
     @Builder.Default
     private Instant updatedAt = Instant.now();
 
+    @Column(name = "parent_id")
+    private UUID parentId;
+
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = Instant.now();
