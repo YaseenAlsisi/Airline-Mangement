@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.security.access.AccessDeniedException;
 import java.util.UUID;
 
 @RestController
@@ -23,7 +24,7 @@ public class NoteController {
     private final NoteService noteService;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('NOTE_MANAGE')")
+    @PreAuthorize("hasAnyAuthority('NOTE_MANAGE', 'NOTE_VIEW')")
     public ResponseEntity<ApiResponse<PagedResponse<NoteDto.NoteResponse>>> getNotes(
             @RequestParam(required = false) String entityType,
             @RequestParam(required = false) UUID entityId,
@@ -36,10 +37,19 @@ public class NoteController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('NOTE_MANAGE')")
+    @PreAuthorize("hasAnyAuthority('NOTE_MANAGE', 'NOTE_CREATE', 'NOTE_REPLY')")
     public ResponseEntity<ApiResponse<NoteDto.NoteResponse>> createNote(
             @Valid @RequestBody NoteDto.CreateNoteRequest request,
             Authentication authentication) {
+        
+        if (request.getParentId() != null) {
+            boolean hasReplyAuth = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("NOTE_REPLY") || a.getAuthority().equals("NOTE_MANAGE"));
+            if (!hasReplyAuth) {
+                throw new AccessDeniedException("Not authorized to reply to notes");
+            }
+        }
+        
         return new ResponseEntity<>(ApiResponse.success(noteService.createNote(request, authentication.getName())), HttpStatus.CREATED);
     }
 

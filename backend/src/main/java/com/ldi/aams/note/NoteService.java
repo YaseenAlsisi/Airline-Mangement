@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +23,7 @@ public class NoteService {
     private final NoteRepository noteRepository;
     private final NoteMapper noteMapper;
     private final NotificationService notificationService;
+    private final JdbcTemplate jdbcTemplate;
 
     @Transactional(readOnly = true)
     public Page<NoteDto.NoteResponse> getAllNotes(Pageable pageable) {
@@ -81,6 +83,19 @@ public class NoteService {
                         parentNote.getId()
                 );
             });
+        } else {
+            List<String> usernames = jdbcTemplate.queryForList("SELECT username FROM users WHERE is_active = true", String.class);
+            for (String u : usernames) {
+                if (!u.equals(username)) {
+                    notificationService.createNotification(
+                            u,
+                            username,
+                            "NEW_NOTE",
+                            username + " added a new system note.",
+                            savedNote.getId()
+                    );
+                }
+            }
         }
         
         return noteMapper.toResponse(savedNote);
