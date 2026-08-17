@@ -283,7 +283,7 @@ export const AgentDataPage = () => {
         {/* Subtle grid pattern for texture */}
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCI+CjxyZWN0IHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0ibm9uZSIvPgo8cGF0aCBkPSJNMCAyNEwyNCAwTTI0IDI0TDAgMCIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjAuNSIgc3Ryb2tlLW9wYWNpdHk9IjAuMDIiLz4KPC9zdmc+')] pointer-events-none"></div>
 
-        <div className="relative z-10 sm:flex sm:items-center sm:justify-between">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="sm:flex-auto">
             <div className="flex items-center gap-6">
               <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-[0_0_40px_rgba(99,102,241,0.4)] ring-1 ring-white/20 transform hover:scale-105 hover:rotate-3 transition-all duration-500">
@@ -318,7 +318,7 @@ export const AgentDataPage = () => {
       </div>
 
       <div className="mt-8 flow-root">
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-end gap-4">
+        <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
           <div className="w-full sm:max-w-xs">
             <label htmlFor="agent-filter" className="block text-sm font-medium leading-6 text-gray-900">
               {t('agent.filterByName', 'Select Agent')}
@@ -387,12 +387,12 @@ export const AgentDataPage = () => {
             </button>
 
             <div className="group flex items-center gap-2.5 rounded-full bg-gradient-to-r from-green-50 to-emerald-50 px-5 py-2 ring-1 ring-inset ring-green-500/20 shadow-sm transition-all duration-300 hover:shadow-md hover:from-green-100 hover:to-emerald-100">
-              <span className="text-sm font-medium text-slate-600">{t('agent.netUsd', 'صافي دولار')}</span>
+              <span className="text-sm font-medium text-slate-600">{t('agent.netUsd', 'Net USD')}</span>
               <span className="text-lg font-bold text-green-700 tabular-nums tracking-tight">${totalNetUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
 
             <div className="group flex items-center gap-2.5 rounded-full bg-gradient-to-r from-orange-50 to-amber-50 px-5 py-2 ring-1 ring-inset ring-orange-500/20 shadow-sm transition-all duration-300 hover:shadow-md hover:from-orange-100 hover:to-amber-100">
-              <span className="text-sm font-medium text-slate-600">{t('agent.netEgp', 'صافي مصري')}</span>
+              <span className="text-sm font-medium text-slate-600">{t('agent.netEgp', 'Net EGP')}</span>
               <span className="text-lg font-bold text-orange-700 tabular-nums tracking-tight">{totalNetEgp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</span>
             </div>
           </div>
@@ -410,17 +410,17 @@ export const AgentDataPage = () => {
                     <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.departureDate', 'Dep. Date')}</th>
                     <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.flight', 'Flight')}</th>
                     <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.destination', 'Destination')}</th>
-                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.departurePort', 'المنفذ')}</th>
-                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.birthDate', 'تاريخ الميلاد')}</th>
-                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.arrivalTime', 'ميعاد الوصول')}</th>
-                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.serviceType', 'نوع الخدمة')}</th>
-                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.debitUsd', 'مدين دولار')}</th>
-                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.creditUsd', 'دائن دولار')}</th>
-                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.netUsd', 'صافي دولار')}</th>
-                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.debitEgp', 'مدين مصري')}</th>
-                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.creditEgp', 'دائن مصري')}</th>
-                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.creditEgpDate', 'تاريخ دائن مصري')}</th>
-                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.netEgp', 'صافي مصري')}</th>
+                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.departurePort', 'Dep. Port')}</th>
+                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.birthDate', 'Birth Date')}</th>
+                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.arrivalTime', 'Arrival Time')}</th>
+                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.serviceType', 'Service Type')}</th>
+                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.debitUsd', 'Debit USD')}</th>
+                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.creditUsd', 'Credit USD')}</th>
+                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('agent.netUsd', 'Net USD')}</th>
+                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.debitEgp', 'Debit EGP')}</th>
+                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.creditEgp', 'Credit EGP')}</th>
+                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('import.col.creditEgpDate', 'Credit Date EGP')}</th>
+                    <th className="px-3 py-3.5 text-start text-sm font-semibold text-gray-900">{t('agent.netEgp', 'Net EGP')}</th>
                     <th className="relative py-3.5 pl-3 pr-4 sm:pr-6">
                       <span className="sr-only">Edit</span>
                     </th>

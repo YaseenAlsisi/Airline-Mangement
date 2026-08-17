@@ -66,18 +66,18 @@ export const PriceListDataPage = () => {
 
   const handleDelete = async (priceList) => {
     if (!canEdit) return;
-    const confirmMsg = t('priceList.deleteConfirm', 'هل أنت متأكد من حذف قائمة الأسعار هذه؟ لا يمكن التراجع عن هذا الإجراء.');
+    const confirmMsg = t('priceList.deleteConfirm', 'Are you sure you want to delete this price list? This action cannot be undone.');
     if (!window.confirm(confirmMsg)) return;
 
     try {
       setLoading(true);
       await deletePriceList(priceList.id);
       fetchPriceLists();
-      setToast(t('priceList.deleteSuccess', 'تم حذف قائمة الأسعار بنجاح'));
+      setToast(t('priceList.deleteSuccess', 'Price list deleted successfully'));
       setTimeout(() => setToast(null), 3000);
     } catch (e) {
       console.error("Failed to delete price list:", e);
-      alert(t('priceList.deleteError', 'حدث خطأ أثناء محاولة الحذف.'));
+      alert(t('priceList.deleteError', 'An error occurred while trying to delete.'));
     } finally {
       setLoading(false);
     }
@@ -103,7 +103,7 @@ export const PriceListDataPage = () => {
     <div>
       <div className="sm:flex sm:items-center sm:justify-between mb-8 gap-4 flex-wrap">
         <div className="sm:flex-auto">
-          <h1 className="text-2xl font-bold leading-6 text-gray-900">{t('priceList.title', 'Price Lists (قوائم الأسعار)')}</h1>
+          <h1 className="text-2xl font-bold leading-6 text-gray-900">{t('priceList.title', 'Price Lists')}</h1>
           <p className="mt-2 text-sm text-gray-700">{t('priceList.subtitle', 'Manage your price lists and display them in the required grid format.')}</p>
         </div>
         
@@ -128,7 +128,7 @@ export const PriceListDataPage = () => {
                 {filterView === 'main' && (
                   <div>
                     <h3 className="text-xs font-bold text-slate-800 mb-2">{t('priceList.addFilter', 'Add Filter')}</h3>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       
                       <button 
                         onClick={() => setFilterView('departure')}
@@ -159,7 +159,7 @@ export const PriceListDataPage = () => {
                           onClick={() => { setDepartureFilter(''); setDestinationFilter(''); }}
                           className="w-full py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg text-center font-bold transition-colors"
                         >
-                          {t('priceList.clearFilters', 'مسح الفلاتر')}
+                          {t('priceList.clearFilters', 'Clear Filters')}
                         </button>
                       </div>
                     )}
@@ -177,7 +177,7 @@ export const PriceListDataPage = () => {
                           onClick={() => { setDepartureFilter(''); setFilterView('main'); }}
                           className={`w-full text-start px-3 py-2 rounded-lg text-sm font-medium ${!departureFilter ? 'bg-indigo-500 text-white' : 'text-slate-700 hover:bg-slate-100'}`}
                        >
-                          {t('priceList.allDepartures', 'الكل (All)')}
+                          {t('priceList.all', 'All')}
                        </button>
                        {[...new Set(priceLists.flatMap(pl => (pl.groups || []).map(g => g.departureAirport?.trim())).filter(Boolean))].sort().map(dep => (
                          <button 
@@ -203,7 +203,7 @@ export const PriceListDataPage = () => {
                           onClick={() => { setDestinationFilter(''); setFilterView('main'); }}
                           className={`w-full text-start px-3 py-2 rounded-lg text-sm font-medium ${!destinationFilter ? 'bg-indigo-500 text-white' : 'text-slate-700 hover:bg-slate-100'}`}
                        >
-                          {t('priceList.allDestinations', 'الكل (All)')}
+                          {t('priceList.all', 'All')}
                        </button>
                        {[...new Set(priceLists.flatMap(pl => (pl.groups || []).map(g => g.destination?.trim())).filter(Boolean))].sort().map(dest => (
                          <button 
@@ -268,13 +268,13 @@ export const PriceListDataPage = () => {
                           onClick={() => handleEdit(pl)} 
                           className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-indigo-600 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
                         >
-                          {t('priceList.edit', 'تعديل (Edit)')}
+                          {t('priceList.edit', 'Edit')}
                         </button>
                         <button 
                           onClick={() => handleDelete(pl)} 
                           className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-red-600 shadow-sm ring-1 ring-inset ring-red-300 hover:bg-red-50"
                         >
-                          {t('priceList.delete', 'حذف (Delete)')}
+                          {t('priceList.delete', 'Delete')}
                         </button>
                       </div>
                     )}
@@ -305,16 +305,16 @@ export const PriceListDataPage = () => {
                                 <thead>
                                   <tr className="bg-gray-50/50 border-b border-gray-100">
                                     <th className="px-6 py-3 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/4">
-                                      {t('priceList.type', 'نوع المسافر')}
+                                      {t('priceList.type', 'Passenger Type')}
                                     </th>
                                     <th className="px-6 py-3 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/4">
-                                      {t('priceList.basePrice', 'السعر الأساسي')}
+                                      {t('priceList.basePrice', 'Base Price')}
                                     </th>
                                     <th className="px-6 py-3 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/4">
                                       {t('priceList.commission', 'العمولة')}
                                     </th>
                                     <th className="px-6 py-3 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/4">
-                                      {t('priceList.total', 'السعر الإجمالي')}
+                                      {t('priceList.total', 'Total')}
                                     </th>
                                   </tr>
                                 </thead>

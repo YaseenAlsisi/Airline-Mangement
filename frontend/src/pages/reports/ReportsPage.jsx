@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getDashboardData } from '../../api/reports.api';
+import { getAgents } from '../../api/agents.api';
 import * as XLSX from 'xlsx';
 import html2pdf from 'html2pdf.js';
 import {
@@ -87,11 +88,14 @@ export const ReportsPage = () => {
   const [agentId, setAgentId] = useState('');
   const [destination, setDestination] = useState('');
   const [serviceType, setServiceType] = useState('');
-  const [airline, setAirline] = useState('');
-  
+
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(MOCK_DATA); // Render mock data immediately
   const [agentChartPage, setAgentChartPage] = useState(0);
+  const [agentsList, setAgentsList] = useState([]);
+  
+  const [destinationsList, setDestinationsList] = useState([t('reports.allDestinations', 'All Destinations')]);
+  const [serviceTypesList, setServiceTypesList] = useState([t('reports.allServiceTypes', 'All Service Types')]);
 
   const agentsPerPage = 5;
   const topAgents = data?.topAgentsByRevenue || [];
@@ -145,26 +149,42 @@ export const ReportsPage = () => {
       if (agentId) params.agentId = agentId;
       if (destination) params.destination = destination;
       if (serviceType) params.serviceType = serviceType;
-      if (airline) params.airline = airline;
 
       const res = await getDashboardData(params);
+      let fetchedData = null;
+
       if (res.data?.success && res.data?.data) {
-        setData(res.data.data); // USE REAL DATA
-        setAgentChartPage(0); // Reset page on new data
-        setTablePage(0);
+        fetchedData = res.data.data;
       } else if (res.data && res.data.data === null) {
-          setData(res.data);
-          setAgentChartPage(0);
-          setTablePage(0);
-      } else if (res.success) {
-          setData(res.data);
-          setAgentChartPage(0);
-          setTablePage(0);
+        fetchedData = res.data;
+      } else if (res.data && res.data.totalRevenueEgp) {
+        // Direct object case
+        fetchedData = res.data;
+      }
+
+      if (fetchedData) {
+        setData(fetchedData);
+        setAgentChartPage(0);
+        setTablePage(0);
+        
+        // Populate filter options safely
+        if (!agentId && !destination && !serviceType && !dateRange) {
+          const uniqueDests = [...new Set((fetchedData.revenueByDestination || []).map(d => d.name))].filter(d => d && d !== 'Unknown');
+          const uniqueServices = [...new Set((fetchedData.serviceTypeDistribution || []).map(s => s.name))].filter(s => s && s !== 'Other');
+          setDestinationsList([t('reports.allDestinations', 'All Destinations'), ...uniqueDests]);
+          setServiceTypesList([t('reports.allServiceTypes', 'All Service Types'), ...uniqueServices]);
+        }
       }
     } catch (error) {
       console.error("Error fetching real data.", error);
-      // If the backend fails, set to empty or mock data, but we show a console warning
+      // Fallback to MOCK_DATA
       setData(MOCK_DATA);
+      if (!agentId && !destination && !serviceType && !dateRange) {
+        const uniqueDests = [...new Set((MOCK_DATA.revenueByDestination || []).map(d => d.name))].filter(d => d && d !== 'Unknown');
+        const uniqueServices = [...new Set((MOCK_DATA.serviceTypeDistribution || []).map(s => s.name))].filter(s => s && s !== 'Other');
+        setDestinationsList([t('reports.allDestinations', 'All Destinations'), ...uniqueDests]);
+        setServiceTypesList([t('reports.allServiceTypes', 'All Service Types'), ...uniqueServices]);
+      }
       alert("Error: Could not connect to the backend database. Using mock data for now.");
     } finally {
       setLoading(false);
@@ -173,6 +193,22 @@ export const ReportsPage = () => {
 
   useEffect(() => {
     fetchDashboard();
+    // Fetch agents for the filter dropdown
+    const fetchAgentsList = async () => {
+      try {
+        const res = await getAgents();
+        if (res.data?.success && res.data?.data?.content) {
+          setAgentsList(res.data.data.content);
+        } else if (res.data?.content) {
+          setAgentsList(res.data.content);
+        } else if (Array.isArray(res.data)) {
+          setAgentsList(res.data);
+        }
+      } catch (error) {
+        console.error("Error fetching agents.", error);
+      }
+    };
+    fetchAgentsList();
   }, []);
 
   const handleApplyFilter = () => {
@@ -184,7 +220,6 @@ export const ReportsPage = () => {
     setAgentId('');
     setDestination('');
     setServiceType('');
-    setAirline('');
     // Automatically re-fetch after clearing
     setTimeout(() => {
       fetchDashboard();
@@ -344,18 +379,13 @@ export const ReportsPage = () => {
               <span className={`${isPositive ? 'text-emerald-500' : isNeutral ? 'text-slate-400' : 'text-rose-500'}`}>
                 {isPositive ? '↑' : isNeutral ? '' : '↓'} {changeVal}%
               </span>
-              <span className="text-slate-400 font-medium">vs previous period</span>
+              <span className="text-slate-400 font-medium">{t('reports.vsPrevious', 'vs previous period')}</span>
             </div>
           </div>
         </div>
       </div>
     );
   };
-
-  const agentsList = ['All Agents', 'Abu Attia Company', 'Alrahma Group', 'Al Travel Co.', 'Sky Vision', 'Alwaha Agency'];
-  const destinationsList = ['All Destinations', 'Tripoli', 'Benghazi', 'Misrata', 'Cairo', 'Tunis'];
-  const airlinesList = ['All Airlines', 'EgyptAir', 'Libyan Airlines', 'Afriqiyah', 'Tunisair'];
-  const serviceTypesList = ['All Service Types', 'Economy (Single)', 'Business (Double)', 'First Class (Triple)'];
 
   return (
     <div className="p-8 bg-[#f8fafc] min-h-screen font-sans w-full">
@@ -364,26 +394,24 @@ export const ReportsPage = () => {
         {/* Header */}
         <div className="flex justify-between items-center px-1">
           <div>
-            <h1 className="text-[26px] font-extrabold text-slate-900 tracking-tight">Sales Reports</h1>
-            <p className="text-[13px] text-slate-500 font-medium mt-1">View aggregated financial and operational data across the entire system.</p>
+            <h1 className="text-[26px] font-extrabold text-slate-900 tracking-tight">{t('reports.title', 'Sales Reports')}</h1>
+            <p className="text-[13px] text-slate-500 font-medium mt-1">{t('reports.subtitle', 'View aggregated financial and operational data across the entire system.')}</p>
           </div>
           <button 
             onClick={exportToExcel}
             className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-lg hover:bg-slate-50 font-bold text-sm transition-colors shadow-sm"
           >
-            <ArrowDownTrayIcon className="w-4 h-4" />
-            Export Report
-            <span className="text-slate-400 ml-1 text-[10px]">▼</span>
+            <ArrowDownTrayIcon className="w-4 h-4" />{t('reports.export', 'Export Report')}<span className="text-slate-400 ml-1 text-[10px]">▼</span>
           </button>
         </div>
 
         {/* Filters */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mt-6">
-          <h3 className="text-[14px] font-bold text-slate-900 mb-4">Filter by</h3>
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+          <h3 className="text-[14px] font-bold text-slate-900 mb-4">{t('reports.filterBy', 'Filter by')}</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
             
             <div className="md:col-span-2 space-y-1.5">
-              <label className="text-[12px] font-bold text-slate-700">Date Range</label>
+              <label className="text-[12px] font-bold text-slate-700">{t('reports.dateRange', 'Date Range')}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <CalendarIcon className="h-4 w-4 text-slate-400" />
@@ -402,29 +430,24 @@ export const ReportsPage = () => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[12px] font-bold text-slate-700">Agent</label>
+              <label className="text-[12px] font-bold text-slate-700">{t('reports.agent', 'Agent')}</label>
               <select value={agentId} onChange={e => setAgentId(e.target.value)} className="w-full text-[13px] font-medium border-slate-200 rounded-lg py-2.5 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 shadow-sm bg-white">
-                {agentsList.map(a => <option key={a} value={a === 'All Agents' ? '' : a}>{a}</option>)}
+                <option value="">{t('reports.allAgents', 'All Agents')}</option>
+                {agentsList.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[12px] font-bold text-slate-700">Destination</label>
+              <label className="text-[12px] font-bold text-slate-700">{t('reports.destination', 'Destination')}</label>
               <select value={destination} onChange={e => setDestination(e.target.value)} className="w-full text-[13px] font-medium border-slate-200 rounded-lg py-2.5 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 shadow-sm bg-white">
-                {destinationsList.map(d => <option key={d} value={d === 'All Destinations' ? '' : d}>{d}</option>)}
+                {destinationsList.map(d => <option key={d} value={d === t('reports.allDestinations', 'All Destinations') ? '' : d}>{d}</option>)}
               </select>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[12px] font-bold text-slate-700">Airline</label>
-              <select value={airline} onChange={e => setAirline(e.target.value)} className="w-full text-[13px] font-medium border-slate-200 rounded-lg py-2.5 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 shadow-sm bg-white">
-                {airlinesList.map(a => <option key={a} value={a === 'All Airlines' ? '' : a}>{a}</option>)}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[12px] font-bold text-slate-700">Service Type</label>
+              <label className="text-[12px] font-bold text-slate-700">{t('reports.serviceType', 'Service Type')}</label>
               <select value={serviceType} onChange={e => setServiceType(e.target.value)} className="w-full text-[13px] font-medium border-slate-200 rounded-lg py-2.5 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 shadow-sm bg-white">
-                {serviceTypesList.map(s => <option key={s} value={s === 'All Service Types' ? '' : s}>{s}</option>)}
+                {serviceTypesList.map(s => <option key={s} value={s === t('reports.allServiceTypes', 'All Service Types') ? '' : s}>{s}</option>)}
               </select>
             </div>
 
@@ -433,16 +456,12 @@ export const ReportsPage = () => {
                 onClick={handleApplyFilter}
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-bold py-2.5 px-4 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2"
               >
-                <FunnelIcon className="h-4 w-4" />
-                Apply Filter
-              </button>
+                <FunnelIcon className="h-4 w-4" />{t('reports.applyFilter', 'Apply Filter')}</button>
               <button 
                 onClick={handleClearFilters}
                 className="px-3 py-2.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center justify-center text-[12px] font-bold whitespace-nowrap"
               >
-                <ArrowPathIcon className="h-4 w-4 mr-1" />
-                Clear Filters
-              </button>
+                <ArrowPathIcon className="h-4 w-4 mr-1" />{t('reports.clearFilters', 'Clear Filters')}</button>
             </div>
           </div>
         </div>
@@ -452,12 +471,12 @@ export const ReportsPage = () => {
           <>
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {renderKpiCard("Total Revenue (EGP)", data.totalRevenueEgp.current, data.totalRevenueEgp, <WalletIcon className="w-6 h-6 stroke-2" />, "text-[#7c3aed]", "bg-[#f3e8ff]")}
-              {renderKpiCard("Total Revenue (USD)", data.totalRevenueUsd.current, data.totalRevenueUsd, <BanknotesIcon className="w-6 h-6 stroke-2" />, "text-[#10b981]", "bg-[#dcfce7]")}
-              {renderKpiCard("Total Expenses (EGP)", data.totalExpensesEgp.current, data.totalExpensesEgp, <CreditCardIcon className="w-6 h-6 stroke-2" />, "text-[#f59e0b]", "bg-[#fef3c7]")}
-              {renderKpiCard("Net Profit (EGP)", data.netProfitEgp.current, data.netProfitEgp, <ChartBarIcon className="w-6 h-6 stroke-2" />, "text-[#3b82f6]", "bg-[#dbeafe]")}
-              {renderKpiCard("Total Passengers", data.totalPassengers.current, data.totalPassengers, <UsersIcon className="w-6 h-6 stroke-2" />, "text-[#8b5cf6]", "bg-[#f3e8ff]")}
-              {renderKpiCard("Total Flights", data.totalFlights.current, data.totalFlights, <PaperAirplaneIcon className="w-6 h-6 stroke-2" />, "text-[#14b8a6]", "bg-[#ccfbf1]")}
+              {renderKpiCard(t('reports.totalRevenueEgp', 'Total Revenue (EGP)'), data.totalRevenueEgp.current, data.totalRevenueEgp, <WalletIcon className="w-6 h-6 stroke-2" />, "text-[#7c3aed]", "bg-[#f3e8ff]")}
+              {renderKpiCard(t('reports.totalRevenueUsd', 'Total Revenue (USD)'), data.totalRevenueUsd.current, data.totalRevenueUsd, <BanknotesIcon className="w-6 h-6 stroke-2" />, "text-[#10b981]", "bg-[#dcfce7]")}
+              {renderKpiCard(t('reports.totalExpensesEgp', 'Total Expenses (EGP)'), data.totalExpensesEgp.current, data.totalExpensesEgp, <CreditCardIcon className="w-6 h-6 stroke-2" />, "text-[#f59e0b]", "bg-[#fef3c7]")}
+              {renderKpiCard(t('reports.netProfitEgp', 'Net Profit (EGP)'), data.netProfitEgp.current, data.netProfitEgp, <ChartBarIcon className="w-6 h-6 stroke-2" />, "text-[#3b82f6]", "bg-[#dbeafe]")}
+              {renderKpiCard(t('reports.totalPassengers', 'Total Passengers'), data.totalPassengers.current, data.totalPassengers, <UsersIcon className="w-6 h-6 stroke-2" />, "text-[#8b5cf6]", "bg-[#f3e8ff]")}
+              {renderKpiCard(t('reports.totalFlights', 'Total Flights'), data.totalFlights.current, data.totalFlights, <PaperAirplaneIcon className="w-6 h-6 stroke-2" />, "text-[#14b8a6]", "bg-[#ccfbf1]")}
             </div>
 
             {/* Charts Row */}
@@ -466,7 +485,7 @@ export const ReportsPage = () => {
               {/* Revenue Over Time */}
               <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 lg:col-span-4 flex flex-col">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-[14px] font-bold text-slate-900">Revenue Over Time (EGP)</h3>
+                  <h3 className="text-[14px] font-bold text-slate-900">{t('reports.revenueOverTime', 'Revenue Over Time (EGP)')}</h3>
                   <div className="flex items-center gap-2">
                     <select className="text-[12px] border-slate-200 rounded-md py-1 pr-6 pl-2 text-slate-700 font-bold bg-white focus:ring-0 shadow-sm">
                       <option>Daily</option>
@@ -491,7 +510,7 @@ export const ReportsPage = () => {
               {/* Revenue by Destination */}
               <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 lg:col-span-3 flex flex-col">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-[14px] font-bold text-slate-900">Revenue by Destination (EGP)</h3>
+                  <h3 className="text-[14px] font-bold text-slate-900">{t('reports.revenueByDestination', 'Revenue by Destination (EGP)')}</h3>
                   <EllipsisVerticalIcon className="w-5 h-5 text-slate-400 cursor-pointer" />
                 </div>
                 <div className="h-[220px] w-full flex-grow">
@@ -510,7 +529,7 @@ export const ReportsPage = () => {
               {/* Service Type Distribution */}
               <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 lg:col-span-2 flex flex-col">
                 <div className="flex justify-between items-center mb-0">
-                  <h3 className="text-[14px] font-bold text-slate-900">Service Type Distribution</h3>
+                  <h3 className="text-[14px] font-bold text-slate-900">{t('reports.serviceTypeDistribution', 'Service Type Distribution')}</h3>
                   <EllipsisVerticalIcon className="w-5 h-5 text-slate-400 cursor-pointer" />
                 </div>
                 <div className="flex-grow flex flex-col justify-center relative min-h-[220px]">
@@ -533,7 +552,7 @@ export const ReportsPage = () => {
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-1">
-                      <span className="text-[11px] font-bold text-slate-500">Total</span>
+                      <span className="text-[11px] font-bold text-slate-500">{t('reports.total', 'Total')}</span>
                       <span className="text-[16px] font-extrabold text-slate-900 -mt-1">{data.totalPassengers.current.toLocaleString()}</span>
                     </div>
                   </div>
@@ -556,7 +575,7 @@ export const ReportsPage = () => {
               {/* Top Agents */}
               <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 lg:col-span-3 flex flex-col">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-[14px] font-bold text-slate-900">All Agents by Revenue (EGP)</h3>
+                  <h3 className="text-[14px] font-bold text-slate-900">{t('reports.allAgentsByRevenue', 'All Agents by Revenue (EGP)')}</h3>
                   <div className="flex items-center gap-2">
                     <button 
                       onClick={handlePrevAgentPage} 
@@ -565,9 +584,7 @@ export const ReportsPage = () => {
                     >
                       <ChevronLeftIcon className="w-4 h-4" />
                     </button>
-                    <span className="text-[11px] font-bold text-slate-500">
-                      Page {agentChartPage + 1} of {Math.max(1, totalAgentPages)}
-                    </span>
+                    <span className="text-[11px] font-bold text-slate-500">{t('reports.page', 'Page ')}{agentChartPage + 1} of {Math.max(1, totalAgentPages)}</span>
                     <button 
                       onClick={handleNextAgentPage} 
                       disabled={agentChartPage >= totalAgentPages - 1}
@@ -595,17 +612,14 @@ export const ReportsPage = () => {
             {/* Detailed Summary Table */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
               <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-white">
-                <h3 className="text-[15px] font-extrabold text-slate-900">Detailed Summary</h3>
+                <h3 className="text-[15px] font-extrabold text-slate-900">{t('reports.detailedSummary', 'Detailed Summary')}</h3>
                 <div className="flex gap-2.5">
                   <button onClick={exportToCSV} className="text-[12px] font-bold text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 shadow-sm">
-                    <DocumentTextIcon className="w-4 h-4 text-blue-500 stroke-2" /> Export CSV
-                  </button>
+                    <DocumentTextIcon className="w-4 h-4 text-blue-500 stroke-2" />{t('reports.exportCsv', 'Export CSV')}</button>
                   <button onClick={exportToExcel} className="text-[12px] font-bold text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 shadow-sm">
-                    <TableCellsIcon className="w-4 h-4 text-emerald-500 stroke-2" /> Export Excel
-                  </button>
+                    <TableCellsIcon className="w-4 h-4 text-emerald-500 stroke-2" />{t('reports.exportExcel', 'Export Excel')}</button>
                   <button onClick={exportToPDF} className="text-[12px] font-bold text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 shadow-sm">
-                    <DocumentIcon className="w-4 h-4 text-rose-500 stroke-2" /> Export PDF
-                  </button>
+                    <DocumentIcon className="w-4 h-4 text-rose-500 stroke-2" />{t('reports.exportPdf', 'Export PDF')}</button>
                 </div>
               </div>
               
