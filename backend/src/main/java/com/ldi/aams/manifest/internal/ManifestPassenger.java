@@ -99,6 +99,9 @@ public class ManifestPassenger {
     @Builder.Default
     private BigDecimal creditEgp = BigDecimal.ZERO;
 
+    @Column(name = "credit_egp_date")
+    private Instant creditEgpDate;
+
     @Column(name = "regular_price", precision = 15, scale = 2)
     private BigDecimal regularPrice;
 

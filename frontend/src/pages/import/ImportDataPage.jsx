@@ -453,7 +453,7 @@ export const ImportDataPage = () => {
           </div>
           
           <div className="px-4 py-5 sm:p-6">
-            <dl className="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-6">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 mb-6">
               <div className="overflow-hidden rounded-lg bg-white px-4 py-5 shadow border">
                 <dt className="truncate text-sm font-medium text-gray-500">{t('import.stat.totalRows', 'Total Rows')}</dt>
                 <dd className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{batch.totalRows}</dd>
@@ -477,7 +477,7 @@ export const ImportDataPage = () => {
             </dl>
 
             {/* Financial Stats */}
-            <dl className="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-6">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 mb-6">
               <div className="overflow-hidden rounded-lg bg-blue-50 px-4 py-5 shadow border border-blue-200">
                 <dt className="truncate text-sm font-medium text-blue-800 flex items-center gap-2">
                   <BanknotesIcon className="w-5 h-5" />
@@ -574,7 +574,7 @@ export const ImportDataPage = () => {
                           {filterView === 'main' && (
                             <div>
                               <h3 className="text-xs font-bold text-slate-800 mb-2">{t('import.addFilter', 'Add Filter')}</h3>
-                              <div className="grid grid-cols-2 gap-2">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {[
                                   { key: 'passengerCategory', label: 'Category', icon: TagIcon },
                                   { key: 'agentNameRaw', label: 'Agent', icon: BuildingOfficeIcon },

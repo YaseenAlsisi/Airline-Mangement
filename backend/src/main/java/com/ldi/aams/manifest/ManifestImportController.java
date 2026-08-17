@@ -124,4 +124,11 @@ public class ManifestImportController {
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(excelData);
     }
+
+    @DeleteMapping("/reset")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> resetAllPublishedData() {
+        service.resetAllPublishedData();
+        return ResponseEntity.noContent().build();
+    }
 }

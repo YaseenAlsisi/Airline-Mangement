@@ -21,6 +21,7 @@ public class AgentManifestController {
 
     private final ManifestPassengerRepository passengerRepository;
     private final ManifestMapper mapper;
+    private final ManifestImportService manifestImportService;
 
     @GetMapping("/manifest-summary")
     @PreAuthorize("isAuthenticated()")
@@ -96,5 +97,20 @@ public class AgentManifestController {
         );
 
         return ResponseEntity.ok(page);
+    }
+    @PutMapping("/manifest-passengers/{id}")
+    @PreAuthorize("hasAuthority('AGENT_EDIT')")
+    public ResponseEntity<ManifestDto.PassengerRowResponse> updateManifestPassenger(
+            @PathVariable UUID id,
+            @RequestBody ManifestDto.PassengerRowUpdateRequest request) {
+        ManifestPassenger updated = manifestImportService.updatePublishedPassenger(id, request);
+        return ResponseEntity.ok(mapper.toPassengerRowResponse(updated));
+    }
+
+    @DeleteMapping("/manifest-passengers/{id}")
+    @PreAuthorize("hasAuthority('AGENT_EDIT')")
+    public ResponseEntity<Void> deleteManifestPassenger(@PathVariable UUID id) {
+        manifestImportService.deletePublishedPassenger(id);
+        return ResponseEntity.noContent().build();
     }
 }

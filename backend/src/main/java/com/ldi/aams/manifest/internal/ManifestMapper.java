@@ -51,6 +51,7 @@ public class ManifestMapper {
                 .creditUsd(row.getCreditUsd())
                 .debitEgp(row.getDebitEgp())
                 .creditEgp(row.getCreditEgp())
+                .creditEgpDate(row.getCreditEgpDate())
                 .regularPrice(row.getRegularPrice())
                 .commission(row.getCommission())
                 .totalPrice(row.getTotalPrice())

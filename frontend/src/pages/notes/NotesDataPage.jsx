@@ -19,6 +19,8 @@ export const NotesDataPage = () => {
   const [submittingReply, setSubmittingReply] = useState(false);
 
   const canManage = hasPermission('NOTE_MANAGE');
+  const canCreate = canManage || hasPermission('NOTE_CREATE');
+  const canReply = canManage; // Only Admin can reply
 
   const fetchNotes = async () => {
     setLoading(true);
@@ -107,12 +109,14 @@ export const NotesDataPage = () => {
             
             {/* Actions */}
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setReplyingTo(replyingTo === note.id ? null : note.id)}
-                className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
-              >
-                Reply
-              </button>
+              {canReply && (
+                <button
+                  onClick={() => setReplyingTo(replyingTo === note.id ? null : note.id)}
+                  className="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
+                  Reply
+                </button>
+              )}
               {canDelete && (
                 <button
                   onClick={() => handleDelete(note.id)}
@@ -197,7 +201,7 @@ export const NotesDataPage = () => {
           </p>
         </div>
         <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-          {canManage && (
+          {canCreate && (
             <button
               onClick={() => setIsModalOpen(true)}
               type="button"

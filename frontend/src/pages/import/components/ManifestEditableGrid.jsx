@@ -278,8 +278,12 @@ export const ManifestEditableGrid = ({ batchId, rows, onRowUpdated, selectedRows
                    <div className="text-sm font-semibold text-slate-700">{row.commission != null ? row.commission.toLocaleString() : '-'}</div>
                  </div>
                  <div>
-                   <label className="block text-xs font-bold text-indigo-700 mb-1">{t('import.col.total', 'Total')}</label>
-                   <div className="text-sm font-bold text-indigo-700">{row.totalPrice != null ? row.totalPrice.toLocaleString() : '-'}</div>
+                   <label className="block text-xs font-bold text-green-700 mb-1">{t('import.col.debitEgp', 'مدين مصري')}</label>
+                   {isEditing ? (
+                     <input type="number" step="0.01" name="debitEgp" value={editFormData.debitEgp || ''} onChange={handleChange} className="block w-full rounded border-0 py-1 px-2 text-green-900 shadow-sm ring-1 ring-inset ring-green-300 focus:ring-2 focus:ring-inset focus:ring-green-600 sm:text-xs" />
+                   ) : (
+                     <div className="text-sm font-bold text-green-700">{row.debitEgp != null ? row.debitEgp.toLocaleString() : '0'}</div>
+                   )}
                  </div>
               </div>
 

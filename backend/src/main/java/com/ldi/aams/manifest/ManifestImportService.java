@@ -98,7 +98,10 @@ public class ManifestImportService {
                     else if (header.equals("النوع")) headerMap.put("passengerCategory", cell.getColumnIndex());
                     else if (header.equals("مدين دولار")) headerMap.put("debitUsd", cell.getColumnIndex());
                     else if (header.equals("دائن دولار")) headerMap.put("creditUsd", cell.getColumnIndex());
-                    else if (header.equals("مدين مصري")) headerMap.put("debitEgp", cell.getColumnIndex());
+                    else if (header.equals("مدين مصري") || header.toLowerCase().contains("total") || header.contains("المجموع") || header.contains("الاجمالي") || header.contains("الإجمالي")) {
+                        headerMap.put("debitEgp", cell.getColumnIndex());
+                        logDebug("Mapped '" + header + "' to debitEgp at column index " + cell.getColumnIndex());
+                    }
                     else if (header.equals("دائن مصري")) headerMap.put("creditEgp", cell.getColumnIndex());
                 }
             }
@@ -331,16 +334,72 @@ public class ManifestImportService {
         if (colIndex == null) return BigDecimal.ZERO;
         Cell cell = row.getCell(colIndex);
         if (cell == null) return BigDecimal.ZERO;
-        if (cell.getCellType() == CellType.NUMERIC) {
-            return BigDecimal.valueOf(cell.getNumericCellValue());
-        }
-        String str = cell.toString().trim();
-        if (str.isEmpty()) return BigDecimal.ZERO;
+
+        BigDecimal result = BigDecimal.ZERO;
+
+        // 1. Try to get cached numeric value first
         try {
-            return new BigDecimal(str);
+            result = BigDecimal.valueOf(cell.getNumericCellValue());
+            logDebug("Parsed NUMERIC/FORMULA for col " + colIndex + " row " + row.getRowNum() + " -> " + result);
+            return result;
         } catch (Exception e) {
-            return BigDecimal.ZERO;
+            // Ignored, the cell is not a simple number
         }
+
+        // 2. If it's a formula and the cached value failed, try to evaluate it
+        if (cell.getCellType() == CellType.FORMULA) {
+            try {
+                FormulaEvaluator evaluator = row.getSheet().getWorkbook().getCreationHelper().createFormulaEvaluator();
+                CellValue cellValue = evaluator.evaluate(cell);
+                if (cellValue.getCellType() == CellType.NUMERIC) {
+                    result = BigDecimal.valueOf(cellValue.getNumberValue());
+                    logDebug("Evaluated FORMULA to NUMERIC for col " + colIndex + " row " + row.getRowNum() + " -> " + result);
+                    return result;
+                } else if (cellValue.getCellType() == CellType.STRING) {
+                    String str = cellValue.getStringValue().trim().replaceAll("[^\\d.\\-]", "");
+                    if (!str.isEmpty() && !str.equals(".") && !str.equals("-")) {
+                        result = new BigDecimal(str);
+                        logDebug("Evaluated FORMULA to STRING for col " + colIndex + " row " + row.getRowNum() + " -> " + result);
+                        return result;
+                    }
+                }
+            } catch (Exception e) {
+                logDebug("FORMULA evaluation failed for col " + colIndex + " row " + row.getRowNum() + ": " + e.getMessage());
+            }
+        }
+
+        // 3. Fallback to robust string parsing (handles formatted currencies like "$1,500.00" or text)
+        try {
+            String str;
+            if (cell.getCellType() == CellType.FORMULA) {
+                str = cell.getStringCellValue(); // Gets cached string result, not the formula text
+            } else {
+                str = cell.toString();
+            }
+            logDebug("Raw string for col " + colIndex + " row " + row.getRowNum() + " -> '" + str + "'");
+            str = str.trim().replaceAll("[^\\d.\\-]", ""); // Strip everything except digits, dots, and minus
+            if (!str.isEmpty() && !str.equals("-") && !str.equals(".")) {
+                result = new BigDecimal(str);
+                logDebug("Parsed STRING for col " + colIndex + " row " + row.getRowNum() + " -> " + result);
+                return result;
+            }
+        } catch (Exception e) {
+            logDebug("STRING parse failed for col " + colIndex + " row " + row.getRowNum() + ": " + e.getMessage());
+        }
+
+        logDebug("Returning ZERO for col " + colIndex + " row " + row.getRowNum());
+        return BigDecimal.ZERO;
+    }
+
+    private void logDebug(String message) {
+        try {
+            java.nio.file.Files.write(
+                java.nio.file.Paths.get("import_debug.log"),
+                (message + "\n").getBytes(),
+                java.nio.file.StandardOpenOption.CREATE,
+                java.nio.file.StandardOpenOption.APPEND
+            );
+        } catch (Exception e) {}
     }
 
     @Transactional(readOnly = true)
@@ -436,8 +495,10 @@ public class ManifestImportService {
             p.setCommission(foundCommission);
             if (foundPrice != null && foundCommission != null) {
                 p.setTotalPrice(foundPrice.add(foundCommission));
+                p.setDebitEgp(p.getTotalPrice());
             } else if (foundPrice != null) {
                 p.setTotalPrice(foundPrice);
+                p.setDebitEgp(p.getTotalPrice());
             } else {
                 p.setTotalPrice(null);
             }
@@ -538,7 +599,18 @@ public class ManifestImportService {
         passenger.setDebitUsd(request.getDebitUsd() != null ? request.getDebitUsd() : BigDecimal.ZERO);
         passenger.setCreditUsd(request.getCreditUsd() != null ? request.getCreditUsd() : BigDecimal.ZERO);
         passenger.setDebitEgp(request.getDebitEgp() != null ? request.getDebitEgp() : BigDecimal.ZERO);
-        passenger.setCreditEgp(request.getCreditEgp() != null ? request.getCreditEgp() : BigDecimal.ZERO);
+        
+        BigDecimal newCreditEgp = request.getCreditEgp() != null ? request.getCreditEgp() : BigDecimal.ZERO;
+        BigDecimal oldCreditEgp = passenger.getCreditEgp() != null ? passenger.getCreditEgp() : BigDecimal.ZERO;
+        
+        if (newCreditEgp.compareTo(oldCreditEgp) != 0) {
+            passenger.setCreditEgp(newCreditEgp);
+            if (newCreditEgp.compareTo(BigDecimal.ZERO) > 0) {
+                passenger.setCreditEgpDate(Instant.now());
+            } else {
+                passenger.setCreditEgpDate(null);
+            }
+        }
 
         String agentNameRaw = request.getAgentNameRaw();
         passenger.setAgentNameRaw(agentNameRaw);
@@ -586,6 +658,71 @@ public class ManifestImportService {
         }
 
         return passengerRepository.save(passenger);
+    }
+
+    @Transactional
+    public ManifestPassenger updatePublishedPassenger(UUID rowId, ManifestDto.PassengerRowUpdateRequest request) {
+        ManifestPassenger passenger = passengerRepository.findById(rowId)
+                .orElseThrow(() -> new IllegalArgumentException("Row not found"));
+        
+        passenger.setPassengerName(request.getPassengerName());
+        passenger.setBirthDate(request.getBirthDate());
+        passenger.setNationalId(request.getNationalId());
+        passenger.setPassportNumber(request.getPassportNumber());
+        passenger.setDeparturePort(request.getDeparturePort());
+        passenger.setDestination(request.getDestination());
+        passenger.setFlightNumber(request.getFlightNumber());
+        passenger.setDepartureDate(request.getDepartureDate());
+        passenger.setArrivalTime(request.getArrivalTime());
+        passenger.setInvestmentSupplier(request.getInvestmentSupplier());
+        passenger.setServiceType(request.getServiceType());
+        passenger.setPassengerCategory(request.getPassengerCategory());
+        passenger.setNote2(request.getNote2());
+        passenger.setNote3(request.getNote3());
+        passenger.setNote4(request.getNote4());
+        passenger.setDebitUsd(request.getDebitUsd() != null ? request.getDebitUsd() : BigDecimal.ZERO);
+        passenger.setCreditUsd(request.getCreditUsd() != null ? request.getCreditUsd() : BigDecimal.ZERO);
+        passenger.setDebitEgp(request.getDebitEgp() != null ? request.getDebitEgp() : BigDecimal.ZERO);
+        
+        BigDecimal newCreditEgp = request.getCreditEgp() != null ? request.getCreditEgp() : BigDecimal.ZERO;
+        BigDecimal oldCreditEgp = passenger.getCreditEgp() != null ? passenger.getCreditEgp() : BigDecimal.ZERO;
+        
+        if (newCreditEgp.compareTo(oldCreditEgp) != 0) {
+            passenger.setCreditEgp(newCreditEgp);
+            if (newCreditEgp.compareTo(BigDecimal.ZERO) > 0) {
+                passenger.setCreditEgpDate(Instant.now());
+            } else {
+                passenger.setCreditEgpDate(null);
+            }
+        }
+
+        String agentNameRaw = request.getAgentNameRaw();
+        passenger.setAgentNameRaw(agentNameRaw);
+        if (agentNameRaw != null && !agentNameRaw.trim().isEmpty()) {
+            Agent agent = matchOrCreateAgent(agentNameRaw.trim());
+            passenger.setAgent(agent);
+        } else {
+            passenger.setAgent(null);
+        }
+
+        return passengerRepository.save(passenger);
+    }
+
+    @Transactional
+    public void deletePublishedPassenger(UUID rowId) {
+        ManifestPassenger passenger = passengerRepository.findById(rowId)
+                .orElseThrow(() -> new IllegalArgumentException("Row not found"));
+        
+        ManifestImportBatch batch = passenger.getBatch();
+        batch.setTotalRows(Math.max(0, batch.getTotalRows() - 1));
+        if ("VALID".equals(passenger.getValidationStatus())) {
+            batch.setValidRows(Math.max(0, batch.getValidRows() - 1));
+        } else {
+            batch.setInvalidRows(Math.max(0, batch.getInvalidRows() - 1));
+        }
+        batchRepository.save(batch);
+        
+        passengerRepository.delete(passenger);
     }
 
     @Transactional
@@ -668,6 +805,11 @@ public class ManifestImportService {
     }
 
     @Transactional
+    public void resetAllPublishedData() {
+        batchRepository.updatePublishedBatchesToDraft();
+    }
+
+    @Transactional
     public void deleteBatch(UUID batchId) {
         ManifestImportBatch batch = getBatch(batchId);
         passengerRepository.deleteByBatchId(batchId);
@@ -694,11 +836,12 @@ public class ManifestImportService {
             org.apache.poi.xssf.usermodel.XSSFSheet sheet = workbook.createSheet("Manifest Export");
             sheet.setRightToLeft(true);
             
-            // Columns order: name, birthDate, passport, depPort, dest, flightNo, depDate, arrivalTime, agent, serviceType, category, price, commission, total
+            // Columns order: name, passport, category, agent, depDate, flightNo, dest, depPort, birthDate, arrivalTime, serviceType, debitUsd, creditUsd, regularPrice, commission, debitEgp, creditEgp, creditEgpDate
             String[] headers = {
-                "الاسم", "تاريخ الميلاد", "رقم الجواز", "جهة المغادرة", "جهة الوصول", 
-                "رقم الرحلة", "تاريخ المغادرة", "ميعاد الوصول", "الوكيل", "نوع الخدمة", "النوع",
-                "السعر الأساسي", "العمولة", "الإجمالي"
+                "الاسم", "رقم الجواز", "النوع", "الوكيل", "تاريخ المغادرة", 
+                "رقم الرحلة", "جهة الوصول", "جهة المغادرة", "تاريخ الميلاد", 
+                "ميعاد الوصول", "نوع الخدمة", "مدين دولار", "دائن دولار",
+                "السعر الأساسي", "العمولة", "مدين مصري", "دائن مصري", "تاريخ دائن مصري"
             };
 
             // ---- Shared colors ----
@@ -752,9 +895,12 @@ public class ManifestImportService {
             }
             
             // ---- Data rows ----
+            BigDecimal sumDebitUsd = BigDecimal.ZERO;
+            BigDecimal sumCreditUsd = BigDecimal.ZERO;
             BigDecimal sumRegular = BigDecimal.ZERO;
             BigDecimal sumCommission = BigDecimal.ZERO;
-            BigDecimal sumTotal = BigDecimal.ZERO;
+            BigDecimal sumDebitEgp = BigDecimal.ZERO;
+            BigDecimal sumCreditEgp = BigDecimal.ZERO;
 
             int rowIdx = 1;
             for (ManifestPassenger p : passengers) {
@@ -768,42 +914,75 @@ public class ManifestImportService {
                 }
 
                 cells[0].setCellValue(p.getPassengerName() != null ? p.getPassengerName() : "");
-                cells[1].setCellValue(p.getBirthDate() != null ? p.getBirthDate().toString() : "");
-                cells[2].setCellValue(p.getPassportNumber() != null ? p.getPassportNumber() : "");
-                cells[3].setCellValue(p.getDeparturePort() != null ? p.getDeparturePort() : "");
-                cells[4].setCellValue(p.getDestination() != null ? p.getDestination() : "");
+                cells[1].setCellValue(p.getPassportNumber() != null ? p.getPassportNumber() : "");
+                cells[2].setCellValue(p.getPassengerCategory() != null ? p.getPassengerCategory() : "");
+                cells[3].setCellValue(p.getAgentNameRaw() != null ? p.getAgentNameRaw() : "");
+                cells[4].setCellValue(p.getDepartureDate() != null ? p.getDepartureDate().toString() : "");
                 cells[5].setCellValue(p.getFlightNumber() != null ? p.getFlightNumber() : "");
-                cells[6].setCellValue(p.getDepartureDate() != null ? p.getDepartureDate().toString() : "");
-                
+                cells[6].setCellValue(p.getDestination() != null ? p.getDestination() : "");
+                cells[7].setCellValue(p.getDeparturePort() != null ? p.getDeparturePort() : "");
+                cells[8].setCellValue(p.getBirthDate() != null ? p.getBirthDate().toString() : "");
+
                 String arrivalTimeStr = "";
                 if (p.getArrivalTime() != null) {
                     arrivalTimeStr = p.getArrivalTime().format(DateTimeFormatter.ofPattern("HH:mm"));
                 }
-                cells[7].setCellValue(arrivalTimeStr);
-                
-                cells[8].setCellValue(p.getAgentNameRaw() != null ? p.getAgentNameRaw() : "");
-                cells[9].setCellValue(p.getServiceType() != null ? p.getServiceType() : "");
-                cells[10].setCellValue(p.getPassengerCategory() != null ? p.getPassengerCategory() : "");
+                cells[9].setCellValue(arrivalTimeStr);
+                cells[10].setCellValue(p.getServiceType() != null ? p.getServiceType() : "");
 
-                if (p.getRegularPrice() != null) {
-                    cells[11].setCellValue(p.getRegularPrice().doubleValue());
-                    sumRegular = sumRegular.add(p.getRegularPrice());
+                // مدين دولار
+                if (p.getDebitUsd() != null) {
+                    cells[11].setCellValue(p.getDebitUsd().doubleValue());
+                    sumDebitUsd = sumDebitUsd.add(p.getDebitUsd());
                 } else {
                     cells[11].setCellValue("-");
                 }
-                
-                if (p.getCommission() != null) {
-                    cells[12].setCellValue(p.getCommission().doubleValue());
-                    sumCommission = sumCommission.add(p.getCommission());
+
+                // دائن دولار
+                if (p.getCreditUsd() != null) {
+                    cells[12].setCellValue(p.getCreditUsd().doubleValue());
+                    sumCreditUsd = sumCreditUsd.add(p.getCreditUsd());
                 } else {
                     cells[12].setCellValue("-");
                 }
-                
-                if (p.getTotalPrice() != null) {
-                    cells[13].setCellValue(p.getTotalPrice().doubleValue());
-                    sumTotal = sumTotal.add(p.getTotalPrice());
+
+                // السعر الأساسي
+                if (p.getRegularPrice() != null) {
+                    cells[13].setCellValue(p.getRegularPrice().doubleValue());
+                    sumRegular = sumRegular.add(p.getRegularPrice());
                 } else {
                     cells[13].setCellValue("-");
+                }
+                
+                // العمولة
+                if (p.getCommission() != null) {
+                    cells[14].setCellValue(p.getCommission().doubleValue());
+                    sumCommission = sumCommission.add(p.getCommission());
+                } else {
+                    cells[14].setCellValue("-");
+                }
+                
+                // مدين مصري
+                if (p.getDebitEgp() != null) {
+                    cells[15].setCellValue(p.getDebitEgp().doubleValue());
+                    sumDebitEgp = sumDebitEgp.add(p.getDebitEgp());
+                } else {
+                    cells[15].setCellValue("-");
+                }
+
+                // دائن مصري
+                if (p.getCreditEgp() != null) {
+                    cells[16].setCellValue(p.getCreditEgp().doubleValue());
+                    sumCreditEgp = sumCreditEgp.add(p.getCreditEgp());
+                } else {
+                    cells[16].setCellValue("-");
+                }
+
+                // تاريخ دائن مصري
+                if (p.getCreditEgpDate() != null) {
+                    cells[17].setCellValue(p.getCreditEgpDate().atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                } else {
+                    cells[17].setCellValue("-");
                 }
             }
 
@@ -814,9 +993,13 @@ public class ManifestImportService {
                 totalRow.createCell(i).setCellStyle(totalStyle);
             }
             totalRow.getCell(0).setCellValue("المجموع");
-            totalRow.getCell(11).setCellValue(sumRegular.doubleValue());
-            totalRow.getCell(12).setCellValue(sumCommission.doubleValue());
-            totalRow.getCell(13).setCellValue(sumTotal.doubleValue());
+            totalRow.getCell(11).setCellValue(sumDebitUsd.doubleValue());
+            totalRow.getCell(12).setCellValue(sumCreditUsd.doubleValue());
+            totalRow.getCell(13).setCellValue(sumRegular.doubleValue());
+            totalRow.getCell(14).setCellValue(sumCommission.doubleValue());
+            totalRow.getCell(15).setCellValue(sumDebitEgp.doubleValue());
+            totalRow.getCell(16).setCellValue(sumCreditEgp.doubleValue());
+            totalRow.getCell(17).setCellValue("");
             
             workbook.write(out);
             return out.toByteArray();

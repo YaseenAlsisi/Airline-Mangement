@@ -84,3 +84,18 @@ export const getAllManifestPassengers = async (params) => {
   const response = await axiosInstance.get(`/api/v1/agents/all-manifest-passengers`, { params });
   return response;
 };
+
+export const updatePublishedPassenger = async (passengerId, data) => {
+  const response = await axiosInstance.put(`/api/v1/agents/manifest-passengers/${passengerId}`, data);
+  return response;
+};
+
+export const resetManifestData = async () => {
+  const response = await axiosInstance.delete(`${API_BASE}/reset`);
+  return response;
+};
+
+export const deletePublishedPassenger = async (passengerId) => {
+  const response = await axiosInstance.delete(`/api/v1/agents/manifest-passengers/${passengerId}`);
+  return response;
+};
