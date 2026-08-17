@@ -164,7 +164,13 @@
       "regularPrice": "Regular Price",
       "commission": "Commission",
       "total": "Total",
-      "actions": "Actions"
+      "actions": "Actions",
+      "debitUsd": "Debit USD",
+      "creditUsd": "Credit USD",
+      "debitEgp": "Debit EGP",
+      "creditEgp": "Credit EGP",
+      "creditEgpDate": "Credit Date EGP",
+      "agentExcel": "Agent (Excel)"
     },
     "calculate": "Calculate"
   },
@@ -175,7 +181,7 @@
     "noneFound": "No agents found.",
     "passengers": {
       "title": "Passengers for",
-      "none": "No passengers found for this agent."
+      "none": "No passengers found."
     },
     "col": {
       "code": "Code",
@@ -183,11 +189,33 @@
       "email": "Email",
       "status": "Status",
       "passengers": "Total Passengers"
-    }
+    },
+    "totalPassengers": "Total Passengers",
+    "uniqueAgents": "Unique Agents",
+    "netUsd": "Net USD",
+    "netEgp": "Net EGP",
+    "filterByName": "Select Agent",
+    "enterNote": "Enter Note:",
+    "confirmDeletePassenger": "Are you sure you want to delete passenger {{name}}?",
+    "exportExcel": "Export Excel",
+    "resetData": "Reset Data"
   },
   "common": {
     "loading": "Loading...",
-    "edit": "Edit"
+    "edit": "Edit",
+    "showing": "Showing",
+    "to": "to",
+    "of": "of",
+    "results": "results",
+    "previous": "Previous",
+    "next": "Next",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "note": "Note",
+    "allAgents": "All Agents",
+    "allDates": "All Dates"
   },
   "files": {
     "title": "Excel Files History",
