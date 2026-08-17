@@ -64,10 +64,6 @@ public class DashboardService {
         List<DashboardDto.ChartItem> categoryChart = getChartData("SELECT p.passengerCategory, COUNT(p) FROM ManifestPassenger p " + whereClause + " GROUP BY p.passengerCategory ORDER BY COUNT(p) DESC", startDate, endDate, agent, destination, totalPassengers);
         List<DashboardDto.ChartItem> topAgents = getChartData("SELECT p.agentNameRaw, COUNT(p) FROM ManifestPassenger p " + whereClause + " GROUP BY p.agentNameRaw ORDER BY COUNT(p) DESC", startDate, endDate, agent, destination, totalPassengers);
 
-        // Limit top agents
-        if (topAgents.size() > 5) {
-            topAgents = topAgents.subList(0, 5);
-        }
 
         // Latest Flights (guarantees data shows up if there are any flights)
         String todaysFlightsQueryStr = "SELECT p.arrivalTime, p.departurePort, p.flightNumber, COUNT(p), p.serviceType FROM ManifestPassenger p " + 
