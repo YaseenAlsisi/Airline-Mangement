@@ -169,7 +169,13 @@
       "departurePort": "جهة المغادرة",
       "birthDate": "تاريخ الميلاد",
       "arrivalTime": "ميعاد الوصول",
-      "serviceType": "نوع الخدمة"
+      "serviceType": "نوع الخدمة",
+      "debitUsd": "مدين دولار",
+      "creditUsd": "دائن دولار",
+      "debitEgp": "مدين مصري",
+      "creditEgp": "دائن مصري",
+      "creditEgpDate": "تاريخ دائن مصري",
+      "agentExcel": "الوكيل (إكسيل)"
     },
     "calculate": "حسابات"
   },
@@ -180,7 +186,7 @@
     "noneFound": "لا يوجد وكلاء.",
     "passengers": {
       "title": "ركاب الوكيل:",
-      "none": "لا يوجد ركاب لهذا الوكيل."
+      "none": "لا يوجد ركاب."
     },
     "col": {
       "code": "الكود",
@@ -188,11 +194,33 @@
       "email": "البريد الإلكتروني",
       "status": "الحالة",
       "passengers": "إجمالي الركاب"
-    }
+    },
+    "totalPassengers": "إجمالي الركاب",
+    "uniqueAgents": "الوكلاء المميزين",
+    "netUsd": "صافي الدولار",
+    "netEgp": "صافي المصري",
+    "filterByName": "اختر الوكيل",
+    "enterNote": "أدخل الملاحظة:",
+    "confirmDeletePassenger": "هل أنت متأكد من حذف الراكب {{name}}؟",
+    "exportExcel": "تصدير إكسيل",
+    "resetData": "إعادة تعيين البيانات"
   },
   "common": {
     "loading": "جاري التحميل...",
-    "edit": "تعديل"
+    "edit": "تعديل",
+    "showing": "عرض",
+    "to": "إلى",
+    "of": "من",
+    "results": "نتيجة",
+    "previous": "السابق",
+    "next": "التالي",
+    "delete": "حذف",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "saving": "جاري الحفظ...",
+    "note": "ملاحظة",
+    "allAgents": "كل الوكلاء",
+    "allDates": "كل التواريخ"
   },
   "Settings": "الإعدادات",
   "Settings & Administration": "الإعدادات والإدارة",
