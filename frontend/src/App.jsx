@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { LoginPage } from './pages/auth/LoginPage';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { LoginPage } from "./pages/auth/LoginPage";
 import { MainLayout } from './components/layout/MainLayout';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
@@ -24,8 +24,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LoginPage />} />
-
+<Route path="/" element={<Navigate to="/login" replace />} />
+<Route path="/login" element={<LoginPage />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route element={<ProtectedRoute requiredPermission="REPORT_VIEW" />}>
