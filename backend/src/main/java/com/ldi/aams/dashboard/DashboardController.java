@@ -17,14 +17,21 @@ public class DashboardController {
 
     private final DashboardService dashboardService;
 
-    @GetMapping("/summary")
-    public ResponseEntity<DashboardDto.DashboardSummaryResponse> getSummary(
+    @GetMapping("/overview")
+    public ResponseEntity<DashboardDto.DashboardOverviewResponse> getOverview(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) String agent,
-            @RequestParam(required = false) String destination) {
+            @RequestParam(required = false) String destination,
+            @RequestParam(required = false) String serviceType) {
         
-        DashboardDto.DashboardSummaryResponse response = dashboardService.getDashboardSummary(startDate, endDate, agent, destination);
+        DashboardDto.DashboardOverviewResponse response = dashboardService.getDashboardOverview(startDate, endDate, agent, destination, serviceType);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/filter-options")
+    public ResponseEntity<DashboardDto.FilterOptionsResponse> getFilterOptions() {
+        DashboardDto.FilterOptionsResponse response = dashboardService.getFilterOptions();
         return ResponseEntity.ok(response);
     }
 }

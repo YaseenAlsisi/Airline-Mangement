@@ -6,6 +6,7 @@
     "Agent Data": "Agent Data",
     "Reports": "Reports",
     "Notes": "Notes",
+    "Safe Calculator": "Safe Calculator",
     "Settings": "Settings"
   },
   "header": {
@@ -75,7 +76,8 @@
     "CHILD": "Child",
     "CHILD_UNDER_8": "Child up to 8 years",
     "LADIES": "Ladies",
-    "INFANT": "Infant"
+    "INFANT": "Infant",
+    "SINGLE_SERVICE": "Single Service"
   },
   "priceList": {
     "title": "Price Lists",
@@ -198,7 +200,33 @@
     "enterNote": "Enter Note:",
     "confirmDeletePassenger": "Are you sure you want to delete passenger {{name}}?",
     "exportExcel": "Export Excel",
-    "resetData": "Reset Data"
+    "resetData": "Reset Data",
+    "totalAgents": "Total Agents",
+    "totalDebit": "Total Debit",
+    "debit": "Debit",
+    "credit": "Credit",
+    "summary": "Summary",
+    "viewDetails": "View Details",
+    "searchAgent": "Search agent...",
+    "filter": "Filter",
+    "grid": "Grid",
+    "list": "List",
+    "owesCompany": "Agent owes",
+    "companyOwes": "Company owes",
+    "settled": "Settled",
+    "payment": {
+      "title": "Add Payment for",
+      "description": "This payment will be recorded in the agent's ledger.",
+      "amount": "Amount (EGP)",
+      "date": "Date",
+      "success": "Payment applied successfully!",
+      "error": "Failed to apply payment",
+      "invalidAmount": "Invalid amount"
+    },
+    "addPayment": "Add Payment",
+    "paymentHistory": "Payment History",
+    "noPayments": "No payments found",
+    "noPaymentsDesc": "This agent has no recorded payments yet."
   },
   "common": {
     "loading": "Loading...",
@@ -272,5 +300,28 @@
     "exportCsv": "Export CSV",
     "exportExcel": "Export Excel",
     "exportPdf": "Export PDF"
+  },
+  "safeCalculator": {
+    "title": "Safe Dashboard",
+    "subtitle": "Independent calculator for treasury tracking",
+    "currentBalance": "Current Balance",
+    "initialCapital": "Initial Capital",
+    "totalReceived": "Total Received",
+    "totalPaid": "Total Paid",
+    "vsInitial": "vs initial capital",
+    "save": "Save",
+    "edit": "Edit",
+    "newTransaction": "New Transaction",
+    "clientNamePlaceholder": "Client Name (e.g. Youssef)",
+    "amountPlaceholder": "Amount",
+    "received": "Received",
+    "paid": "Paid",
+    "addTransaction": "Add Transaction",
+    "balanceOverview": "Balance Overview",
+    "recentTransactions": "Recent Transactions",
+    "noTransactions": "No transactions yet.",
+    "addOne": "Add one from the form above.",
+    "allClients": "All Clients",
+    "date": "Date"
   }
 }

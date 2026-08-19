@@ -20,7 +20,7 @@ const defaultGroup = () => ({
   entries: [defaultEntry()]
 });
 
-const PASSENGER_TYPES = ['ADULT', 'CHILD', 'CHILD_UNDER_8', 'LADIES', 'INFANT'];
+const PASSENGER_TYPES = ['ADULT', 'CHILD', 'CHILD_UNDER_8', 'LADIES', 'INFANT', 'SINGLE_SERVICE'];
 
 const PriceListFormModal = ({ isOpen, priceList, onClose }) => {
   const { t } = useTranslation();

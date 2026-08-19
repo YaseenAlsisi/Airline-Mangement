@@ -12,7 +12,8 @@ import {
   Cog6ToothIcon,
   FolderIcon,
   Squares2X2Icon,
-  PaperAirplaneIcon
+  PaperAirplaneIcon,
+  CalculatorIcon
 } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 
@@ -24,6 +25,7 @@ const navigation = [
   { name: 'Agent Data', href: '/agents', icon: UsersIcon, permission: 'AGENT_VIEW' },
   { name: 'Reports', href: '/reports', icon: ChartBarIcon, permission: 'REPORT_VIEW' },
   { name: 'Notes', href: '/notes', icon: ChatBubbleLeftRightIcon, permission: 'NOTE_VIEW' },
+  { name: 'Safe Calculator', href: '/safe-calculator', icon: CalculatorIcon },
   { name: 'Settings', href: '/settings', icon: Cog6ToothIcon, permission: 'USER_MANAGE' }
 ];
 

@@ -5,5 +5,6 @@ public enum PassengerType {
     CHILD,
     CHILD_UNDER_8,
     LADIES,
-    INFANT
+    INFANT,
+    SINGLE_SERVICE
 }

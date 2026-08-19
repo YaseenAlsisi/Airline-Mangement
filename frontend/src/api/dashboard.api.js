@@ -1,17 +1,11 @@
-import apiClient from './client';
+import api from './client';
 
-export const getDashboardSummary = async (startDate, endDate, agent, destination) => {
-  let url = '/api/v1/dashboard/summary';
-  const params = new URLSearchParams();
-  
-  if (startDate) params.append('startDate', startDate);
-  if (endDate) params.append('endDate', endDate);
-  if (agent && agent !== 'all') params.append('agent', agent);
-  if (destination && destination !== 'all') params.append('destination', destination);
-  
-  if (params.toString()) {
-    url += `?${params.toString()}`;
-  }
-  
-  return await apiClient.get(url);
+export const getDashboardOverview = async (params) => {
+    const res = await api.get('/api/v1/dashboard/overview', { params });
+    return res.data;
+};
+
+export const getDashboardFilterOptions = async () => {
+    const res = await api.get('/api/v1/dashboard/filter-options');
+    return res.data;
 };

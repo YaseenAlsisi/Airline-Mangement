@@ -32,7 +32,7 @@ public class PriceListController {
         jdbcTemplate.update("UPDATE price_list_entries SET passenger_type = 'CHILD' WHERE passenger_type IN ('\u0637\u0641\u0644', 'Child', 'child', 'CHILD')");
         jdbcTemplate.update("UPDATE price_list_entries SET passenger_type = 'CHILD_UNDER_8' WHERE passenger_type IN ('Child_Under_8', 'CHILD_UNDER8')");
         // Fix anything else that doesn't match the valid enum values
-        jdbcTemplate.update("UPDATE price_list_entries SET passenger_type = 'ADULT' WHERE passenger_type NOT IN ('ADULT', 'CHILD', 'CHILD_UNDER_8', 'LADIES', 'INFANT')");
+        jdbcTemplate.update("UPDATE price_list_entries SET passenger_type = 'ADULT' WHERE passenger_type NOT IN ('ADULT', 'CHILD', 'CHILD_UNDER_8', 'LADIES', 'INFANT', 'SINGLE_SERVICE')");
     }
 
     @GetMapping

@@ -12,6 +12,7 @@ import ImportDataPage from './pages/import/ImportDataPage';
 import ManifestFilesPage from './pages/import/ManifestFilesPage';
 import ReportsPage from './pages/reports/ReportsPage';
 import NotesDataPage from './pages/notes/NotesDataPage';
+import { SafeCalculatorPage } from './pages/calculator/SafeCalculatorPage';
 
 function App() {
   const { i18n } = useTranslation();
@@ -53,6 +54,9 @@ function App() {
             <Route element={<ProtectedRoute requiredPermission="USER_MANAGE" />}>
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
+
+            {/* Independent Safe Calculator */}
+            <Route path="/safe-calculator" element={<SafeCalculatorPage />} />
           </Route>
         </Route>
       </Routes>

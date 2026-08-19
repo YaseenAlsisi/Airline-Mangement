@@ -459,6 +459,14 @@ public class ManifestImportService {
                 }
             }
 
+            if (p.getServiceType() != null) {
+                String stNorm = p.getServiceType().replace("ة", "ه").replace("أ", "ا").replace("إ", "ا");
+                if (stNorm.contains("احاديه") || stNorm.contains("احادي") || 
+                    ((stNorm.contains("خدم") || stNorm.contains("خمد")) && stNorm.contains("احاد"))) {
+                    targetCat = "SINGLE_SERVICE";
+                }
+            }
+
             BigDecimal foundPrice = null;
             BigDecimal foundCommission = null;
 
@@ -838,7 +846,7 @@ public class ManifestImportService {
             
             // Columns order: name, passport, category, agent, depDate, flightNo, dest, depPort, birthDate, arrivalTime, serviceType, debitUsd, creditUsd, regularPrice, commission, debitEgp, creditEgp, creditEgpDate
             String[] headers = {
-                "الاسم", "رقم الجواز", "النوع", "الوكيل", "تاريخ المغادرة", 
+                "الوكيل", "الاسم", "رقم الجواز", "النوع", "تاريخ المغادرة", 
                 "رقم الرحلة", "جهة الوصول", "جهة المغادرة", "تاريخ الميلاد", 
                 "ميعاد الوصول", "نوع الخدمة", "مدين دولار", "دائن دولار",
                 "السعر الأساسي", "العمولة", "مدين مصري", "دائن مصري", "تاريخ دائن مصري"
@@ -913,10 +921,10 @@ public class ManifestImportService {
                     cells[i].setCellStyle(dataStyle);
                 }
 
-                cells[0].setCellValue(p.getPassengerName() != null ? p.getPassengerName() : "");
-                cells[1].setCellValue(p.getPassportNumber() != null ? p.getPassportNumber() : "");
-                cells[2].setCellValue(p.getPassengerCategory() != null ? p.getPassengerCategory() : "");
-                cells[3].setCellValue(p.getAgentNameRaw() != null ? p.getAgentNameRaw() : "");
+                cells[0].setCellValue(p.getAgentNameRaw() != null ? p.getAgentNameRaw() : "");
+                cells[1].setCellValue(p.getPassengerName() != null ? p.getPassengerName() : "");
+                cells[2].setCellValue(p.getPassportNumber() != null ? p.getPassportNumber() : "");
+                cells[3].setCellValue(p.getPassengerCategory() != null ? p.getPassengerCategory() : "");
                 cells[4].setCellValue(p.getDepartureDate() != null ? p.getDepartureDate().toString() : "");
                 cells[5].setCellValue(p.getFlightNumber() != null ? p.getFlightNumber() : "");
                 cells[6].setCellValue(p.getDestination() != null ? p.getDestination() : "");

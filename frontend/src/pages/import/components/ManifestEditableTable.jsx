@@ -101,10 +101,10 @@ export const ManifestEditableTable = ({ batchId, rows, onRowUpdated, selectedRow
                 />
               </th>
               <th className="py-4 px-2">#</th>
+              <th className="py-4 px-4">{t('import.col.agent', 'Agent (Excel)')}</th>
               <th className="py-4 px-4">{t('import.col.passengerName', 'Passenger Name')}</th>
               <th className="py-4 px-4">{t('import.col.passport', 'Passport')}</th>
               <th className="py-4 px-4">{t('import.col.category', 'Category')}</th>
-              <th className="py-4 px-4">{t('import.col.agent', 'Agent (Excel)')}</th>
               <th className="py-4 px-4">{t('import.col.departureDate', 'Dep. Date')}</th>
               <th className="py-4 px-4">{t('import.col.flight', 'Flight')}</th>
               <th className="py-4 px-4">{t('import.col.destination', 'Destination')}</th>
@@ -141,6 +141,15 @@ export const ManifestEditableTable = ({ batchId, rows, onRowUpdated, selectedRow
                     {row.rowNumber > 0 ? row.rowNumber - 1 : row.rowNumber}
                   </td>
                   
+                  {/* Agent */}
+                  <td className="py-3 px-4 text-sm text-slate-600">
+                    {isEditing ? (
+                      <input type="text" name="agentNameRaw" value={editFormData.agentNameRaw || ''} onChange={handleChange} className="block w-28 rounded-md border-0 py-1.5 px-2 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm" />
+                    ) : (
+                      <span className="font-medium text-slate-700">{row.agentNameRaw || '-'}</span>
+                    )}
+                  </td>
+
                   {/* Name */}
                   <td className="py-3 px-4">
                     {isEditing ? (
@@ -173,15 +182,6 @@ export const ManifestEditableTable = ({ batchId, rows, onRowUpdated, selectedRow
                       </select>
                     ) : (
                       <CategoryPill category={row.passengerCategory} options={categoryOptions} />
-                    )}
-                  </td>
-
-                  {/* Agent */}
-                  <td className="py-3 px-4 text-sm text-slate-600">
-                    {isEditing ? (
-                      <input type="text" name="agentNameRaw" value={editFormData.agentNameRaw || ''} onChange={handleChange} className="block w-28 rounded-md border-0 py-1.5 px-2 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm" />
-                    ) : (
-                      <span className="font-medium text-slate-700">{row.agentNameRaw || '-'}</span>
                     )}
                   </td>
 
