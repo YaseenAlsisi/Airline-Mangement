@@ -103,6 +103,7 @@ public class DashboardDto {
         private List<ChartItem> passengersByDestination;
         private List<ChartItem> passengersByServiceType;
         private List<ChartItem> passengersByCategory;
+        private List<ChartItem> passengersByAirline;
         private List<ChartItem> topAgentsByPassengers;
         private List<ChartItem> topAgentsByRevenue;
         private List<ChartItem> flightsByDate;
