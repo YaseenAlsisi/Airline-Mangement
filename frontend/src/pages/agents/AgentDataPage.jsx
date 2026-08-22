@@ -377,7 +377,17 @@ export const AgentDataPage = () => {
           </button>
 
           <button
-            onClick={() => exportBalancesReportToExcel(agentGroups)}
+            onClick={() => {
+              const priceStr = window.prompt(t('agent.enterTicketPrice', 'أدخل سعر التذكرة (Enter Ticket Price)'), '44000');
+              if (priceStr !== null) {
+                const price = Number(priceStr);
+                if (!isNaN(price) && price > 0) {
+                  exportBalancesReportToExcel(agentGroups, price);
+                } else {
+                  alert(t('agent.invalidPrice', 'السعر غير صحيح (Invalid price)'));
+                }
+              }
+            }}
             className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-indigo-700 transition-colors"
           >
             <DocumentChartBarIcon className="h-5 w-5" />

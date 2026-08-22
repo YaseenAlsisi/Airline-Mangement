@@ -197,7 +197,7 @@ export const exportAgentsToExcel = async (agentGroups) => {
   saveAs(blob, `Agents_Report_${dateStr}.xlsx`);
 };
 
-export const exportBalancesReportToExcel = async (agentGroups) => {
+export const exportBalancesReportToExcel = async (agentGroups, ticketPrice = 44000) => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('تقرير الأرصدة', { views: [{ rightToLeft: true }] });
 
@@ -234,7 +234,7 @@ export const exportBalancesReportToExcel = async (agentGroups) => {
     const debit = Number(agent.debitEgp || 0);
     const credit = Number(agent.creditEgp || 0);
     const balance = debit - credit;
-    const tickets = (balance / 44000).toFixed(2);
+    const tickets = (balance / ticketPrice).toFixed(2);
 
     const data = {
       name: agent.agentName,
@@ -256,7 +256,7 @@ export const exportBalancesReportToExcel = async (agentGroups) => {
     { header: 'إجمالي المدين', key: 'debit', width: 20 },
     { header: 'إجمالي الدائن', key: 'credit', width: 20 },
     { header: 'الرصيد', key: 'balance', width: 20 },
-    { header: 'التذاكر التقريبية (44,000)', key: 'tickets', width: 25 }
+    { header: `التذاكر التقريبية (${ticketPrice.toLocaleString()})`, key: 'tickets', width: 25 }
   ];
 
   // Table 1: Positive Agents
@@ -287,7 +287,7 @@ export const exportBalancesReportToExcel = async (agentGroups) => {
 
   // Total row for positive
   const posTotalRow = worksheet.getRow(currentRow++);
-  posTotalRow.values = ['الإجمالي', totalPosDebit, totalPosCredit, totalPosBalance, (totalPosBalance / 44000).toFixed(2)];
+  posTotalRow.values = ['الإجمالي', totalPosDebit, totalPosCredit, totalPosBalance, (totalPosBalance / ticketPrice).toFixed(2)];
   posTotalRow.eachCell((cell) => {
     cell.font = { ...headerFont, size: 12 };
     cell.alignment = alignmentCentered;
@@ -324,7 +324,7 @@ export const exportBalancesReportToExcel = async (agentGroups) => {
 
   // Total row for negative
   const negTotalRow = worksheet.getRow(currentRow++);
-  negTotalRow.values = ['الإجمالي', totalNegDebit, totalNegCredit, totalNegBalance, (totalNegBalance / 44000).toFixed(2)];
+  negTotalRow.values = ['الإجمالي', totalNegDebit, totalNegCredit, totalNegBalance, (totalNegBalance / ticketPrice).toFixed(2)];
   negTotalRow.eachCell((cell) => {
     cell.font = { ...headerFont, size: 12 };
     cell.alignment = alignmentCentered;
