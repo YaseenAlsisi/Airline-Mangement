@@ -42,4 +42,11 @@ public class AgentController {
     public ResponseEntity<ApiResponse<AgentDto.AgentResponse>> updateAgent(@PathVariable UUID id, @Valid @RequestBody AgentDto.UpdateAgentRequest request) {
         return ResponseEntity.ok(ApiResponse.success(agentService.updateAgent(id, request)));
     }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('AGENT_EDIT')")
+    public ResponseEntity<ApiResponse<Void>> deleteAgent(@PathVariable UUID id) {
+        agentService.deleteAgent(id);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
 }

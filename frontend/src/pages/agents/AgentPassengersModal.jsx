@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
+import { ManifestRowFormModal } from '../import/components/ManifestRowFormModal';
+import { addPublishedPassenger, updatePublishedPassenger, deletePublishedPassenger } from '../../api/manifestImport.api';
 
-export const AgentPassengersModal = ({ agent, isOpen, onClose }) => {
+export const AgentPassengersModal = ({ agent, isOpen, onClose, onDataChanged }) => {
   const { t } = useTranslation();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingPassenger, setEditingPassenger] = useState(null);
 
   if (!isOpen || !agent) return null;
   
@@ -27,9 +31,22 @@ export const AgentPassengersModal = ({ agent, isOpen, onClose }) => {
             </div>
             <div className="sm:flex sm:items-start">
               <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                <h3 className="text-xl font-bold leading-6 text-slate-900 mb-4" id="modal-title">
-                  {t('agent.passengers.title', 'Passengers for')} <span className="text-indigo-600">{agent.agentName}</span>
-                </h3>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-bold leading-6 text-slate-900" id="modal-title">
+                    {t('agent.passengers.title', 'Passengers for')} <span className="text-indigo-600">{agent.agentName}</span>
+                  </h3>
+                  {!agent.isDeleted && (
+                    <button 
+                      onClick={() => {
+                        setEditingPassenger({ agentNameRaw: agent.agentName }); // Pre-fill agent name
+                        setIsFormOpen(true);
+                      }}
+                      className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 shadow-sm transition-colors"
+                    >
+                      {t('import.addManualRow', 'Add Passenger')}
+                    </button>
+                  )}
+                </div>
                 <div className="mt-4">
                   {passengers.length === 0 ? (
                     <div className="text-sm text-slate-500 bg-slate-50 p-8 rounded-xl text-center border border-slate-200">{t('agent.passengers.none', 'No passengers found for this agent.')}</div>
@@ -45,6 +62,7 @@ export const AgentPassengersModal = ({ agent, isOpen, onClose }) => {
                             <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-900 uppercase tracking-wider">{t('import.col.destination', 'Dest')}</th>
                             <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-900 uppercase tracking-wider">{t('import.col.category', 'Category')}</th>
                             <th className="px-4 py-3.5 text-start text-xs font-semibold text-slate-900 uppercase tracking-wider">{t('agent.debit', 'Debit')}</th>
+                            <th className="px-4 py-3.5 text-end text-xs font-semibold text-slate-900 uppercase tracking-wider">{t('import.col.actions', 'Actions')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200 bg-white">
@@ -56,7 +74,39 @@ export const AgentPassengersModal = ({ agent, isOpen, onClose }) => {
                               <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-500">{p.serviceType || p.flightNumber || '-'}</td>
                               <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-500">{p.destination}</td>
                               <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-500">{p.passengerCategory}</td>
-                              <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-500">{(p.totalPrice != null ? p.totalPrice : p.debitEgp) || 0}</td>
+                              <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-slate-900">
+                                {Number(p.debitUsd) > 0 
+                                  ? `${p.debitUsd} USD` 
+                                  : `${(p.totalPrice != null ? p.totalPrice : p.debitEgp) || 0} EGP`}
+                              </td>
+                              <td className="whitespace-nowrap px-4 py-3 text-sm text-right">
+                                {!agent.isDeleted ? (
+                                  <>
+                                    <button 
+                                      onClick={() => {
+                                        setEditingPassenger(p);
+                                        setIsFormOpen(true);
+                                      }}
+                                      className="text-indigo-600 hover:text-indigo-900 font-medium mr-3"
+                                    >
+                                      {t('common.edit', 'Edit')}
+                                    </button>
+                                    <button 
+                                      onClick={async () => {
+                                        if (window.confirm(t('common.confirmDelete', 'Are you sure you want to delete this?'))) {
+                                          await deletePublishedPassenger(p.id);
+                                          if (onDataChanged) onDataChanged();
+                                        }
+                                      }}
+                                      className="text-red-600 hover:text-red-900 font-medium"
+                                    >
+                                      {t('common.delete', 'Delete')}
+                                    </button>
+                                  </>
+                                ) : (
+                                  <span className="text-slate-400 text-xs italic">{t('common.deleted', 'Deleted')}</span>
+                                )}
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -69,6 +119,22 @@ export const AgentPassengersModal = ({ agent, isOpen, onClose }) => {
           </div>
         </div>
       </div>
+      <ManifestRowFormModal
+        isOpen={isFormOpen}
+        initialData={editingPassenger}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingPassenger(null);
+        }}
+        onSave={async (data) => {
+          if (editingPassenger && editingPassenger.id) {
+            await updatePublishedPassenger(editingPassenger.id, data);
+          } else {
+            await addPublishedPassenger(agent.id, data);
+          }
+          if (onDataChanged) onDataChanged();
+        }}
+      />
     </div>
   );
 };

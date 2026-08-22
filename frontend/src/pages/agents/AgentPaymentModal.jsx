@@ -11,6 +11,15 @@ export const AgentPaymentModal = ({ agentGroup, isOpen, onClose, onPaymentApplie
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [currency, setCurrency] = useState('EGP');
+
+  React.useEffect(() => {
+    if (agentGroup?.fullAgentData?.currency) {
+      setCurrency(agentGroup.fullAgentData.currency);
+    } else {
+      setCurrency('EGP');
+    }
+  }, [agentGroup, isOpen]);
 
   if (!isOpen || !agentGroup) return null;
 
@@ -30,6 +39,7 @@ export const AgentPaymentModal = ({ agentGroup, isOpen, onClose, onPaymentApplie
       const payload = {
         agentNameRaw: agentGroup.agentName,
         amount: paymentAmount,
+        currency: currency,
         paymentDate: paymentDate ? new Date(paymentDate).toISOString() : new Date().toISOString(),
         note: note
       };
@@ -98,12 +108,18 @@ export const AgentPaymentModal = ({ agentGroup, isOpen, onClose, onPaymentApplie
                 <form onSubmit={handleSubmit} className="space-y-5 w-full">
                   <div>
                     <label htmlFor="amount" className="block text-sm font-semibold text-slate-700">
-                      {t('agent.payment.amount', 'Amount (EGP)')}
+                      {t('agent.payment.amount', 'Amount')}
                     </label>
-                    <div className="relative mt-2 rounded-xl shadow-sm">
-                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <span className="text-slate-500 sm:text-sm">EGP</span>
-                      </div>
+                    <div className="relative mt-2 flex rounded-xl shadow-sm">
+                      <select
+                        name="currency"
+                        value={currency}
+                        onChange={(e) => setCurrency(e.target.value)}
+                        className="rounded-l-xl border-0 py-3 pl-3 pr-8 text-slate-900 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-emerald-600 sm:text-sm font-bold bg-slate-50"
+                      >
+                        <option value="EGP">EGP</option>
+                        <option value="USD">USD</option>
+                      </select>
                       <input
                         type="number"
                         name="amount"
@@ -111,7 +127,7 @@ export const AgentPaymentModal = ({ agentGroup, isOpen, onClose, onPaymentApplie
                         required
                         min="1"
                         step="0.01"
-                        className="block w-full rounded-xl border-0 py-3 pl-12 pr-4 text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:text-sm sm:leading-6 font-bold"
+                        className="block w-full rounded-r-xl border-0 py-3 px-4 text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:text-sm sm:leading-6 font-bold"
                         placeholder="0.00"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { createAgent, updateAgent } from '../../api/agents.api';import { jsxDEV as _jsxDEV } from "react/jsx-dev-runtime";
+import { createAgent, updateAgent } from '../../api/agents.api';
 
 const AgentFormModal = ({ isOpen, agent, onClose }) => {
   const [formData, setFormData] = useState({
@@ -58,151 +58,153 @@ const AgentFormModal = ({ isOpen, agent, onClose }) => {
 
   if (!isOpen) return null;
 
-  return (/*#__PURE__*/
-    _jsxDEV("div", { className: "relative z-50", "aria-labelledby": "modal-title", role: "dialog", "aria-modal": "true", children: [/*#__PURE__*/
-      _jsxDEV("div", { className: "fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" }, void 0, false), /*#__PURE__*/
+  return (
+    <div className="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+      <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+          <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+            <div>
+              <h3 className="text-base font-semibold leading-6 text-gray-900" id="modal-title">
+                {agent ? 'Edit Agent' : 'Create Agent'}
+              </h3>
 
-      _jsxDEV("div", { className: "fixed inset-0 z-10 w-screen overflow-y-auto", children: /*#__PURE__*/
-        _jsxDEV("div", { className: "flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0", children: /*#__PURE__*/
-          _jsxDEV("div", { className: "relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6", children: /*#__PURE__*/
-            _jsxDEV("div", { children: [/*#__PURE__*/
-              _jsxDEV("h3", { className: "text-base font-semibold leading-6 text-gray-900", id: "modal-title", children:
-                agent ? 'Edit Agent' : 'Create Agent' }, void 0, false
-              ),
+              {error && (
+                <div className="mt-2 rounded-md bg-red-50 p-4">
+                  <div className="text-sm text-red-700">{error}</div>
+                </div>
+              )}
 
-              error && /*#__PURE__*/
-              _jsxDEV("div", { className: "mt-2 rounded-md bg-red-50 p-4", children: /*#__PURE__*/
-                _jsxDEV("div", { className: "text-sm text-red-700", children: error }, void 0, false) }, void 0, false
-              ), /*#__PURE__*/
+              <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+                <div>
+                  <label htmlFor="code" className="block text-sm font-medium leading-6 text-gray-900">Code *</label>
+                  <input
+                    type="text"
+                    name="code"
+                    id="code"
+                    required
+                    disabled={!!agent}
+                    value={formData.code || ''}
+                    onChange={handleChange}
+                    className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 disabled:bg-gray-100"
+                  />
+                </div>
 
-              _jsxDEV("form", { onSubmit: handleSubmit, className: "mt-4 space-y-4", children: [/*#__PURE__*/
-                _jsxDEV("div", { children: [/*#__PURE__*/
-                  _jsxDEV("label", { htmlFor: "code", className: "block text-sm font-medium leading-6 text-gray-900", children: "Code *" }, void 0, false), /*#__PURE__*/
-                  _jsxDEV("input", {
-                    type: "text",
-                    name: "code",
-                    id: "code",
-                    required: true,
-                    disabled: !!agent,
-                    value: formData.code || '',
-                    onChange: handleChange,
-                    className: "mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 disabled:bg-gray-100" }, void 0, false
-                  )] }, void 0, true
-                ), /*#__PURE__*/
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium leading-6 text-gray-900">Name *</label>
+                  <input
+                    type="text"
+                    name="name"
+                    id="name"
+                    required
+                    value={formData.name || ''}
+                    onChange={handleChange}
+                    className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  />
+                </div>
 
-                _jsxDEV("div", { children: [/*#__PURE__*/
-                  _jsxDEV("label", { htmlFor: "name", className: "block text-sm font-medium leading-6 text-gray-900", children: "Name *" }, void 0, false), /*#__PURE__*/
-                  _jsxDEV("input", {
-                    type: "text",
-                    name: "name",
-                    id: "name",
-                    required: true,
-                    value: formData.name || '',
-                    onChange: handleChange,
-                    className: "mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" }, void 0, false
-                  )] }, void 0, true
-                ), /*#__PURE__*/
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">Email</label>
+                    <input
+                      type="email"
+                      name="email"
+                      id="email"
+                      value={formData.email || ''}
+                      onChange={handleChange}
+                      className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-medium leading-6 text-gray-900">Phone</label>
+                    <input
+                      type="text"
+                      name="phone"
+                      id="phone"
+                      value={formData.phone || ''}
+                      onChange={handleChange}
+                      className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    />
+                  </div>
+                </div>
 
-                _jsxDEV("div", { className: "grid grid-cols-2 gap-4", children: [/*#__PURE__*/
-                  _jsxDEV("div", { children: [/*#__PURE__*/
-                    _jsxDEV("label", { htmlFor: "email", className: "block text-sm font-medium leading-6 text-gray-900", children: "Email" }, void 0, false), /*#__PURE__*/
-                    _jsxDEV("input", {
-                      type: "email",
-                      name: "email",
-                      id: "email",
-                      value: formData.email || '',
-                      onChange: handleChange,
-                      className: "mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" }, void 0, false
-                    )] }, void 0, true
-                  ), /*#__PURE__*/
-                  _jsxDEV("div", { children: [/*#__PURE__*/
-                    _jsxDEV("label", { htmlFor: "phone", className: "block text-sm font-medium leading-6 text-gray-900", children: "Phone" }, void 0, false), /*#__PURE__*/
-                    _jsxDEV("input", {
-                      type: "text",
-                      name: "phone",
-                      id: "phone",
-                      value: formData.phone || '',
-                      onChange: handleChange,
-                      className: "mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" }, void 0, false
-                    )] }, void 0, true
-                  )] }, void 0, true
-                ), /*#__PURE__*/
+                <div>
+                  <label htmlFor="address" className="block text-sm font-medium leading-6 text-gray-900">Address</label>
+                  <textarea
+                    name="address"
+                    id="address"
+                    rows={2}
+                    value={formData.address || ''}
+                    onChange={handleChange}
+                    className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  />
+                </div>
 
-                _jsxDEV("div", { children: [/*#__PURE__*/
-                  _jsxDEV("label", { htmlFor: "address", className: "block text-sm font-medium leading-6 text-gray-900", children: "Address" }, void 0, false), /*#__PURE__*/
-                  _jsxDEV("textarea", {
-                    name: "address",
-                    id: "address",
-                    rows: 2,
-                    value: formData.address || '',
-                    onChange: handleChange,
-                    className: "mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" }, void 0, false
-                  )] }, void 0, true
-                ), /*#__PURE__*/
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label htmlFor="status" className="block text-sm font-medium leading-6 text-gray-900">Status</label>
+                    <select
+                      name="status"
+                      id="status"
+                      value={formData.status}
+                      onChange={handleChange}
+                      className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    >
+                      <option value="ACTIVE">ACTIVE</option>
+                      <option value="INACTIVE">INACTIVE</option>
+                      <option value="SUSPENDED">SUSPENDED</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="creditLimit" className="block text-sm font-medium leading-6 text-gray-900">Credit Limit</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      name="creditLimit"
+                      id="creditLimit"
+                      value={formData.creditLimit || 0}
+                      onChange={handleChange}
+                      className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <label htmlFor="currency" className="block text-sm font-medium leading-6 text-gray-900">Currency</label>
+                    <select
+                      name="currency"
+                      id="currency"
+                      value={formData.currency || 'USD'}
+                      onChange={handleChange}
+                      className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    >
+                      <option value="EGP">EGP</option>
+                      <option value="USD">USD</option>
+                    </select>
+                  </div>
+                </div>
 
-                _jsxDEV("div", { className: "grid grid-cols-3 gap-4", children: [/*#__PURE__*/
-                  _jsxDEV("div", { children: [/*#__PURE__*/
-                    _jsxDEV("label", { htmlFor: "status", className: "block text-sm font-medium leading-6 text-gray-900", children: "Status" }, void 0, false), /*#__PURE__*/
-                    _jsxDEV("select", {
-                      name: "status",
-                      id: "status",
-                      value: formData.status,
-                      onChange: handleChange,
-                      className: "mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6", children: [/*#__PURE__*/
-
-                      _jsxDEV("option", { value: "ACTIVE", children: "ACTIVE" }, void 0, false), /*#__PURE__*/
-                      _jsxDEV("option", { value: "INACTIVE", children: "INACTIVE" }, void 0, false), /*#__PURE__*/
-                      _jsxDEV("option", { value: "SUSPENDED", children: "SUSPENDED" }, void 0, false)] }, void 0, true
-                    )] }, void 0, true
-                  ), /*#__PURE__*/
-                  _jsxDEV("div", { children: [/*#__PURE__*/
-                    _jsxDEV("label", { htmlFor: "creditLimit", className: "block text-sm font-medium leading-6 text-gray-900", children: "Credit Limit" }, void 0, false), /*#__PURE__*/
-                    _jsxDEV("input", {
-                      type: "number",
-                      step: "0.01",
-                      name: "creditLimit",
-                      id: "creditLimit",
-                      value: formData.creditLimit || 0,
-                      onChange: handleChange,
-                      className: "mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" }, void 0, false
-                    )] }, void 0, true
-                  ), /*#__PURE__*/
-                  _jsxDEV("div", { children: [/*#__PURE__*/
-                    _jsxDEV("label", { htmlFor: "currency", className: "block text-sm font-medium leading-6 text-gray-900", children: "Currency" }, void 0, false), /*#__PURE__*/
-                    _jsxDEV("input", {
-                      type: "text",
-                      name: "currency",
-                      id: "currency",
-                      value: formData.currency || 'USD',
-                      onChange: handleChange,
-                      className: "mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" }, void 0, false
-                    )] }, void 0, true
-                  )] }, void 0, true
-                ), /*#__PURE__*/
-
-                _jsxDEV("div", { className: "mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3", children: [/*#__PURE__*/
-                  _jsxDEV("button", {
-                    type: "submit",
-                    disabled: loading,
-                    className: "inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:col-start-2 disabled:bg-indigo-400", children:
-
-                    loading ? 'Saving...' : 'Save' }, void 0, false
-                  ), /*#__PURE__*/
-                  _jsxDEV("button", {
-                    type: "button",
-                    onClick: () => onClose(false),
-                    className: "mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0", children:
-                    "Cancel" }, void 0, false
-
-                  )] }, void 0, true
-                )] }, void 0, true
-              )] }, void 0, true
-            ) }, void 0, false
-          ) }, void 0, false
-        ) }, void 0, false
-      )] }, void 0, true
-    ));
-
+                <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:col-start-2 disabled:bg-indigo-400"
+                  >
+                    {loading ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onClose(false)}
+                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default AgentFormModal;

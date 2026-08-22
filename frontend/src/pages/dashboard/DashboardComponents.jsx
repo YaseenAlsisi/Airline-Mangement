@@ -37,13 +37,13 @@ export const CustomDonutChart = ({ data, colors, title, centerText }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 h-full flex flex-col">
       <h3 className="text-sm font-bold text-gray-800 mb-4">{title}</h3>
-      <div className="flex-1 relative">
-        <ResponsiveContainer width="100%" height={200}>
+      <div className="flex-1 relative min-h-[220px]">
+        <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={validData}
-              innerRadius={55}
-              outerRadius={80}
+              innerRadius="60%"
+              outerRadius="80%"
               paddingAngle={2}
               dataKey="value"
               stroke="none"
@@ -62,17 +62,18 @@ export const CustomDonutChart = ({ data, colors, title, centerText }) => {
           <span className="text-xl font-bold text-gray-900">{centerText.value}</span>
         </div>
       </div>
-      <div className="mt-4 grid grid-cols-1 xl:grid-cols-2 gap-2">
+      <div className="mt-4 flex flex-col gap-y-2 overflow-y-auto max-h-40 pr-2">
         {validData.map((entry, index) => {
           if (entry.name === 'No Data') return null;
+          const displayName = entry.name || 'Unknown';
           return (
             <div key={index} className="flex justify-between items-center text-xs">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colors[index % colors.length] }} />
-                <span className="text-gray-600 truncate max-w-[80px]" title={entry.name}>{entry.name}</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: colors[index % colors.length] }} />
+                <span className="text-gray-600 truncate" title={displayName}>{displayName}</span>
               </div>
-              <div className="font-semibold text-gray-900">
-                {Number(entry.value).toLocaleString()} <span className="text-gray-400 font-normal ml-1">({entry.percent}%)</span>
+              <div className="font-semibold text-gray-900 shrink-0 ml-2">
+                {Number(entry.value).toLocaleString()} <span className="text-gray-400 font-normal">({entry.percent}%)</span>
               </div>
             </div>
           );
@@ -89,7 +90,7 @@ export const CustomBarChart = ({ data, title }) => {
       <h3 className="text-sm font-bold text-gray-800 mb-4">{title}</h3>
       <div className="flex-1">
         <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={validData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+          <BarChart data={validData} margin={{ top: 20, right: 10, left: 20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
             <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#6b7280' }} />
             <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#6b7280' }} />

@@ -27,10 +27,16 @@ public class ManifestImportController {
     @PostMapping("/preview")
     @PreAuthorize("hasAnyAuthority('MANIFEST_IMPORT_CREATE', 'AGENT_VIEW', 'AGENT_CREATE', 'AGENT_EDIT')")
     public ResponseEntity<ManifestDto.BatchPreviewResponse> previewImport(@RequestParam("file") MultipartFile file) throws Exception {
-        // Use a dummy uploader ID for now since security principal might not map to UUID cleanly in this sample, or we can just pass null
         ManifestImportBatch batch = service.previewManifestImport(file, null);
-        Page<ManifestPassenger> rowsPage = service.getRows(batch.getId(), Pageable.unpaged()); // Fetch all for preview response
+        Page<ManifestPassenger> rowsPage = service.getRows(batch.getId(), Pageable.unpaged());
         return ResponseEntity.ok(mapper.toBatchPreviewResponse(batch, rowsPage.getContent()));
+    }
+
+    @PostMapping("/empty-batch")
+    @PreAuthorize("hasAnyAuthority('MANIFEST_IMPORT_CREATE', 'AGENT_VIEW', 'AGENT_CREATE', 'AGENT_EDIT')")
+    public ResponseEntity<ManifestDto.BatchPreviewResponse> createEmptyBatch() {
+        ManifestImportBatch batch = service.createEmptyBatch(null);
+        return ResponseEntity.ok(mapper.toBatchPreviewResponse(batch, List.of()));
     }
 
     @GetMapping
@@ -65,6 +71,15 @@ public class ManifestImportController {
             @RequestBody ManifestDto.PassengerRowUpdateRequest request) {
         ManifestPassenger updated = service.updateRow(batchId, rowId, request);
         return ResponseEntity.ok(mapper.toPassengerRowResponse(updated));
+    }
+
+    @PostMapping("/{batchId}/rows")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ManifestDto.PassengerRowResponse> addRow(
+            @PathVariable UUID batchId,
+            @RequestBody ManifestDto.PassengerRowUpdateRequest request) {
+        ManifestPassenger added = service.addRow(batchId, request);
+        return ResponseEntity.ok(mapper.toPassengerRowResponse(added));
     }
 
     @DeleteMapping("/{batchId}/rows/{rowId}")

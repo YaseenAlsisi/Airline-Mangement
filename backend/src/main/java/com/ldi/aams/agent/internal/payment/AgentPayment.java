@@ -27,6 +27,9 @@ public class AgentPayment {
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;
 
+    @Column(name = "currency", length = 3)
+    private String currency;
+
     @Column(name = "payment_date", nullable = false)
     private Instant paymentDate;
 

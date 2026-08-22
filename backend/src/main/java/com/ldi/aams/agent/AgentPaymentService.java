@@ -34,6 +34,7 @@ public class AgentPaymentService {
         AgentPayment payment = AgentPayment.builder()
                 .agentNameRaw(request.getAgentNameRaw())
                 .amount(request.getAmount())
+                .currency(request.getCurrency())
                 .paymentDate(request.getPaymentDate())
                 .note(request.getNote())
                 .build();
@@ -48,6 +49,9 @@ public class AgentPaymentService {
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
         
         payment.setAmount(request.getAmount());
+        if (request.getCurrency() != null) {
+            payment.setCurrency(request.getCurrency());
+        }
         payment.setPaymentDate(request.getPaymentDate());
         payment.setNote(request.getNote());
         
@@ -67,6 +71,7 @@ public class AgentPaymentService {
                 .id(payment.getId())
                 .agentNameRaw(payment.getAgentNameRaw())
                 .amount(payment.getAmount())
+                .currency(payment.getCurrency())
                 .paymentDate(payment.getPaymentDate())
                 .note(payment.getNote())
                 .createdAt(payment.getCreatedAt())

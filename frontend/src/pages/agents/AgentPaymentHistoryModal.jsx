@@ -138,7 +138,7 @@ export const AgentPaymentHistoryModal = ({ isOpen, onClose, agentGroup, payments
                                 {new Date(payment.paymentDate).toLocaleDateString()}
                               </td>
                               <td className="whitespace-nowrap px-4 py-4 text-sm font-bold text-emerald-600">
-                                {Number(payment.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                {Number(payment.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-xs text-slate-500 font-medium ml-1">{payment.currency || 'EGP'}</span>
                               </td>
                               <td className="px-4 py-4 text-sm text-slate-600 max-w-xs truncate" title={payment.note}>
                                 {payment.note || '-'}

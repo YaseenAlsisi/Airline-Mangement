@@ -23,8 +23,18 @@ export const getBatchPreview = async (batchId) => {
   return response;
 };
 
+export const createEmptyBatch = async () => {
+  const response = await axiosInstance.post(`${API_BASE}/empty-batch`);
+  return response;
+};
+
 export const getManifestRows = async (batchId, params) => {
   const response = await axiosInstance.get(`${API_BASE}/${batchId}/rows`, { params });
+  return response;
+};
+
+export const addManifestRow = async (batchId, data) => {
+  const response = await axiosInstance.post(`${API_BASE}/${batchId}/rows`, data);
   return response;
 };
 
@@ -87,6 +97,11 @@ export const getAllManifestPassengers = async (params) => {
 
 export const updatePublishedPassenger = async (passengerId, data) => {
   const response = await axiosInstance.put(`/api/v1/agents/manifest-passengers/${passengerId}`, data);
+  return response;
+};
+
+export const addPublishedPassenger = async (agentId, data) => {
+  const response = await axiosInstance.post(`/api/v1/agents/${agentId}/manifest-passengers`, data);
   return response;
 };
 

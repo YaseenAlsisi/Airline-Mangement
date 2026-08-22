@@ -34,6 +34,19 @@ public class ManifestImportService {
     private final com.ldi.aams.pricelist.PriceListService priceListService;
 
     @Transactional
+    public ManifestImportBatch createEmptyBatch(UUID uploaderId) {
+        ManifestImportBatch batch = ManifestImportBatch.builder()
+                .originalFilename("Manual_Entry_" + LocalDate.now() + ".xlsx")
+                .status("DRAFT")
+                .uploadedBy(uploaderId)
+                .totalRows(0)
+                .validRows(0)
+                .invalidRows(0)
+                .build();
+        return batchRepository.save(batch);
+    }
+
+    @Transactional
     public ManifestImportBatch previewManifestImport(MultipartFile file, UUID uploaderId) throws Exception {
         ManifestImportBatch batch = ManifestImportBatch.builder()
                 .originalFilename(file.getOriginalFilename())
@@ -669,6 +682,77 @@ public class ManifestImportService {
     }
 
     @Transactional
+    public ManifestPassenger addRow(UUID batchId, ManifestDto.PassengerRowUpdateRequest request) {
+        ManifestImportBatch batch = getBatch(batchId);
+        
+        ManifestPassenger passenger = new ManifestPassenger();
+        passenger.setBatch(batch);
+        
+        // Find max row number
+        Integer maxRowNumber = passengerRepository.findByBatchId(batchId, org.springframework.data.domain.PageRequest.of(0, 1, org.springframework.data.domain.Sort.by("rowNumber").descending()))
+                .stream().map(ManifestPassenger::getRowNumber).findFirst().orElse(0);
+        passenger.setRowNumber(maxRowNumber + 1);
+
+        passenger.setPassengerName(request.getPassengerName());
+        passenger.setBirthDate(request.getBirthDate());
+        passenger.setNationalId(request.getNationalId());
+        passenger.setPassportNumber(request.getPassportNumber());
+        passenger.setDeparturePort(request.getDeparturePort());
+        passenger.setDestination(request.getDestination());
+        passenger.setFlightNumber(request.getFlightNumber());
+        passenger.setDepartureDate(request.getDepartureDate());
+        passenger.setArrivalTime(request.getArrivalTime());
+        passenger.setInvestmentSupplier(request.getInvestmentSupplier());
+        passenger.setServiceType(request.getServiceType());
+        passenger.setPassengerCategory(request.getPassengerCategory());
+        passenger.setNote2(request.getNote2());
+        passenger.setNote3(request.getNote3());
+        passenger.setNote4(request.getNote4());
+        passenger.setDebitUsd(request.getDebitUsd() != null ? request.getDebitUsd() : BigDecimal.ZERO);
+        passenger.setCreditUsd(request.getCreditUsd() != null ? request.getCreditUsd() : BigDecimal.ZERO);
+        passenger.setDebitEgp(request.getDebitEgp() != null ? request.getDebitEgp() : BigDecimal.ZERO);
+        passenger.setCreditEgp(request.getCreditEgp() != null ? request.getCreditEgp() : BigDecimal.ZERO);
+        if (passenger.getCreditEgp().compareTo(BigDecimal.ZERO) > 0) {
+            passenger.setCreditEgpDate(Instant.now());
+        }
+
+        String agentNameRaw = request.getAgentNameRaw();
+        passenger.setAgentNameRaw(agentNameRaw);
+        if (agentNameRaw != null && !agentNameRaw.trim().isEmpty()) {
+            Agent agent = matchOrCreateAgent(agentNameRaw.trim());
+            passenger.setAgent(agent);
+        }
+
+        List<String> errors = new ArrayList<>();
+        if (passenger.getPassengerName() == null || passenger.getPassengerName().isEmpty()) {
+            errors.add("Passenger name is required");
+        }
+        if (passenger.getPassportNumber() == null || passenger.getPassportNumber().isEmpty()) {
+            errors.add("Passport number is required");
+        }
+        if (passenger.getAgentNameRaw() == null || passenger.getAgentNameRaw().isEmpty()) {
+            errors.add("Agent name is required");
+        }
+        if (passenger.getDepartureDate() == null) {
+            errors.add("Departure date is required");
+        }
+
+        if (errors.isEmpty()) {
+            passenger.setValidationStatus("VALID");
+            batch.setValidRows(batch.getValidRows() + 1);
+        } else {
+            passenger.setValidationStatus("ERROR");
+            passenger.setValidationErrors(String.join(", ", errors));
+            batch.setInvalidRows(batch.getInvalidRows() + 1);
+        }
+
+        batch.setTotalRows(batch.getTotalRows() + 1);
+        batchRepository.save(batch);
+
+        return passengerRepository.save(passenger);
+    }
+
+    @Transactional
     public ManifestPassenger updatePublishedPassenger(UUID rowId, ManifestDto.PassengerRowUpdateRequest request) {
         ManifestPassenger passenger = passengerRepository.findById(rowId)
                 .orElseThrow(() -> new IllegalArgumentException("Row not found"));
@@ -712,6 +796,66 @@ public class ManifestImportService {
         } else {
             passenger.setAgent(null);
         }
+
+        return passengerRepository.save(passenger);
+    }
+
+    @Transactional
+    public ManifestPassenger addPublishedPassenger(UUID agentId, ManifestDto.PassengerRowUpdateRequest request) {
+        // Find or create the "Direct Entries" batch
+        ManifestImportBatch directBatch = batchRepository.findAll().stream()
+                .filter(b -> "Direct Entries".equals(b.getOriginalFilename()) && "PUBLISHED".equals(b.getStatus()))
+                .findFirst()
+                .orElseGet(() -> {
+                    ManifestImportBatch newBatch = new ManifestImportBatch();
+                    newBatch.setOriginalFilename("Direct Entries");
+                    newBatch.setStatus("PUBLISHED");
+                    newBatch.setTotalRows(0);
+                    newBatch.setValidRows(0);
+                    newBatch.setInvalidRows(0);
+                    return batchRepository.save(newBatch);
+                });
+
+        ManifestPassenger passenger = new ManifestPassenger();
+        passenger.setBatch(directBatch);
+        
+        Integer maxRowNumber = passengerRepository.findByBatchId(directBatch.getId(), org.springframework.data.domain.PageRequest.of(0, 1, org.springframework.data.domain.Sort.by("rowNumber").descending()))
+                .stream().map(ManifestPassenger::getRowNumber).findFirst().orElse(0);
+        passenger.setRowNumber(maxRowNumber + 1);
+
+        passenger.setPassengerName(request.getPassengerName());
+        passenger.setBirthDate(request.getBirthDate());
+        passenger.setNationalId(request.getNationalId());
+        passenger.setPassportNumber(request.getPassportNumber());
+        passenger.setDeparturePort(request.getDeparturePort());
+        passenger.setDestination(request.getDestination());
+        passenger.setFlightNumber(request.getFlightNumber());
+        passenger.setDepartureDate(request.getDepartureDate());
+        passenger.setArrivalTime(request.getArrivalTime());
+        passenger.setInvestmentSupplier(request.getInvestmentSupplier());
+        passenger.setServiceType(request.getServiceType());
+        passenger.setPassengerCategory(request.getPassengerCategory());
+        passenger.setNote2(request.getNote2());
+        passenger.setNote3(request.getNote3());
+        passenger.setNote4(request.getNote4());
+        passenger.setDebitUsd(request.getDebitUsd() != null ? request.getDebitUsd() : BigDecimal.ZERO);
+        passenger.setCreditUsd(request.getCreditUsd() != null ? request.getCreditUsd() : BigDecimal.ZERO);
+        passenger.setDebitEgp(request.getDebitEgp() != null ? request.getDebitEgp() : BigDecimal.ZERO);
+        passenger.setCreditEgp(request.getCreditEgp() != null ? request.getCreditEgp() : BigDecimal.ZERO);
+        if (passenger.getCreditEgp().compareTo(BigDecimal.ZERO) > 0) {
+            passenger.setCreditEgpDate(Instant.now());
+        }
+
+        // Link to explicit agent
+        Agent agent = agentRepository.findById(agentId)
+            .orElseThrow(() -> new IllegalArgumentException("Agent not found"));
+        passenger.setAgent(agent);
+        passenger.setAgentNameRaw(agent.getName());
+        passenger.setValidationStatus("VALID");
+
+        directBatch.setTotalRows(directBatch.getTotalRows() + 1);
+        directBatch.setValidRows(directBatch.getValidRows() + 1);
+        batchRepository.save(directBatch);
 
         return passengerRepository.save(passenger);
     }

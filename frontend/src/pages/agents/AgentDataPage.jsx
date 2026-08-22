@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { getAllManifestPassengers, resetManifestData } from '../../api/manifestImport.api';
 import { getAllAgentPayments } from '../../api/agentPayment.api';
+import { getAgents, deleteAgent } from '../../api/agents.api';
 import { useAuthStore } from '../../store/authStore';
 import AgentFormModal from './AgentFormModal';
 import AgentPassengersModal from './AgentPassengersModal';
@@ -19,6 +20,7 @@ export const AgentDataPage = () => {
   
   const [allPassengers, setAllPassengers] = useState([]);
   const [allAgentPayments, setAllAgentPayments] = useState([]);
+  const [allExplicitAgents, setAllExplicitAgents] = useState([]);
   const [loadingPassengers, setLoadingPassengers] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -47,55 +49,65 @@ export const AgentDataPage = () => {
 
   const canEdit = hasPermission('AGENT_EDIT');
 
-  useEffect(() => {
-    const fetchAllPassengers = async () => {
-      setLoadingPassengers(true);
-      try {
-        const res = await getAllManifestPassengers({ page: 0, size: 5000 });
-        const rawData = res.data?.content || res.content || [];
+  const fetchAllPassengers = async () => {
+    setLoadingPassengers(true);
+    try {
+      const res = await getAllManifestPassengers({ page: 0, size: 5000 });
+      const rawData = res.data?.content || res.content || [];
 
-        const seenPassports = new Set();
-        const seenNames = new Set();
-        const uniqueData = [];
+      const seenPassports = new Set();
+      const seenNames = new Set();
+      const uniqueData = [];
 
-        for (let i = rawData.length - 1; i >= 0; i--) {
-          const p = rawData[i];
-          const passKey = p.passportNumber ? `${p.passportNumber}_${p.departureDate}` : null;
-          const nameKey = p.passengerName ? `${p.passengerName}_${p.departureDate}` : null;
+      for (let i = rawData.length - 1; i >= 0; i--) {
+        const p = rawData[i];
+        const passKey = p.passportNumber ? `${p.passportNumber}_${p.departureDate}` : null;
+        const nameKey = p.passengerName ? `${p.passengerName}_${p.departureDate}` : null;
 
-          let isDup = false;
-          if (passKey && seenPassports.has(passKey)) isDup = true;
-          if (nameKey && seenNames.has(nameKey)) isDup = true;
+        let isDup = false;
+        if (passKey && seenPassports.has(passKey)) isDup = true;
+        if (nameKey && seenNames.has(nameKey)) isDup = true;
 
-          if (!isDup) {
-            uniqueData.unshift(p);
-            if (passKey) seenPassports.add(passKey);
-            if (nameKey) seenNames.add(nameKey);
-          }
+        if (!isDup) {
+          uniqueData.unshift(p);
+          if (passKey) seenPassports.add(passKey);
+          if (nameKey) seenNames.add(nameKey);
         }
-
-        setAllPassengers(uniqueData);
-      } catch (e) {
-        console.error(e);
       }
-    };
 
-    const fetchAllPayments = async () => {
-      try {
-        const res = await getAllAgentPayments();
-        const payments = res.content || res.data || res || [];
-        setAllAgentPayments(Array.isArray(payments) ? payments : []);
-      } catch (e) {
-        console.error(e);
-      }
-    };
+      setAllPassengers(uniqueData);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
-    const loadData = async () => {
-      setLoadingPassengers(true);
-      await Promise.all([fetchAllPassengers(), fetchAllPayments()]);
-      setLoadingPassengers(false);
-    };
-    
+  const fetchAllPayments = async () => {
+    try {
+      const res = await getAllAgentPayments();
+      const payments = res.content || res.data || res || [];
+      setAllAgentPayments(Array.isArray(payments) ? payments : []);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchAllExplicitAgents = async () => {
+    try {
+      const res = await getAgents({ size: 5000 });
+      const agents = res.data?.data?.content || res.data?.content || res.content || [];
+      setAllExplicitAgents(Array.isArray(agents) ? agents : []);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const loadData = async () => {
+    setLoadingPassengers(true);
+    await Promise.all([fetchAllPassengers(), fetchAllPayments(), fetchAllExplicitAgents()]);
+    setLoadingPassengers(false);
+  };
+
+  useEffect(() => {
     loadData();
   }, []);
 
@@ -126,10 +138,35 @@ export const AgentDataPage = () => {
   });
 
   const agentGroupsMap = new Map();
+  
+    // Pre-fill with explicit agents
+    allExplicitAgents.forEach(agent => {
+      const agentName = agent.name;
+      if (agentName && !agentGroupsMap.has(agentName)) {
+        agentGroupsMap.set(agentName, {
+          id: agent.id,
+          fullAgentData: agent,
+          isDeleted: agent.status === 'DELETED',
+          agentName,
+          passengerCount: 0,
+          debitUsd: 0,
+          creditUsd: 0,
+          debitEgp: 0,
+          creditEgp: 0,
+          passengers: [],
+          payments: []
+        });
+      }
+    });
+
   displayedPassengers.forEach(p => {
     const agentName = p.agentNameRaw || 'Unknown';
     if (!agentGroupsMap.has(agentName)) {
+      const explicitAgent = allExplicitAgents.find(a => a.name.toLowerCase() === agentName.toLowerCase());
       agentGroupsMap.set(agentName, {
+        id: explicitAgent ? explicitAgent.id : null,
+        fullAgentData: explicitAgent || null,
+        isDeleted: explicitAgent ? explicitAgent.status === 'DELETED' : false,
         agentName,
         passengerCount: 0,
         debitUsd: 0,
@@ -156,7 +193,14 @@ export const AgentDataPage = () => {
     const agentName = payment.agentNameRaw;
     if (agentGroupsMap.has(agentName)) {
       const group = agentGroupsMap.get(agentName);
-      group.creditEgp += (Number(payment.amount) || 0);
+      const currency = payment.currency || group.fullAgentData?.currency || 'EGP';
+      
+      if (currency === 'USD') {
+        group.creditUsd += (Number(payment.amount) || 0);
+      } else {
+        group.creditEgp += (Number(payment.amount) || 0);
+      }
+      
       if (!group.payments) group.payments = [];
       group.payments.push(payment);
     }
@@ -168,11 +212,9 @@ export const AgentDataPage = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedAgents = agentGroups.slice(startIndex, startIndex + itemsPerPage);
 
-  const totalAgentsCount = new Set(allPassengers.map(p => p.agentNameRaw || 'Unknown')).size;
-  const totalDebitOverall = allPassengers.reduce((sum, p) => {
-    const debitEgp = p.totalPrice != null ? Number(p.totalPrice) : (Number(p.debitEgp) || 0);
-    return sum + debitEgp;
-  }, 0);
+  const totalAgentsCount = agentGroups.filter(g => g.passengerCount > 0 && !g.isDeleted).length;
+  const totalDebitEgpOverall = agentGroups.reduce((sum, g) => sum + g.debitEgp, 0);
+  const totalDebitUsdOverall = agentGroups.reduce((sum, g) => sum + g.debitUsd, 0);
 
   const handleViewDetails = (agentGroup) => {
     setViewingAgent(agentGroup);
@@ -199,6 +241,31 @@ export const AgentDataPage = () => {
     }
   };
 
+  const handleEditAgent = (agentGroup) => {
+    if (agentGroup.fullAgentData) {
+      setEditingAgent(agentGroup.fullAgentData);
+      setIsFormModalOpen(true);
+    }
+  };
+
+  const handleDeleteAgent = async (agentGroup) => {
+    if (!agentGroup.id) return;
+    if (window.confirm(t('agent.confirmDelete', 'Are you sure you want to delete this agent?'))) {
+      try {
+        await deleteAgent(agentGroup.id);
+        
+        // Refresh all agents
+        const res = await getAgents({ size: 5000 });
+        const agents = res.data?.data?.content || res.data?.content || res.content || [];
+        setAllExplicitAgents(Array.isArray(agents) ? agents : []);
+        
+      } catch (e) {
+        console.error(e);
+        alert(t('agent.deleteError', 'Failed to delete agent. It may have associated payments or passengers.'));
+      }
+    }
+  };
+
   const getSummaryStatus = (debit, credit) => {
     const diff = debit - credit;
     if (diff > 0) return { text: t('agent.owesCompany', 'Agent owes'), color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200' };
@@ -208,7 +275,7 @@ export const AgentDataPage = () => {
 
   const renderFilterOptions = (filterKey) => {
     const options = filterKey === 'agentNameRaw' 
-      ? [...new Set(allPassengers.map(p => p.agentNameRaw || 'Unknown'))].sort()
+      ? agentGroups.map(g => g.agentName).sort((a, b) => a.localeCompare(b))
       : [...new Set(allPassengers.map(p => p.departureDate).filter(Boolean))].sort();
 
     const currentValue = filterKey === 'agentNameRaw' ? selectedFilterName : selectedFilterDate;
@@ -258,7 +325,14 @@ export const AgentDataPage = () => {
         <div className="overflow-hidden rounded-2xl bg-white p-6 shadow-sm border border-slate-200 flex items-center justify-between transition-all hover:shadow-md">
           <div>
             <p className="text-sm font-semibold text-slate-500 mb-1">{t('agent.totalDebit', 'Total Debit')}</p>
-            <h3 className="text-3xl font-black text-slate-800">{totalDebitOverall.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-lg text-slate-400 font-medium ml-1">EGP</span></h3>
+            <h3 className="text-xl font-black text-slate-800">
+              {totalDebitEgpOverall.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span className="text-sm text-slate-400 font-medium ml-1">EGP</span>
+            </h3>
+            {totalDebitUsdOverall > 0 && (
+              <h3 className="text-xl font-black text-slate-800 mt-1">
+                {totalDebitUsdOverall.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span className="text-sm text-slate-400 font-medium ml-1">USD</span>
+              </h3>
+            )}
           </div>
           <div className="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center border border-orange-100">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7 text-orange-600">
@@ -292,6 +366,14 @@ export const AgentDataPage = () => {
           >
             <ArrowDownTrayIcon className="h-5 w-5" />
             {t('agent.exportExcel', 'Export to Excel')}
+          </button>
+
+          <button
+            onClick={() => setIsFormModalOpen(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-indigo-700 transition-colors"
+          >
+            <BuildingOfficeIcon className="h-5 w-5" />
+            {t('agent.addAgent', 'Add Agent')}
           </button>
 
           <button
@@ -394,57 +476,159 @@ export const AgentDataPage = () => {
       ) : (
         <>
           {viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-              {paginatedAgents.map((agentGroup, idx) => {
-                const diff = agentGroup.debitEgp - agentGroup.creditEgp;
-                const status = getSummaryStatus(agentGroup.debitEgp, agentGroup.creditEgp);
-                return (
-                  <div key={idx} className="bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg transition-all p-6 flex flex-col">
+            <div className="mb-8">
+              {/* Manual Masonry Implementation */}
+              {(() => {
+                const colXl = [[], [], [], []];
+                const colLg = [[], [], []];
+                const colMd = [[], []];
+                
+                paginatedAgents.forEach((agent, i) => {
+                  colXl[i % 4].push(agent);
+                  colLg[i % 3].push(agent);
+                  colMd[i % 2].push(agent);
+                });
+
+                const renderCard = (agentGroup, idx) => {
+                  const diffEgp = agentGroup.debitEgp - agentGroup.creditEgp;
+                  const statusEgp = getSummaryStatus(agentGroup.debitEgp, agentGroup.creditEgp);
+                  
+                  const diffUsd = agentGroup.debitUsd - agentGroup.creditUsd;
+                  const statusUsd = getSummaryStatus(agentGroup.debitUsd, agentGroup.creditUsd);
+
+                  const hasEgp = agentGroup.debitEgp > 0 || agentGroup.creditEgp > 0;
+                  const hasUsd = agentGroup.debitUsd > 0 || agentGroup.creditUsd > 0;
+                  
+                  return (
+                    <div key={agentGroup.id || idx} className="bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg transition-all p-6 flex flex-col">
                     <div className="text-center mb-6">
-                      <h3 className="text-xl font-bold text-slate-800 truncate mb-1" title={agentGroup.agentName}>{agentGroup.agentName}</h3>
+                      <h3 className="text-xl font-bold text-slate-800 truncate mb-1" title={agentGroup.agentName}>
+                        {agentGroup.agentName}
+                        {agentGroup.isDeleted && (
+                          <span className="ml-2 inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">
+                            {t('common.deleted', 'Deleted')}
+                          </span>
+                        )}
+                      </h3>
                       <p className="text-sm text-slate-500">{agentGroup.passengerCount} {t('dashboard.kpi.totalPassengers', 'Passengers')}</p>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="grid grid-cols-2 gap-4 mb-4">
                       <div className="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
                         <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">{t('agent.debit', 'Debit')}</p>
-                        <p className="text-lg font-bold text-slate-800">{agentGroup.debitEgp.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                        {hasEgp && <p className="text-sm font-bold text-slate-800">{agentGroup.debitEgp.toLocaleString()} EGP</p>}
+                        {hasUsd && <p className="text-sm font-bold text-slate-800">{agentGroup.debitUsd.toLocaleString()} USD</p>}
+                        {!hasEgp && !hasUsd && <p className="text-sm font-bold text-slate-800">0 EGP</p>}
                       </div>
                       <div className="bg-slate-50 rounded-2xl p-4 text-center border border-slate-100">
                         <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">{t('agent.credit', 'Credit')}</p>
-                        <p className="text-lg font-bold text-slate-800">{agentGroup.creditEgp.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                        {hasEgp && <p className="text-sm font-bold text-slate-800">{agentGroup.creditEgp.toLocaleString()} EGP</p>}
+                        {hasUsd && <p className="text-sm font-bold text-slate-800">{agentGroup.creditUsd.toLocaleString()} USD</p>}
+                        {!hasEgp && !hasUsd && <p className="text-sm font-bold text-slate-800">0 EGP</p>}
                       </div>
                     </div>
                     
-                    <div className={`mt-auto mb-6 rounded-2xl p-4 text-center border ${status.bg} ${status.border}`}>
-                      <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${status.color}`}>{t('agent.summary', 'Summary')}</p>
-                      <p className={`text-xl font-bold ${status.color}`}>{Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span className="text-sm font-medium">EGP</span></p>
-                      <p className={`text-xs mt-1 ${status.color} opacity-80`}>{status.text}</p>
+                    <div className="mt-auto mb-6 flex flex-col gap-2">
+                      {hasEgp && (
+                        <div className={`rounded-xl p-3 text-center border ${statusEgp.bg} ${statusEgp.border}`}>
+                          <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${statusEgp.color}`}>Summary (EGP)</p>
+                          <p className={`text-lg font-bold ${statusEgp.color}`}>{Math.abs(diffEgp).toLocaleString()} EGP</p>
+                          <p className={`text-[10px] mt-1 ${statusEgp.color} opacity-80`}>{statusEgp.text}</p>
+                        </div>
+                      )}
+                      {hasUsd && (
+                        <div className={`rounded-xl p-3 text-center border ${statusUsd.bg} ${statusUsd.border}`}>
+                          <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${statusUsd.color}`}>Summary (USD)</p>
+                          <p className={`text-lg font-bold ${statusUsd.color}`}>{Math.abs(diffUsd).toLocaleString()} USD</p>
+                          <p className={`text-[10px] mt-1 ${statusUsd.color} opacity-80`}>{statusUsd.text}</p>
+                        </div>
+                      )}
+                      {!hasEgp && !hasUsd && (
+                        <div className={`rounded-xl p-3 text-center border bg-slate-50 border-slate-200`}>
+                          <p className={`text-lg font-bold text-slate-600`}>0 EGP</p>
+                        </div>
+                      )}
                     </div>
                     
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 mb-2">
                       <button 
                         onClick={() => handleViewDetails(agentGroup)}
-                        className="w-1/3 py-2.5 rounded-xl bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition-colors shadow-md"
+                        className="w-full py-2 rounded-lg bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition-colors shadow-md"
                       >
                         {t('agent.viewDetails', 'View Details')}
                       </button>
+                    </div>
+
+                    <div className="flex gap-2 mb-2">
                       <button 
                         onClick={() => handleOpenHistory(agentGroup)}
-                        className="w-1/3 py-2.5 rounded-xl bg-indigo-50 text-indigo-700 font-semibold text-xs hover:bg-indigo-100 transition-colors shadow-sm"
+                        className={`${agentGroup.isDeleted ? 'w-full' : 'w-1/2'} py-2 rounded-lg bg-indigo-50 text-indigo-700 font-semibold text-xs hover:bg-indigo-100 transition-colors shadow-sm`}
                       >
                         {t('agent.paymentHistory', 'History')}
                       </button>
-                      <button 
-                        onClick={() => handleOpenPayment(agentGroup)}
-                        className="w-1/3 py-2.5 rounded-xl bg-emerald-100 text-emerald-700 font-semibold text-xs hover:bg-emerald-200 transition-colors shadow-sm"
-                      >
-                        {t('agent.addPayment', 'Payment')}
-                      </button>
+                      {!agentGroup.isDeleted && (
+                        <button 
+                          onClick={() => handleOpenPayment(agentGroup)}
+                          className="w-1/2 py-2 rounded-lg bg-emerald-100 text-emerald-700 font-semibold text-xs hover:bg-emerald-200 transition-colors shadow-sm"
+                        >
+                          {t('agent.addPayment', 'Payment')}
+                        </button>
+                      )}
                     </div>
+
+                    {agentGroup.id && canEdit && !agentGroup.isDeleted && (
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => handleEditAgent(agentGroup)}
+                          className="w-1/2 py-1.5 rounded-lg bg-slate-100 text-slate-700 font-semibold text-xs hover:bg-slate-200 transition-colors shadow-sm"
+                        >
+                          {t('common.edit', 'Edit')}
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteAgent(agentGroup)}
+                          className="w-1/2 py-1.5 rounded-lg bg-red-50 text-red-700 font-semibold text-xs hover:bg-red-100 transition-colors shadow-sm"
+                        >
+                          {t('common.delete', 'Delete')}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  );
+                };
+
+                const Col = ({ items }) => (
+                  <div className="flex flex-col gap-6 w-full">
+                    {items.map((ag, i) => renderCard(ag, i))}
                   </div>
                 );
-              })}
+
+                return (
+                  <>
+                    {/* Mobile: 1 Column */}
+                    <div className="grid grid-cols-1 gap-6 md:hidden">
+                      <Col items={paginatedAgents} />
+                    </div>
+                    {/* Tablet: 2 Columns */}
+                    <div className="hidden md:grid lg:hidden grid-cols-2 gap-6 items-start">
+                      <Col items={colMd[0]} />
+                      <Col items={colMd[1]} />
+                    </div>
+                    {/* Desktop: 3 Columns */}
+                    <div className="hidden lg:grid xl:hidden grid-cols-3 gap-6 items-start">
+                      <Col items={colLg[0]} />
+                      <Col items={colLg[1]} />
+                      <Col items={colLg[2]} />
+                    </div>
+                    {/* Large Desktop: 4 Columns */}
+                    <div className="hidden xl:grid grid-cols-4 gap-6 items-start">
+                      <Col items={colXl[0]} />
+                      <Col items={colXl[1]} />
+                      <Col items={colXl[2]} />
+                      <Col items={colXl[3]} />
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           ) : (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
@@ -462,17 +646,52 @@ export const AgentDataPage = () => {
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white">
                     {paginatedAgents.map((agentGroup, idx) => {
-                      const diff = agentGroup.debitEgp - agentGroup.creditEgp;
-                      const status = getSummaryStatus(agentGroup.debitEgp, agentGroup.creditEgp);
+                      const diffEgp = agentGroup.debitEgp - agentGroup.creditEgp;
+                      const statusEgp = getSummaryStatus(agentGroup.debitEgp, agentGroup.creditEgp);
+                      const diffUsd = agentGroup.debitUsd - agentGroup.creditUsd;
+                      const statusUsd = getSummaryStatus(agentGroup.debitUsd, agentGroup.creditUsd);
+
+                      const hasEgp = agentGroup.debitEgp > 0 || agentGroup.creditEgp > 0;
+                      const hasUsd = agentGroup.debitUsd > 0 || agentGroup.creditUsd > 0;
+
                       return (
-                        <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                          <td className="whitespace-nowrap px-6 py-4 text-sm font-bold text-slate-900">{agentGroup.agentName}</td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-600">{agentGroup.debitEgp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-600">{agentGroup.creditEgp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <tr key={idx} className={`hover:bg-slate-50 transition-colors ${agentGroup.isDeleted ? 'opacity-75' : ''}`}>
+                          <td className="whitespace-nowrap px-6 py-4 text-sm font-bold text-slate-900">
+                            {agentGroup.agentName}
+                            {agentGroup.isDeleted && (
+                              <span className="ml-2 inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">
+                                {t('common.deleted', 'Deleted')}
+                              </span>
+                            )}
+                          </td>
+                          <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-600">
+                            {hasEgp && <div>{agentGroup.debitEgp.toLocaleString()} EGP</div>}
+                            {hasUsd && <div>{agentGroup.debitUsd.toLocaleString()} USD</div>}
+                            {!hasEgp && !hasUsd && <div>0 EGP</div>}
+                          </td>
+                          <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-600">
+                            {hasEgp && <div>{agentGroup.creditEgp.toLocaleString()} EGP</div>}
+                            {hasUsd && <div>{agentGroup.creditUsd.toLocaleString()} USD</div>}
+                            {!hasEgp && !hasUsd && <div>0 EGP</div>}
+                          </td>
                           <td className="whitespace-nowrap px-6 py-4">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${status.bg} ${status.color} ${status.border} border`}>
-                              {status.text}: {Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} EGP
-                            </span>
+                            <div className="flex flex-col gap-1">
+                              {hasEgp && (
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusEgp.bg} ${statusEgp.color} ${statusEgp.border} border w-max`}>
+                                  {statusEgp.text}: {Math.abs(diffEgp).toLocaleString()} EGP
+                                </span>
+                              )}
+                              {hasUsd && (
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusUsd.bg} ${statusUsd.color} ${statusUsd.border} border w-max`}>
+                                  {statusUsd.text}: {Math.abs(diffUsd).toLocaleString()} USD
+                                </span>
+                              )}
+                              {!hasEgp && !hasUsd && (
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-50 text-slate-600 border-slate-200 border w-max`}>
+                                  0 EGP
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-600">{agentGroup.passengerCount}</td>
                           <td className="whitespace-nowrap px-6 py-4 text-end text-sm font-medium">
@@ -485,16 +704,34 @@ export const AgentDataPage = () => {
                               </button>
                               <button 
                                 onClick={() => handleOpenHistory(agentGroup)}
-                                className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors"
+                                className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors font-medium"
                               >
                                 {t('agent.paymentHistory', 'History')}
                               </button>
-                              <button 
-                                onClick={() => handleOpenPayment(agentGroup)}
-                                className="text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition-colors font-semibold"
-                              >
-                                {t('agent.addPayment', 'Add Payment')}
-                              </button>
+                              {!agentGroup.isDeleted && (
+                                <button 
+                                  onClick={() => handleOpenPayment(agentGroup)}
+                                  className="text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition-colors font-semibold"
+                                >
+                                  {t('agent.addPayment', 'Add Payment')}
+                                </button>
+                              )}
+                              {agentGroup.id && canEdit && !agentGroup.isDeleted && (
+                                <>
+                                  <button 
+                                    onClick={() => handleEditAgent(agentGroup)}
+                                    className="text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 px-3 py-1.5 rounded-lg transition-colors font-medium"
+                                  >
+                                    {t('common.edit', 'Edit')}
+                                  </button>
+                                  <button 
+                                    onClick={() => handleDeleteAgent(agentGroup)}
+                                    className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors font-medium"
+                                  >
+                                    {t('common.delete', 'Delete')}
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -516,10 +753,31 @@ export const AgentDataPage = () => {
         </>
       )}
 
-      {/* Passengers Modal for viewing details inside an agent */}
+      <AgentFormModal
+        isOpen={isFormModalOpen}
+        agent={editingAgent}
+        onClose={async (refresh) => {
+          setIsFormModalOpen(false);
+          setEditingAgent(null);
+          if (refresh) {
+            setLoadingPassengers(true);
+            try {
+              const res = await getAgents({ size: 5000 });
+              const agents = res.data?.data?.content || res.data?.content || res.content || [];
+              setAllExplicitAgents(Array.isArray(agents) ? agents : []);
+            } finally {
+              setLoadingPassengers(false);
+            }
+          }
+        }}
+      />
+
       <AgentPassengersModal
         isOpen={isPassengersModalOpen}
-        agent={viewingAgent}
+        agent={viewingAgent ? (agentGroups.find(g => g.agentName === viewingAgent.agentName) || viewingAgent) : null}
+        onDataChanged={async () => {
+          await fetchAllPassengers();
+        }}
         onClose={() => {
           setIsPassengersModalOpen(false);
           setViewingAgent(null);

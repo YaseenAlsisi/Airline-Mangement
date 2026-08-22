@@ -98,6 +98,16 @@ public class AgentManifestController {
 
         return ResponseEntity.ok(page);
     }
+
+    @PostMapping("/{agentId}/manifest-passengers")
+    @PreAuthorize("hasAuthority('AGENT_EDIT')")
+    public ResponseEntity<ManifestDto.PassengerRowResponse> addManifestPassenger(
+            @PathVariable UUID agentId,
+            @RequestBody ManifestDto.PassengerRowUpdateRequest request) {
+        ManifestPassenger added = manifestImportService.addPublishedPassenger(agentId, request);
+        return ResponseEntity.ok(mapper.toPassengerRowResponse(added));
+    }
+
     @PutMapping("/manifest-passengers/{id}")
     @PreAuthorize("hasAuthority('AGENT_EDIT')")
     public ResponseEntity<ManifestDto.PassengerRowResponse> updateManifestPassenger(

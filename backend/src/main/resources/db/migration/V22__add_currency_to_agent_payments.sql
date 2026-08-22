@@ -1,0 +1,1 @@
+ALTER TABLE agent_payments ADD COLUMN currency VARCHAR(3) DEFAULT 'EGP';

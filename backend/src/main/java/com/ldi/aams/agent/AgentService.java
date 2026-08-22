@@ -3,6 +3,7 @@ package com.ldi.aams.agent;
 import com.ldi.aams.agent.internal.Agent;
 import com.ldi.aams.agent.internal.AgentMapper;
 import com.ldi.aams.agent.internal.AgentRepository;
+import com.ldi.aams.manifest.internal.ManifestPassengerRepository;
 import com.ldi.aams.common.exception.BusinessException;
 import com.ldi.aams.common.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class AgentService {
 
     private final AgentRepository agentRepository;
     private final AgentMapper agentMapper;
+    private final ManifestPassengerRepository passengerRepository;
 
     @Transactional(readOnly = true)
     public Page<AgentDto.AgentResponse> getAllAgents(Pageable pageable) {
@@ -74,5 +76,14 @@ public class AgentService {
         }
 
         return agentMapper.toResponse(agentRepository.save(agent));
+    }
+
+    @Transactional
+    public void deleteAgent(UUID id) {
+        Agent agent = agentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Agent", "id", id));
+        
+        agent.setStatus("DELETED");
+        agentRepository.save(agent);
     }
 }

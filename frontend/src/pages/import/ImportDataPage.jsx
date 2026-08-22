@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { previewManifestImport, publishManifestImport, getBatchPreview, deleteManifestRowsBulk, calculateManifestPrices, exportManifestBatch } from '../../api/manifestImport.api';
+import { previewManifestImport, publishManifestImport, getBatchPreview, deleteManifestRowsBulk, calculateManifestPrices, exportManifestBatch, createEmptyBatch } from '../../api/manifestImport.api';
 import { DocumentArrowUpIcon, CheckCircleIcon, ExclamationTriangleIcon, CheckIcon, FunnelIcon, ArrowUpTrayIcon, TrashIcon, ChevronLeftIcon, TagIcon, BuildingOfficeIcon, CalendarDaysIcon, PaperAirplaneIcon, MapPinIcon, MapIcon, ClockIcon, BriefcaseIcon, MagnifyingGlassIcon, CalculatorIcon, BanknotesIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import { ManifestEditableGrid } from './components/ManifestEditableGrid';
 import { ManifestEditableTable } from './components/ManifestEditableTable';
+import { ManifestRowFormModal } from './components/ManifestRowFormModal';
 import { PlaneLoader } from './components/PlaneLoader';
-import { Squares2X2Icon, ListBulletIcon } from '@heroicons/react/24/outline';
+import { Squares2X2Icon, ListBulletIcon, PlusIcon, DocumentPlusIcon } from '@heroicons/react/24/outline';
 import { Pagination } from '../../components/ui/Pagination';
 
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
@@ -29,6 +30,7 @@ export const ImportDataPage = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState('');
+  const [isRowModalOpen, setIsRowModalOpen] = useState(false);
   
   const [filters, setFilters] = useState({
     passengerCategory: '',
@@ -164,6 +166,29 @@ export const ImportDataPage = () => {
     }
   };
 
+  const handleCreateEmptyBatch = async () => {
+    setUploading(true);
+    setError(null);
+    setBatch(null);
+    
+    try {
+      const res = await createEmptyBatch();
+      const batchData = res.data || res;
+      setBatch(batchData);
+      setRows([]);
+      setCurrentPage(1);
+      if (batchData.id) {
+        sessionStorage.setItem('activeManifestBatchId', batchData.id);
+      }
+      setIsRowModalOpen(true);
+    } catch (err) {
+      console.error(err);
+      setError(t('import.error.createFailed', 'Failed to create empty batch'));
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleRowUpdated = (updatedRow) => {
     setRows(rows.map(r => r.id === updatedRow.id ? updatedRow : r));
     // Recalculate valid/invalid rows
@@ -227,6 +252,36 @@ export const ImportDataPage = () => {
     } catch (err) {
       console.error(err);
       alert(t('import.bulkDeleteError', 'Failed to delete selected rows'));
+    }
+  };
+
+  const handleAddRowSave = async (formData) => {
+    try {
+      const { addManifestRow } = await import('../../api/manifestImport.api');
+      const res = await addManifestRow(batch.id, formData);
+      const newRow = res.data || res;
+      
+      const newRows = [...rows, newRow];
+      setRows(newRows);
+      
+      let validCount = 0;
+      let invalidCount = 0;
+      newRows.forEach(r => {
+        if (r.validationStatus === 'VALID') validCount++;
+        else invalidCount++;
+      });
+      setBatch(prev => ({ 
+        ...prev, 
+        totalRows: newRows.length,
+        validRows: validCount, 
+        invalidRows: invalidCount 
+      }));
+      setToast(t('import.rowAdded', 'تم إضافة الصف بنجاح'));
+      setTimeout(() => setToast(null), 3000);
+    } catch (err) {
+      console.error(err);
+      alert(t('import.addError', 'Failed to add row'));
+      throw err;
     }
   };
 
@@ -383,6 +438,26 @@ export const ImportDataPage = () => {
                 </div>
                 <p className="text-xs leading-5 text-gray-600">.xlsx {t('import.fileLimit', 'up to 10MB')}</p>
               </div>
+            </div>
+
+            <div className="relative mt-8 mb-8">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-white px-2 text-sm text-gray-500">{t('common.or', 'OR')}</span>
+              </div>
+            </div>
+
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={handleCreateEmptyBatch}
+                className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-sm hover:bg-indigo-700 transition-colors"
+              >
+                <PlusIcon className="w-5 h-5" />
+                {t('import.addManualPassenger', 'إضافة مسافر يدوياً (Add Manual Entry)')}
+              </button>
             </div>
 
             {file && (
@@ -664,6 +739,16 @@ export const ImportDataPage = () => {
                         {calculating ? t('import.calculating', 'جاري الحساب...') : t('import.calculate', 'Calculate')}
                       </button>
                     )}
+                    {batch.status === 'DRAFT' && (
+                      <button 
+                        type="button" 
+                        onClick={() => setIsRowModalOpen(true)}
+                        className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-indigo-700 transition-colors"
+                      >
+                        <PlusIcon className="h-5 w-5" />
+                        {t('import.addRow', 'إضافة صف (Add Row)')}
+                      </button>
+                    )}
                   </div>
 
                   {/* Right Controls */}
@@ -738,6 +823,12 @@ export const ImportDataPage = () => {
           </div>
         </div>
       )}
+      
+      <ManifestRowFormModal
+        isOpen={isRowModalOpen}
+        onClose={() => setIsRowModalOpen(false)}
+        onSave={handleAddRowSave}
+      />
     </div>
   );
 };

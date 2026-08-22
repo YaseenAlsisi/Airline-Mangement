@@ -18,6 +18,7 @@ public class AgentPaymentDto {
         private UUID id;
         private String agentNameRaw;
         private BigDecimal amount;
+        private String currency;
         private Instant paymentDate;
         private String note;
         private Instant createdAt;
@@ -33,6 +34,8 @@ public class AgentPaymentDto {
         @Positive(message = "Amount must be positive")
         private BigDecimal amount;
 
+        private String currency;
+
         @NotNull(message = "Payment date is required")
         private Instant paymentDate;
 
@@ -44,6 +47,8 @@ public class AgentPaymentDto {
         @NotNull(message = "Amount is required")
         @Positive(message = "Amount must be positive")
         private BigDecimal amount;
+
+        private String currency;
 
         @NotNull(message = "Payment date is required")
         private Instant paymentDate;
