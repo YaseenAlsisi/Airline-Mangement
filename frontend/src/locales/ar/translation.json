@@ -1,4 +1,31 @@
 {
+  "notes": {
+    "title": "ملاحظات النظام",
+    "subtitle": "سجل داخلي للملاحظات في النظام. يمكن أن تكون ملاحظات عامة أو مرتبطة بسجلات محددة.",
+    "addNote": "إضافة ملاحظة",
+    "loading": "جاري تحميل الملاحظات...",
+    "noNotesFound": "لا توجد ملاحظات",
+    "getStarted": "ابدأ بإضافة ملاحظة جديدة.",
+    "replyBtn": "رد",
+    "deleteNote": "حذف الملاحظة",
+    "addReplyLabel": "أضف ردك",
+    "writeReplyPlaceholder": "اكتب ردك هنا...",
+    "sending": "جاري الإرسال...",
+    "confirmDelete": "هل أنت متأكد من أنك تريد حذف هذه الملاحظة؟",
+    "failedToCreate": "فشل إنشاء الملاحظة",
+    "newNote": "ملاحظة جديدة",
+    "contentLabel": "المحتوى *",
+    "linkRecord": "ربط بسجل معين (اختياري)",
+    "entityType": "نوع السجل",
+    "entityGeneral": "ملاحظة عامة",
+    "entityAgent": "وكيل",
+    "entityAirline": "شركة طيران",
+    "entityTransaction": "معاملة",
+    "entityId": "معرف السجل",
+    "saving": "جاري الحفظ...",
+    "saveNote": "حفظ الملاحظة",
+    "cancel": "إلغاء"
+  },
   "navigation": {
     "Dashboard": "الرئيسية",
     "Excel Import": "استيراد الكشوف",
@@ -176,6 +203,11 @@
     "fixErrorsFirst": "يرجى إصلاح الصفوف الخاطئة أولاً",
     "publishData": "نشر البيانات للوكلاء",
     "publishing": "جاري النشر...",
+    "clearAll": "الغاء الجدول بالكامل",
+    "confirmClear": "هل أنت متأكد من أنك تريد إلغاء هذا الملف بالكامل والبدء من جديد؟",
+    "bulkDeleteConfirm": "هل أنت متأكد من حذف الصفوف المحددة؟",
+    "bulkDeleteSuccess": "تم حذف الصفوف المحددة بنجاح",
+    "bulkDeleteError": "فشل حذف الصفوف المحددة",
     "stat": {
       "totalRows": "إجمالي الصفوف",
       "validRows": "الصفوف الصحيحة",
@@ -191,6 +223,13 @@
       "invalidFile": "يرجى اختيار ملف إكسيل صحيح (.xlsx أو .xls)",
       "uploadFailed": "حدث خطأ أثناء الاستيراد",
       "publishFailed": "حدث خطأ أثناء النشر"
+    },
+    "category": {
+      "adult": "بالغ",
+      "child": "طفل",
+      "childUnder8": "طفل تحت 8 سنوات",
+      "ladies": "سيدة",
+      "infant": "رضيع"
     },
     "col": {
       "row": "م",

@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { getAgents } from '../../api/agents.api';
+import { createAgentPayment } from '../../api/agentPayment.api';
 import { 
   CurrencyDollarIcon, 
   ArrowTrendingUpIcon, 
@@ -42,6 +44,21 @@ export const SafeCalculatorPage = () => {
   useEffect(() => {
     localStorage.setItem('safe_transactions', JSON.stringify(transactions));
   }, [transactions]);
+  
+  const [agents, setAgents] = useState([]);
+
+  useEffect(() => {
+    const fetchAgents = async () => {
+      try {
+        const res = await getAgents({ size: 5000 });
+        const agentsData = res.data?.data?.content || res.data?.content || res.content || [];
+        setAgents(Array.isArray(agentsData) ? agentsData : []);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchAgents();
+  }, []);
   
   // Form state
   const [clientName, setClientName] = useState('');
@@ -106,10 +123,14 @@ export const SafeCalculatorPage = () => {
     }
   };
 
-  const handleAddTransaction = (e) => {
+  const handleAddTransaction = async (e) => {
     e.preventDefault();
     const val = parseFloat(amount);
     if (!clientName.trim() || isNaN(val) || val <= 0) return;
+
+    const selectedAgent = agents.find(a => a.name === clientName);
+    const currency = selectedAgent?.currency || 'EGP';
+    const paymentAmount = type === 'received' ? val : -val;
 
     const dateObj = new Date(txDate);
     const formattedDate = dateObj.toLocaleDateString('en-GB');
@@ -122,9 +143,22 @@ export const SafeCalculatorPage = () => {
       date: formattedDate
     };
 
-    setTransactions([...transactions, newTx]);
-    setClientName('');
-    setAmount('');
+    try {
+      await createAgentPayment({
+        agentNameRaw: clientName.trim(),
+        amount: paymentAmount,
+        currency: currency,
+        paymentDate: dateObj.toISOString(),
+        note: `Safe Calculator: ${type === 'received' ? 'Received from' : 'Paid to'} agent`
+      });
+
+      setTransactions([...transactions, newTx]);
+      setClientName('');
+      setAmount('');
+    } catch (error) {
+      console.error('Failed to create agent payment:', error);
+      alert(t('safeCalculator.paymentError', 'Failed to save to agent payment history.'));
+    }
   };
 
   const handleDeleteTransaction = (id) => {
@@ -232,14 +266,17 @@ export const SafeCalculatorPage = () => {
            </h3>
            <form onSubmit={handleAddTransaction} className="space-y-3 flex-1 flex flex-col justify-end">
               <div>
-                <input
-                  type="text"
-                  placeholder={t('safeCalculator.clientNamePlaceholder')}
+                <select
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
                   className="w-full bg-slate-800 border-0 rounded-lg py-2 px-3 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 text-sm"
                   required
-                />
+                >
+                  <option value="" disabled>{t('safeCalculator.clientNamePlaceholder', 'Select Agent')}</option>
+                  {agents.map(agent => (
+                    <option key={agent.id} value={agent.name}>{agent.name}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <input

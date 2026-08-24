@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { updateManifestRow } from '../../../api/manifestImport.api';
 import { 
@@ -10,7 +10,7 @@ const CategoryPill = ({ category, options }) => {
   
   // Extract just the English part for the pill, or keep it short
   const rawLabel = options.find(o => o.value === category)?.label || category;
-  const shortLabel = rawLabel.split(' - ')[1] || rawLabel;
+  const shortLabel = rawLabel;
 
   let colorClass = "bg-slate-100 text-slate-700";
   if (category === 'ADULT') colorClass = "bg-green-100 text-green-700";
@@ -25,11 +25,46 @@ const CategoryPill = ({ category, options }) => {
   );
 };
 
-export const ManifestEditableTable = ({ batchId, rows, onRowUpdated, selectedRows, setSelectedRows }) => {
+import { getAgents } from '../../../api/agents.api';
+import { getPriceLists } from '../../../api/priceLists.api';
+
+export const ManifestEditableTable = ({ batchId, rows, onRowUpdated, selectedRows, setSelectedRows, onAddRow }) => {
   const { t } = useTranslation();
   const [editingRowId, setEditingRowId] = useState(null);
   const [editFormData, setEditFormData] = useState({});
   const [saving, setSaving] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [agents, setAgents] = useState([]);
+  const [serviceTypes, setServiceTypes] = useState([]);
+
+  useEffect(() => {
+    getAgents({ size: 5000 }).then(res => {
+      const data = res.data?.data?.content || res.data?.content || res.content || [];
+      setAgents(Array.isArray(data) ? data.filter(a => a.status !== 'DELETED') : []);
+    }).catch(console.error);
+
+    getPriceLists({ size: 5000 }).then(res => {
+      const data = res.data?.data?.content || res.data?.content || res.content || [];
+      const types = [...new Set(data.map(p => p.serviceType).filter(Boolean))];
+      setServiceTypes(types);
+    }).catch(console.error);
+  }, []);
+  
+  const initialNewRowState = {
+    agentNameRaw: '',
+    passengerName: '',
+    passportNumber: '',
+    passengerCategory: '',
+    departureDate: '',
+    flightNumber: '',
+    destination: '',
+    departurePort: '',
+    birthDate: '',
+    arrivalTime: '',
+    serviceType: '',
+    debitEgp: 0
+  };
+  const [newRowData, setNewRowData] = useState(initialNewRowState);
 
   const handleEditClick = (row) => {
     setEditingRowId(row.id);
@@ -78,12 +113,33 @@ export const ManifestEditableTable = ({ batchId, rows, onRowUpdated, selectedRow
     setEditFormData({ ...editFormData, [name]: value });
   };
 
+  const handleNewRowChange = (e) => {
+    const { name, value } = e.target;
+    setNewRowData({ ...newRowData, [name]: value });
+  };
+
+  const handleAddNewRow = async () => {
+    if (!newRowData.passengerName || !newRowData.passportNumber) {
+      alert(t('import.requiredFields', 'Please fill at least the passenger name and passport.'));
+      return;
+    }
+    setAdding(true);
+    try {
+      await onAddRow(newRowData);
+      setNewRowData(initialNewRowState);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setAdding(false);
+    }
+  };
+
   const categoryOptions = [
-    { value: 'ADULT', label: 'بالغ - Adult' },
-    { value: 'CHILD', label: 'طفل - Child' },
-    { value: 'CHILD_UNDER_8', label: 'طفل تحت 8 سنوات - Child under 8' },
-    { value: 'LADIES', label: 'سيدة - Ladies' },
-    { value: 'INFANT', label: 'رضيع - Infant' },
+    { value: 'ADULT', label: t('import.category.adult', 'بالغ') },
+    { value: 'CHILD', label: t('import.category.child', 'طفل') },
+    { value: 'CHILD_UNDER_8', label: t('import.category.childUnder8', 'طفل تحت 8 سنوات') },
+    { value: 'LADIES', label: t('import.category.ladies', 'سيدة') },
+    { value: 'INFANT', label: t('import.category.infant', 'رضيع') },
   ];
 
   return (
@@ -112,14 +168,51 @@ export const ManifestEditableTable = ({ batchId, rows, onRowUpdated, selectedRow
               <th className="py-4 px-4">{t('import.col.birthDate', 'Birth Date')}</th>
               <th className="py-4 px-4">{t('import.col.arrivalTime', 'Arrival Time')}</th>
               <th className="py-4 px-4">{t('import.col.serviceType', 'Service Type')}</th>
-              <th className="py-4 px-4">{t('import.col.regularPrice', 'Regular Price')}</th>
-              <th className="py-4 px-4">{t('import.col.commission', 'Commission')}</th>
-              <th className="py-4 px-4">{t('import.col.debitEgp', 'مدين مصري')}</th>
               <th className="py-4 px-4">{t('import.col.status', 'Status')}</th>
               <th className="py-4 px-4 text-center">{t('import.col.actions', 'Action')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100/80">
+            {/* Quick Add Row */}
+            {onAddRow && (
+              <tr className="bg-indigo-50/50 hover:bg-indigo-50 transition-colors border-b-2 border-indigo-100">
+                <td className="py-2 px-4 w-12"></td>
+                <td className="py-2 px-2 text-sm text-indigo-500 font-bold text-center">+</td>
+                <td className="py-2 px-4">
+                  <input type="text" list="quickAddAgents" name="agentNameRaw" placeholder={t('import.col.agent', 'Agent')} value={newRowData.agentNameRaw} onChange={handleNewRowChange} className="block w-28 rounded-md border-0 py-1.5 px-2 text-slate-900 shadow-sm ring-1 ring-inset ring-indigo-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white" />
+                  <datalist id="quickAddAgents">
+                    {agents.map(a => <option key={a.id} value={a.name} />)}
+                  </datalist>
+                </td>
+                <td className="py-2 px-4"><input type="text" name="passengerName" placeholder={t('import.col.passengerName', 'Name')} value={newRowData.passengerName} onChange={handleNewRowChange} className="block w-32 rounded-md border-0 py-1.5 px-2 text-slate-900 shadow-sm ring-1 ring-inset ring-indigo-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white" /></td>
+                <td className="py-2 px-4"><input type="text" name="passportNumber" placeholder={t('import.col.passport', 'Passport')} value={newRowData.passportNumber} onChange={handleNewRowChange} className="block w-24 rounded-md border-0 py-1.5 px-2 text-slate-900 shadow-sm ring-1 ring-inset ring-indigo-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white" /></td>
+                <td className="py-2 px-4">
+                  <select name="passengerCategory" value={newRowData.passengerCategory} onChange={handleNewRowChange} className="block w-28 rounded-md border-0 py-1.5 px-2 text-slate-900 shadow-sm ring-1 ring-inset ring-indigo-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white">
+                    <option value="">--</option>
+                    {categoryOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                  </select>
+                </td>
+                <td className="py-2 px-4"><input type="date" name="departureDate" value={newRowData.departureDate} onChange={handleNewRowChange} className="block w-32 rounded-md border-0 py-1.5 px-2 text-slate-900 shadow-sm ring-1 ring-inset ring-indigo-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white" /></td>
+                <td className="py-2 px-4"><input type="text" name="flightNumber" placeholder={t('import.col.flight', 'Flight')} value={newRowData.flightNumber} onChange={handleNewRowChange} className="block w-20 rounded-md border-0 py-1.5 px-2 text-slate-900 shadow-sm ring-1 ring-inset ring-indigo-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white" /></td>
+                <td className="py-2 px-4"><input type="text" name="destination" placeholder={t('import.col.destination', 'Dest')} value={newRowData.destination} onChange={handleNewRowChange} className="block w-24 rounded-md border-0 py-1.5 px-2 text-slate-900 shadow-sm ring-1 ring-inset ring-indigo-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white" /></td>
+                <td className="py-2 px-4"><input type="text" name="departurePort" placeholder={t('import.col.departurePort', 'Port')} value={newRowData.departurePort} onChange={handleNewRowChange} className="block w-24 rounded-md border-0 py-1.5 px-2 text-slate-900 shadow-sm ring-1 ring-inset ring-indigo-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white" /></td>
+                <td className="py-2 px-4"><input type="date" name="birthDate" value={newRowData.birthDate} onChange={handleNewRowChange} className="block w-32 rounded-md border-0 py-1.5 px-2 text-slate-900 shadow-sm ring-1 ring-inset ring-indigo-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white" /></td>
+                <td className="py-2 px-4"><input type="time" name="arrivalTime" value={newRowData.arrivalTime} onChange={handleNewRowChange} className="block w-24 rounded-md border-0 py-1.5 px-2 text-slate-900 shadow-sm ring-1 ring-inset ring-indigo-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white" step="2" /></td>
+                <td className="py-2 px-4">
+                  <input type="text" list="quickAddServiceTypes" name="serviceType" placeholder={t('import.col.serviceType', 'Service')} value={newRowData.serviceType} onChange={handleNewRowChange} className="block w-24 rounded-md border-0 py-1.5 px-2 text-slate-900 shadow-sm ring-1 ring-inset ring-indigo-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white" />
+                  <datalist id="quickAddServiceTypes">
+                    {serviceTypes.map(st => <option key={st} value={st} />)}
+                  </datalist>
+                </td>
+                <td className="py-2 px-4 text-center text-slate-400">-</td>
+                <td className="py-2 px-4 text-center">
+                  <button onClick={handleAddNewRow} disabled={adding} className="inline-flex items-center gap-1 bg-indigo-600 text-white px-3 py-1.5 rounded-md hover:bg-indigo-700 text-xs font-bold transition-colors disabled:opacity-50">
+                    <CheckIcon className="w-4 h-4" /> {adding ? '...' : t('common.add', 'Add')}
+                  </button>
+                </td>
+              </tr>
+            )}
+
             {rows.map((row) => {
               const isEditing = editingRowId === row.id;
               const isError = row.validationStatus === 'ERROR';
@@ -144,7 +237,12 @@ export const ManifestEditableTable = ({ batchId, rows, onRowUpdated, selectedRow
                   {/* Agent */}
                   <td className="py-3 px-4 text-sm text-slate-600">
                     {isEditing ? (
-                      <input type="text" name="agentNameRaw" value={editFormData.agentNameRaw || ''} onChange={handleChange} className="block w-28 rounded-md border-0 py-1.5 px-2 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm" />
+                      <>
+                        <input type="text" list={`agentsList-${row.id}`} name="agentNameRaw" value={editFormData.agentNameRaw || ''} onChange={handleChange} className="block w-28 rounded-md border-0 py-1.5 px-2 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm" />
+                        <datalist id={`agentsList-${row.id}`}>
+                          {agents.map(a => <option key={a.id} value={a.name} />)}
+                        </datalist>
+                      </>
                     ) : (
                       <span className="font-medium text-slate-700">{row.agentNameRaw || '-'}</span>
                     )}
@@ -242,21 +340,15 @@ export const ManifestEditableTable = ({ batchId, rows, onRowUpdated, selectedRow
                   {/* Service Type */}
                   <td className="py-3 px-4 text-sm text-slate-600">
                     {isEditing ? (
-                      <input type="text" name="serviceType" value={editFormData.serviceType || ''} onChange={handleChange} className="block w-24 rounded-md border-0 py-1.5 px-2 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm" />
+                      <>
+                        <input type="text" list={`serviceTypes-${row.id}`} name="serviceType" value={editFormData.serviceType || ''} onChange={handleChange} className="block w-24 rounded-md border-0 py-1.5 px-2 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm" />
+                        <datalist id={`serviceTypes-${row.id}`}>
+                          {serviceTypes.map(st => <option key={st} value={st} />)}
+                        </datalist>
+                      </>
                     ) : (
                       row.serviceType || '-'
                     )}
-                  </td>
-
-                  {/* Prices */}
-                  <td className="py-3 px-4 text-sm font-medium text-slate-700 text-right">
-                    {row.regularPrice != null ? row.regularPrice.toLocaleString() : '-'}
-                  </td>
-                  <td className="py-3 px-4 text-sm font-medium text-slate-700 text-right">
-                    {row.commission != null ? row.commission.toLocaleString() : '-'}
-                  </td>
-                  <td className="py-3 px-4 text-sm font-bold text-green-700 text-right">
-                    {row.debitEgp != null ? row.debitEgp.toLocaleString() : '0'}
                   </td>
 
                   {/* Status */}

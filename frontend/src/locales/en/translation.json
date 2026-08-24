@@ -1,4 +1,31 @@
 {
+  "notes": {
+    "title": "System Notes",
+    "subtitle": "Internal log of notes across the system. Can be general or tied to specific records.",
+    "addNote": "Add Note",
+    "loading": "Loading notes...",
+    "noNotesFound": "No notes found",
+    "getStarted": "Get started by adding a new note.",
+    "replyBtn": "Reply",
+    "deleteNote": "Delete Note",
+    "addReplyLabel": "Add your reply",
+    "writeReplyPlaceholder": "Write a reply...",
+    "sending": "Sending...",
+    "confirmDelete": "Are you sure you want to delete this note?",
+    "failedToCreate": "Failed to create note",
+    "newNote": "New Note",
+    "contentLabel": "Content *",
+    "linkRecord": "Link to a specific record (Optional)",
+    "entityType": "Entity Type",
+    "entityGeneral": "General Note",
+    "entityAgent": "Agent",
+    "entityAirline": "Airline",
+    "entityTransaction": "Transaction",
+    "entityId": "Entity ID",
+    "saving": "Saving...",
+    "saveNote": "Save Note",
+    "cancel": "Cancel"
+  },
   "navigation": {
     "Dashboard": "Dashboard",
     "Excel Import": "Excel Import",
@@ -137,6 +164,11 @@
     "fixErrorsFirst": "Please fix invalid rows first",
     "publishData": "Publish Data to Agents",
     "publishing": "Publishing...",
+    "clearAll": "Clear All Data",
+    "confirmClear": "Are you sure you want to discard this entire file and start over?",
+    "bulkDeleteConfirm": "Are you sure you want to delete the selected row(s)?",
+    "bulkDeleteSuccess": "Selected rows deleted successfully",
+    "bulkDeleteError": "Failed to delete selected rows",
     "stat": {
       "totalRows": "Total Rows",
       "validRows": "Valid Rows",
@@ -152,6 +184,13 @@
       "invalidFile": "Please select a valid Excel file (.xlsx or .xls)",
       "uploadFailed": "An error occurred during import",
       "publishFailed": "An error occurred during publish"
+    },
+    "category": {
+      "adult": "Adult",
+      "child": "Child",
+      "childUnder8": "Child under 8",
+      "ladies": "Ladies",
+      "infant": "Infant"
     },
     "col": {
       "row": "#",

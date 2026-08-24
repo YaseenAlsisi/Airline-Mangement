@@ -5,7 +5,6 @@ import { DocumentArrowUpIcon, CheckCircleIcon, ExclamationTriangleIcon, CheckIco
 import { useTranslation } from 'react-i18next';
 import { ManifestEditableGrid } from './components/ManifestEditableGrid';
 import { ManifestEditableTable } from './components/ManifestEditableTable';
-import { ManifestRowFormModal } from './components/ManifestRowFormModal';
 import { PlaneLoader } from './components/PlaneLoader';
 import { Squares2X2Icon, ListBulletIcon, PlusIcon, DocumentPlusIcon } from '@heroicons/react/24/outline';
 import { Pagination } from '../../components/ui/Pagination';
@@ -30,8 +29,6 @@ export const ImportDataPage = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState('');
-  const [isRowModalOpen, setIsRowModalOpen] = useState(false);
-  
   const [filters, setFilters] = useState({
     passengerCategory: '',
     agentNameRaw: '',
@@ -180,7 +177,6 @@ export const ImportDataPage = () => {
       if (batchData.id) {
         sessionStorage.setItem('activeManifestBatchId', batchData.id);
       }
-      setIsRowModalOpen(true);
     } catch (err) {
       console.error(err);
       setError(t('import.error.createFailed', 'Failed to create empty batch'));
@@ -396,9 +392,7 @@ export const ImportDataPage = () => {
     }
   };
 
-  const totalRegularPrice = rows.reduce((sum, row) => sum + (Number(row.regularPrice) || 0), 0);
-  const totalCommission = rows.reduce((sum, row) => sum + (Number(row.commission) || 0), 0);
-  const totalOverallPrice = rows.reduce((sum, row) => sum + (Number(row.totalPrice) || 0), 0);
+
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -551,36 +545,7 @@ export const ImportDataPage = () => {
               </div>
             </dl>
 
-            {/* Financial Stats */}
-            <dl className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 mb-6">
-              <div className="overflow-hidden rounded-lg bg-blue-50 px-4 py-5 shadow border border-blue-200">
-                <dt className="truncate text-sm font-medium text-blue-800 flex items-center gap-2">
-                  <BanknotesIcon className="w-5 h-5" />
-                  {t('import.stat.totalRegular', 'إجمالي السعر (بدون عمولة)')}
-                </dt>
-                <dd className="mt-1 text-3xl font-semibold tracking-tight text-blue-900">
-                  {totalRegularPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </dd>
-              </div>
-              <div className="overflow-hidden rounded-lg bg-purple-50 px-4 py-5 shadow border border-purple-200">
-                <dt className="truncate text-sm font-medium text-purple-800 flex items-center gap-2">
-                  <BanknotesIcon className="w-5 h-5" />
-                  {t('import.stat.totalCommission', 'إجمالي العمولة')}
-                </dt>
-                <dd className="mt-1 text-3xl font-semibold tracking-tight text-purple-900">
-                  {totalCommission.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </dd>
-              </div>
-              <div className="overflow-hidden rounded-lg bg-indigo-50 px-4 py-5 shadow border border-indigo-200">
-                <dt className="truncate text-sm font-medium text-indigo-800 flex items-center gap-2">
-                  <BanknotesIcon className="w-5 h-5" />
-                  {t('import.stat.totalOverall', 'الإجمالي العام (بالعمولة)')}
-                </dt>
-                <dd className="mt-1 text-3xl font-semibold tracking-tight text-indigo-900">
-                  {totalOverallPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </dd>
-              </div>
-            </dl>
+
 
               <>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
@@ -719,6 +684,17 @@ export const ImportDataPage = () => {
                       )}
                     </div>
 
+                    {batch.status === 'DRAFT' && (
+                      <button 
+                        type="button" 
+                        onClick={handleCalculate}
+                        disabled={calculating}
+                        className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 shadow-sm ring-1 ring-inset ring-emerald-200 hover:bg-emerald-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <CalculatorIcon className="h-4 w-4 text-emerald-600" />
+                        {calculating ? t('import.calculating', 'جاري الحساب...') : t('import.calculate', 'Calculate')}
+                      </button>
+                    )}
                     <button 
                       type="button" 
                       onClick={handleExport}
@@ -739,16 +715,7 @@ export const ImportDataPage = () => {
                         {calculating ? t('import.calculating', 'جاري الحساب...') : t('import.calculate', 'Calculate')}
                       </button>
                     )}
-                    {batch.status === 'DRAFT' && (
-                      <button 
-                        type="button" 
-                        onClick={() => setIsRowModalOpen(true)}
-                        className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-indigo-700 transition-colors"
-                      >
-                        <PlusIcon className="h-5 w-5" />
-                        {t('import.addRow', 'إضافة صف (Add Row)')}
-                      </button>
-                    )}
+
                   </div>
 
                   {/* Right Controls */}
@@ -784,6 +751,7 @@ export const ImportDataPage = () => {
                     onRowUpdated={handleRowUpdated} 
                     selectedRows={selectedRows}
                     setSelectedRows={setSelectedRows}
+                    onAddRow={batch.status === 'DRAFT' ? handleAddRowSave : null}
                   />
                 )}
                 
@@ -823,12 +791,6 @@ export const ImportDataPage = () => {
           </div>
         </div>
       )}
-      
-      <ManifestRowFormModal
-        isOpen={isRowModalOpen}
-        onClose={() => setIsRowModalOpen(false)}
-        onSave={handleAddRowSave}
-      />
     </div>
   );
 };

@@ -31,7 +31,6 @@ public class AgentPaymentDto {
         private String agentNameRaw;
 
         @NotNull(message = "Amount is required")
-        @Positive(message = "Amount must be positive")
         private BigDecimal amount;
 
         private String currency;
@@ -45,7 +44,6 @@ public class AgentPaymentDto {
     @Data
     public static class UpdateAgentPaymentRequest {
         @NotNull(message = "Amount is required")
-        @Positive(message = "Amount must be positive")
         private BigDecimal amount;
 
         private String currency;
