@@ -49,4 +49,36 @@ public class AgentController {
         agentService.deleteAgent(id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
+
+    @GetMapping("/balance-report")
+    @PreAuthorize("hasAuthority('AGENT_VIEW')")
+    public ResponseEntity<ApiResponse<AgentDto.BalanceReportResponse>> getBalanceReport(
+            @RequestParam(required = false) java.math.BigDecimal ticketPrice) {
+        return ResponseEntity.ok(ApiResponse.success(agentService.getBalanceReport(ticketPrice)));
+    }
+
+    @GetMapping("/{id}/transactions")
+    @PreAuthorize("hasAuthority('AGENT_VIEW')")
+    public ResponseEntity<ApiResponse<PagedResponse<AgentDto.AgentTransactionResponse>>> getAgentTransactions(
+            @PathVariable UUID id, 
+            @RequestParam(required = false) String type,
+            Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success(PagedResponse.of(agentService.getAgentTransactions(id, type, pageable))));
+    }
+
+    @PostMapping("/{id}/transactions")
+    @PreAuthorize("hasAuthority('AGENT_EDIT')")
+    public ResponseEntity<ApiResponse<AgentDto.AgentTransactionResponse>> addTransaction(
+            @PathVariable UUID id, 
+            @Valid @RequestBody AgentDto.CreateTransactionRequest request) {
+        return new ResponseEntity<>(ApiResponse.success(agentService.addTransaction(id, request)), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/{id}/payments")
+    @PreAuthorize("hasAuthority('AGENT_EDIT')")
+    public ResponseEntity<ApiResponse<AgentDto.AgentTransactionResponse>> recordPayment(
+            @PathVariable UUID id, 
+            @Valid @RequestBody AgentDto.RecordPaymentRequest request) {
+        return new ResponseEntity<>(ApiResponse.success(agentService.recordPayment(id, request)), HttpStatus.CREATED);
+    }
 }

@@ -26,7 +26,7 @@ public class ReportService {
             UUID agentId, String destination, String serviceType) {
         
         // Base where clause
-        StringBuilder baseWhere = new StringBuilder("WHERE validation_status = 'VALID' ");
+        StringBuilder baseWhere = new StringBuilder("WHERE validation_status = 'VALID' AND batch_id IN (SELECT id FROM manifest_import_batches WHERE status = 'PUBLISHED') ");
         List<Object> currentParams = new ArrayList<>();
         
         if (startDate != null) {
@@ -51,7 +51,7 @@ public class ReportService {
         }
 
         // Previous Period logic
-        StringBuilder prevWhere = new StringBuilder("WHERE validation_status = 'VALID' ");
+        StringBuilder prevWhere = new StringBuilder("WHERE validation_status = 'VALID' AND batch_id IN (SELECT id FROM manifest_import_batches WHERE status = 'PUBLISHED') ");
         List<Object> prevParams = new ArrayList<>();
         
         if (startDate != null && endDate != null) {
@@ -79,9 +79,9 @@ public class ReportService {
 
         // 1. KPI Metrics
         String kpiQuery = "SELECT " +
-                "COALESCE(SUM(debit_egp), 0) as revenueEgp, " +
+                "COALESCE(SUM(total_price), 0) as revenueEgp, " +
                 "COALESCE(SUM(debit_usd), 0) as revenueUsd, " +
-                "COALESCE(SUM(credit_egp), 0) as expensesEgp, " +
+                "COALESCE(SUM(commission), 0) as expensesEgp, " +
                 "COUNT(*) as totalPassengers, " +
                 "COUNT(DISTINCT flight_number) as totalFlights " +
                 "FROM manifest_passengers " + baseWhere.toString();
@@ -89,9 +89,9 @@ public class ReportService {
         Map<String, Object> currentKpi = fetchKpis(kpiQuery, currentParams);
 
         String prevKpiQuery = "SELECT " +
-                "COALESCE(SUM(debit_egp), 0) as revenueEgp, " +
+                "COALESCE(SUM(total_price), 0) as revenueEgp, " +
                 "COALESCE(SUM(debit_usd), 0) as revenueUsd, " +
-                "COALESCE(SUM(credit_egp), 0) as expensesEgp, " +
+                "COALESCE(SUM(commission), 0) as expensesEgp, " +
                 "COUNT(*) as totalPassengers, " +
                 "COUNT(DISTINCT flight_number) as totalFlights " +
                 "FROM manifest_passengers " + prevWhere.toString();
@@ -111,13 +111,13 @@ public class ReportService {
         ReportDto.KpiLongMetric flightCount = buildKpiLongMetric((Long) currentKpi.get("totalFlights"), (Long) prevKpi.get("totalFlights"));
 
         // 2. Revenue Over Time
-        String timeQuery = "SELECT TO_CHAR(departure_date, 'DD Mon') as dateStr, COALESCE(SUM(debit_egp), 0) as total " +
+        String timeQuery = "SELECT TO_CHAR(departure_date, 'DD Mon') as dateStr, COALESCE(SUM(total_price), 0) as total " +
                 "FROM manifest_passengers " + baseWhere.toString() + " AND departure_date IS NOT NULL " +
                 "GROUP BY departure_date ORDER BY departure_date";
         List<ReportDto.TimeChartPoint> timeChart = jdbcTemplate.query(timeQuery, (rs, rowNum) -> new ReportDto.TimeChartPoint(rs.getString("dateStr"), rs.getBigDecimal("total")), currentParams.toArray());
 
         // 3. Revenue By Destination
-        String destQuery = "SELECT COALESCE(destination, 'Unknown') as name, COALESCE(SUM(debit_egp), 0) as total " +
+        String destQuery = "SELECT COALESCE(destination, 'Unknown') as name, COALESCE(SUM(total_price), 0) as total " +
                 "FROM manifest_passengers " + baseWhere.toString() + " GROUP BY destination ORDER BY total DESC LIMIT 10";
         List<ReportDto.CategoryChartPoint> destChart = jdbcTemplate.query(destQuery, (rs, rowNum) -> new ReportDto.CategoryChartPoint(rs.getString("name"), rs.getBigDecimal("total"), null), currentParams.toArray());
 
@@ -132,7 +132,7 @@ public class ReportService {
         }, currentParams.toArray());
 
         // 5. Top 5 Agents
-        String agentQuery = "SELECT COALESCE(a.name, mp.agent_name_raw, 'Direct') as name, COALESCE(SUM(mp.debit_egp), 0) as total " +
+        String agentQuery = "SELECT COALESCE(a.name, mp.agent_name_raw, 'Direct') as name, COALESCE(SUM(mp.total_price), 0) as total " +
                 "FROM manifest_passengers mp LEFT JOIN agents a ON mp.agent_id = a.id " +
                 baseWhere.toString() + " GROUP BY a.name, mp.agent_name_raw ORDER BY total DESC";
         List<ReportDto.CategoryChartPoint> agentChart = jdbcTemplate.query(agentQuery, (rs, rowNum) -> new ReportDto.CategoryChartPoint(rs.getString("name"), rs.getBigDecimal("total"), null), currentParams.toArray());
@@ -142,9 +142,9 @@ public class ReportService {
                 "COALESCE(mp.destination, 'Unknown') as dest, " +
                 "COUNT(DISTINCT mp.flight_number) as flt, " +
                 "COUNT(*) as pass, " +
-                "COALESCE(SUM(mp.debit_egp), 0) as revEgp, " +
+                "COALESCE(SUM(mp.total_price), 0) as revEgp, " +
                 "COALESCE(SUM(mp.debit_usd), 0) as revUsd, " +
-                "COALESCE(SUM(mp.credit_egp), 0) as expEgp " +
+                "COALESCE(SUM(mp.commission), 0) as expEgp " +
                 "FROM manifest_passengers mp LEFT JOIN agents a ON mp.agent_id = a.id " +
                 baseWhere.toString() + " GROUP BY a.id, a.name, mp.agent_name_raw, mp.destination ORDER BY revEgp DESC LIMIT 100";
         

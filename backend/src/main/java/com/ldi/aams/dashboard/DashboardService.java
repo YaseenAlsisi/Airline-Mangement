@@ -27,7 +27,7 @@ public class DashboardService {
     @Transactional(readOnly = true)
     public DashboardDto.DashboardOverviewResponse getDashboardOverview(LocalDate startDate, LocalDate endDate, String agent, String destination, String serviceType) {
         
-        String whereClause = " WHERE p.batch.status = 'PUBLISHED' ";
+        String whereClause = " WHERE p.batch.status = 'PUBLISHED' AND p.validationStatus = 'VALID' ";
         if (startDate != null) whereClause += " AND p.departureDate >= :startDate ";
         if (endDate != null) whereClause += " AND p.departureDate <= :endDate ";
         if (agent != null && !agent.trim().isEmpty()) whereClause += " AND p.agentNameRaw = :agent ";
@@ -35,7 +35,7 @@ public class DashboardService {
         if (serviceType != null && !serviceType.trim().isEmpty()) whereClause += " AND p.serviceType = :serviceType ";
 
         // Previous Period Calculation
-        String prevWhereClause = " WHERE p.batch.status = 'PUBLISHED' ";
+        String prevWhereClause = " WHERE p.batch.status = 'PUBLISHED' AND p.validationStatus = 'VALID' ";
         LocalDate prevStartDate = null;
         LocalDate prevEndDate = null;
         if (startDate != null && endDate != null) {
@@ -155,7 +155,7 @@ public class DashboardService {
         if (missingAgent > 0) dataHealth.add(new DashboardDto.DataIssueItem("Missing Agent", missingAgent, "WARNING"));
 
         // 6. Agent Balances (Top 5 owing)
-        List<Object[]> debitResults = entityManager.createQuery("SELECT p.agentNameRaw, SUM(p.totalPrice) FROM ManifestPassenger p GROUP BY p.agentNameRaw").getResultList();
+        List<Object[]> debitResults = entityManager.createQuery("SELECT p.agentNameRaw, SUM(p.totalPrice) FROM ManifestPassenger p WHERE p.batch.status = 'PUBLISHED' AND p.validationStatus = 'VALID' GROUP BY p.agentNameRaw").getResultList();
         List<Object[]> creditResults = entityManager.createQuery("SELECT p.agentNameRaw, SUM(p.amount), MAX(p.paymentDate) FROM AgentPayment p GROUP BY p.agentNameRaw").getResultList();
         
         java.util.Map<String, DashboardDto.AgentBalanceItem> balanceMap = new java.util.HashMap<>();

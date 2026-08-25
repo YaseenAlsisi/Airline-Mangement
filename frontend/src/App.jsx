@@ -7,6 +7,7 @@ import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { SettingsPage } from './pages/settings/SettingsPage';
 import AgentDataPage from './pages/agents/AgentDataPage';
+import { AgentBalanceReportPage } from './pages/agents/AgentBalanceReportPage';
 import PriceListDataPage from './pages/price-lists/PriceListDataPage';
 import ImportDataPage from './pages/import/ImportDataPage';
 import ManifestFilesPage from './pages/import/ManifestFilesPage';
@@ -45,6 +46,7 @@ function App() {
 
             <Route element={<ProtectedRoute requiredPermission="AGENT_VIEW" />}>
               <Route path="/agents" element={<AgentDataPage />} />
+              <Route path="/agent-accounts/balance-report" element={<AgentBalanceReportPage />} />
             </Route>
 
             <Route element={<ProtectedRoute requiredPermission="NOTE_VIEW" />}>

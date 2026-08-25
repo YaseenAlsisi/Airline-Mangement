@@ -1,0 +1,3 @@
+ALTER TABLE agents ADD COLUMN debt_category VARCHAR(30) NOT NULL DEFAULT 'NORMAL';
+ALTER TABLE agents ADD COLUMN source_sheet_name VARCHAR(255);
+ALTER TABLE agents ADD COLUMN import_batch_id UUID NULL;

@@ -47,6 +47,16 @@ public class Agent {
     @Builder.Default
     private String currency = "USD";
 
+    @Column(name = "debt_category", nullable = false, length = 30)
+    @Builder.Default
+    private String debtCategory = "NORMAL";
+
+    @Column(name = "source_sheet_name")
+    private String sourceSheetName;
+
+    @Column(name = "import_batch_id")
+    private UUID importBatchId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private Instant createdAt = Instant.now();

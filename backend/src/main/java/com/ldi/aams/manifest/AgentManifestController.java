@@ -28,6 +28,7 @@ public class AgentManifestController {
     public ResponseEntity<List<Map<String, Object>>> getManifestSummary() {
         List<ManifestPassenger> allPublished = passengerRepository.findAll().stream()
                 .filter(p -> "PUBLISHED".equals(p.getBatch().getStatus()))
+                .filter(p -> "VALID".equals(p.getValidationStatus()))
                 .collect(Collectors.toList());
 
         List<Map<String, Object>> summary = allPublished.stream()
@@ -58,6 +59,7 @@ public class AgentManifestController {
         List<ManifestPassenger> allForAgent = passengerRepository.findAll().stream()
                 .filter(p -> p.getAgent() != null && p.getAgent().getId().equals(agentId))
                 .filter(p -> "PUBLISHED".equals(p.getBatch().getStatus()))
+                .filter(p -> "VALID".equals(p.getValidationStatus()))
                 .collect(Collectors.toList());
 
         int start = (int) pageable.getOffset();
@@ -78,6 +80,7 @@ public class AgentManifestController {
     public ResponseEntity<Page<ManifestDto.PassengerRowResponse>> getAllPassengers(Pageable pageable) {
         List<ManifestPassenger> allPublished = passengerRepository.findAll().stream()
                 .filter(p -> "PUBLISHED".equals(p.getBatch().getStatus()))
+                .filter(p -> "VALID".equals(p.getValidationStatus()))
                 .collect(Collectors.toList());
 
         int start = (int) pageable.getOffset();

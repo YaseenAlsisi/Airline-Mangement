@@ -620,6 +620,7 @@ public class ManifestImportService {
         passenger.setDebitUsd(request.getDebitUsd() != null ? request.getDebitUsd() : BigDecimal.ZERO);
         passenger.setCreditUsd(request.getCreditUsd() != null ? request.getCreditUsd() : BigDecimal.ZERO);
         passenger.setDebitEgp(request.getDebitEgp() != null ? request.getDebitEgp() : BigDecimal.ZERO);
+        passenger.setTotalPrice(passenger.getDebitEgp());
         
         BigDecimal newCreditEgp = request.getCreditEgp() != null ? request.getCreditEgp() : BigDecimal.ZERO;
         BigDecimal oldCreditEgp = passenger.getCreditEgp() != null ? passenger.getCreditEgp() : BigDecimal.ZERO;
@@ -711,6 +712,7 @@ public class ManifestImportService {
         passenger.setDebitUsd(request.getDebitUsd() != null ? request.getDebitUsd() : BigDecimal.ZERO);
         passenger.setCreditUsd(request.getCreditUsd() != null ? request.getCreditUsd() : BigDecimal.ZERO);
         passenger.setDebitEgp(request.getDebitEgp() != null ? request.getDebitEgp() : BigDecimal.ZERO);
+        passenger.setTotalPrice(passenger.getDebitEgp());
         passenger.setCreditEgp(request.getCreditEgp() != null ? request.getCreditEgp() : BigDecimal.ZERO);
         if (passenger.getCreditEgp().compareTo(BigDecimal.ZERO) > 0) {
             passenger.setCreditEgpDate(Instant.now());
@@ -775,6 +777,7 @@ public class ManifestImportService {
         passenger.setDebitUsd(request.getDebitUsd() != null ? request.getDebitUsd() : BigDecimal.ZERO);
         passenger.setCreditUsd(request.getCreditUsd() != null ? request.getCreditUsd() : BigDecimal.ZERO);
         passenger.setDebitEgp(request.getDebitEgp() != null ? request.getDebitEgp() : BigDecimal.ZERO);
+        passenger.setTotalPrice(passenger.getDebitEgp());
         
         BigDecimal newCreditEgp = request.getCreditEgp() != null ? request.getCreditEgp() : BigDecimal.ZERO;
         BigDecimal oldCreditEgp = passenger.getCreditEgp() != null ? passenger.getCreditEgp() : BigDecimal.ZERO;
@@ -841,6 +844,7 @@ public class ManifestImportService {
         passenger.setDebitUsd(request.getDebitUsd() != null ? request.getDebitUsd() : BigDecimal.ZERO);
         passenger.setCreditUsd(request.getCreditUsd() != null ? request.getCreditUsd() : BigDecimal.ZERO);
         passenger.setDebitEgp(request.getDebitEgp() != null ? request.getDebitEgp() : BigDecimal.ZERO);
+        passenger.setTotalPrice(passenger.getDebitEgp());
         passenger.setCreditEgp(request.getCreditEgp() != null ? request.getCreditEgp() : BigDecimal.ZERO);
         if (passenger.getCreditEgp().compareTo(BigDecimal.ZERO) > 0) {
             passenger.setCreditEgpDate(Instant.now());
