@@ -478,5 +478,19 @@
     "addOne": "يمكنك إضافة عملية جديدة من النموذج.",
     "allClients": "كل العملاء",
     "date": "التاريخ"
+  },
+  "agent": {
+    "importing": "جاري الرفع...",
+    "importExcel": "استيراد أرصدة سابقة",
+    "importSuccess": "تم رفع الملف واستيراد الأرصدة بنجاح!",
+    "importError": "حدث خطأ أثناء رفع الملف",
+    "exportExcel": "تصدير إلى إكسل",
+    "addAgent": "إضافة وكيل",
+    "enterTicketPrice": "أدخل سعر التذكرة",
+    "invalidPrice": "السعر غير صحيح",
+    "exportBalances": "تقرير الأرصدة",
+    "searchAgent": "ابحث عن وكيل...",
+    "filter": "تصفية",
+    "filterByName": "اسم الوكيل"
   }
 }

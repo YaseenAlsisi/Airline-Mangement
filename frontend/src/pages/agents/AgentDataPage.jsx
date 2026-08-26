@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { getAllManifestPassengers, resetManifestData } from '../../api/manifestImport.api';
 import { getAllAgentPayments } from '../../api/agentPayment.api';
 import { getAgents, deleteAgent } from '../../api/agents.api';
+import { uploadAgentAccountImport } from '../../api/agentBalance.api';
 import { useAuthStore } from '../../store/authStore';
 import AgentFormModal from './AgentFormModal';
 import AgentPassengersModal from './AgentPassengersModal';
@@ -47,33 +49,39 @@ export const AgentDataPage = () => {
   const [filterView, setFilterView] = useState('main');
   const filterRef = useRef(null);
 
+  const fileInputRef = useRef(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      await uploadAgentAccountImport(file);
+      alert(t('agent.importSuccess', 'تم رفع الملف واستيراد الأرصدة بنجاح! / File imported successfully!'));
+      loadData(); // refresh data
+    } catch (err) {
+      console.error(err);
+      alert(t('agent.importError', 'حدث خطأ أثناء رفع الملف / Error importing file'));
+    } finally {
+      setIsUploading(false);
+      // reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   const canEdit = hasPermission('AGENT_EDIT');
 
   const fetchAllPassengers = async () => {
     setLoadingPassengers(true);
     try {
-      const res = await getAllManifestPassengers({ page: 0, size: 5000 });
+      const res = await getAllManifestPassengers({ page: 0, size: 50000 });
       const rawData = res.data?.content || res.content || [];
 
-      const seenPassports = new Set();
-      const seenNames = new Set();
-      const uniqueData = [];
-
-      for (let i = rawData.length - 1; i >= 0; i--) {
-        const p = rawData[i];
-        const passKey = p.passportNumber ? `${p.passportNumber}_${p.departureDate}` : null;
-        const nameKey = p.passengerName ? `${p.passengerName}_${p.departureDate}` : null;
-
-        let isDup = false;
-        if (passKey && seenPassports.has(passKey)) isDup = true;
-        if (nameKey && seenNames.has(nameKey)) isDup = true;
-
-        if (!isDup) {
-          uniqueData.unshift(p);
-          if (passKey) seenPassports.add(passKey);
-          if (nameKey) seenNames.add(nameKey);
-        }
-      }
+      const uniqueData = rawData;
 
       setAllPassengers(uniqueData);
     } catch (e) {
@@ -374,6 +382,16 @@ export const AgentDataPage = () => {
             <BuildingOfficeIcon className="h-5 w-5" />
             {t('agent.addAgent', 'Add Agent')}
           </button>
+
+          {canEdit && (
+            <Link
+              to="/agent-accounts/balance-report"
+              className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-orange-700 transition-colors"
+            >
+              <ArrowDownTrayIcon className="h-5 w-5" />
+              {t('agent.importExcel', 'استيراد أرصدة سابقة')}
+            </Link>
+          )}
 
           <button
             onClick={() => {

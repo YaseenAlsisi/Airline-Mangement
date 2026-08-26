@@ -1,7 +1,7 @@
 import apiClient from "./client";
 
 export const getAllAgentPayments = async (agentNameRaw = "") => {
-	let url = "/api/v1/agent-payments?size=5000";
+	let url = "/api/v1/agent-payments?size=50000";
 	if (agentNameRaw) {
 		url += `&agentNameRaw=${encodeURIComponent(agentNameRaw)}`;
 	}

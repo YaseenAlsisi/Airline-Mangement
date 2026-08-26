@@ -32,7 +32,6 @@ public class AgentAccountImportService {
     private final AgentImportBatchRepository batchRepository;
     private final AgentRepository agentRepository;
 
-    @Transactional
     public AgentImportResult importFromStream(InputStream inputStream, String filename, UUID importerId) {
         try {
             Workbook workbook = WorkbookFactory.create(inputStream);
@@ -72,6 +71,7 @@ public class AgentAccountImportService {
                 // Agent identification
                 Agent agent = matchOrCreateAgent(sheetName, batch.getId());
                 boolean hasData = false;
+                List<AgentTransaction> batchTransactions = new ArrayList<>();
 
                 for (int r = 1; r <= sheet.getLastRowNum(); r++) { // skip header at r=0
                     Row row = sheet.getRow(r);
@@ -93,12 +93,22 @@ public class AgentAccountImportService {
 
                     populateTransaction(transaction, row, transactionType);
 
-                    transactionRepository.save(transaction);
+                    batchTransactions.add(transaction);
                     hasData = true;
                     totalTransactions++;
                     
                     if (transactionType.equals("PASSENGER")) totalPassengers++;
                     else if (transactionType.equals("PAYMENT")) totalPayments++;
+
+                    if (batchTransactions.size() >= 1000) {
+                        transactionRepository.saveAll(batchTransactions);
+                        batchTransactions.clear();
+                    }
+                }
+                
+                if (!batchTransactions.isEmpty()) {
+                    transactionRepository.saveAll(batchTransactions);
+                    batchTransactions.clear();
                 }
                 
                 if (hasData) {
@@ -143,7 +153,6 @@ public class AgentAccountImportService {
         batchRepository.save(batch);
     }
 
-    @Transactional
     public AgentImportResult reimportFromStream(InputStream inputStream, String filename, UUID importerId) {
         batchRepository.findByStatus("COMPLETED").forEach(b -> deleteImportData(b.getId()));
         return importFromStream(inputStream, filename, importerId);
@@ -206,6 +215,11 @@ public class AgentAccountImportService {
         return "UNKNOWN";
     }
 
+    private String truncate(String val, int maxLen) {
+        if (val == null) return null;
+        return val.length() > maxLen ? val.substring(0, maxLen) : val;
+    }
+
     private void populateTransaction(AgentTransaction txn, Row row, String type) {
         txn.setDebitUsd(getNumericValue(row, 16));
         txn.setCreditUsd(getNumericValue(row, 17));
@@ -213,24 +227,24 @@ public class AgentAccountImportService {
         txn.setCreditEgp(getNumericValue(row, 19));
 
         if (type.equals("PASSENGER")) {
-            txn.setPassengerName(getStringValue(row, 0));
+            txn.setPassengerName(truncate(getStringValue(row, 0), 255));
             txn.setBirthDate(getDateValue(row, 1));
-            txn.setNationalId(getStringValue(row, 2));
-            txn.setPassportNumber(getStringValue(row, 3));
-            txn.setDeparturePort(getStringValue(row, 4));
-            txn.setDestination(getStringValue(row, 5));
-            txn.setAirline(getStringValue(row, 6));
+            txn.setNationalId(truncate(getStringValue(row, 2), 50));
+            txn.setPassportNumber(truncate(getStringValue(row, 3), 50));
+            txn.setDeparturePort(truncate(getStringValue(row, 4), 100));
+            txn.setDestination(truncate(getStringValue(row, 5), 100));
+            txn.setAirline(truncate(getStringValue(row, 6), 100));
             txn.setDepartureDate(getDateValue(row, 7));
             txn.setDepartureTime(getTimeValue(row, 8));
             // col 9 is agentName, handled by sheet mapping
-            txn.setInvestmentSupplier(getStringValue(row, 10));
-            txn.setPassengerCategory(getStringValue(row, 11));
-            txn.setServiceType(getStringValue(row, 12));
-            txn.setNote(getStringValue(row, 13));
-            txn.setNote2(getStringValue(row, 14));
-            txn.setNote3(getStringValue(row, 15));
+            txn.setInvestmentSupplier(truncate(getStringValue(row, 10), 255));
+            txn.setPassengerCategory(truncate(getStringValue(row, 11), 50));
+            txn.setServiceType(truncate(getStringValue(row, 12), 100));
+            txn.setNote(truncate(getStringValue(row, 13), 1000));
+            txn.setNote2(truncate(getStringValue(row, 14), 1000));
+            txn.setNote3(truncate(getStringValue(row, 15), 1000));
         } else if (type.equals("PAYMENT") || type.equals("OPENING_BALANCE")) {
-            txn.setPaymentDescription(getStringValue(row, 0));
+            txn.setPaymentDescription(truncate(getStringValue(row, 0), 255));
         }
     }
 

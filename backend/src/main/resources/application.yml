@@ -2,12 +2,21 @@ server:
   port: 8081
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
   application:
     name: aams
   datasource:
     url: jdbc:postgresql://ep-tiny-night-b1ydnyk0.c-5.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
     username: neondb_owner
     password: npg_oJ21CsYWzTie
+  data:
+    web:
+      pageable:
+        max-page-size: 100000
+        default-page-size: 20
   jpa:
     hibernate:
       ddl-auto: validate
