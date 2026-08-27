@@ -5,13 +5,13 @@ export const exportAgentsToExcel = async (agentGroups) => {
   const workbook = new ExcelJS.Workbook();
 
   const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFED7D31' } }; // Orange
-  const paymentFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFD5B8' } }; // Light Orange for payments
+  const paymentFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF79646' } }; // Orange for payments
   const totalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF304ACE' } }; // Deep Blue for totals
 
-  const headerFont = { name: 'Arial', color: { argb: 'FF000000' }, size: 14, bold: true };
-  const rowFont = { name: 'Arial', color: { argb: 'FF000000' }, size: 12, bold: false };
-  const paymentFont = { name: 'Arial', color: { argb: 'FF9C4200' }, size: 13, bold: true };
-  const totalFont = { name: 'Arial', color: { argb: 'FFFFFFFF' }, size: 15, bold: true };
+  const headerFont = { name: 'Arial', color: { argb: 'FF000000' }, size: 12, bold: true };
+  const rowFont = { name: 'Arial', color: { argb: 'FF000000' }, size: 11, bold: false };
+  const paymentFont = { name: 'Arial', color: { argb: 'FFFFFFFF' }, size: 12, bold: true };
+  const totalFont = { name: 'Arial', color: { argb: 'FFFFFFFF' }, size: 14, bold: true };
   const normalFont = { name: 'Arial', size: 12, bold: true }; // For values in total
 
   const alignmentCentered = { vertical: 'middle', horizontal: 'center' };
@@ -30,25 +30,24 @@ export const exportAgentsToExcel = async (agentGroups) => {
     const sheetName = (agent.agentName || 'Agent').substring(0, 31).replace(/[\\/?*\[\]]/g, '');
     const worksheet = workbook.addWorksheet(sheetName, { views: [{ rightToLeft: true }] });
 
-    // 1. Columns setup (Fixed: Removed extra notes columns)
+    // 1. Columns setup
     worksheet.columns = [
-      { header: 'الاسم', key: 'name', width: 35 },
-      { header: 'تاريخ الميلاد', key: 'dob', width: 15 },
-      { header: 'الرقم القومي', key: 'nationalId', width: 20 },
-      { header: 'رقم الجواز', key: 'passport', width: 18 },
-      { header: 'المنفذ', key: 'departurePort', width: 20 },
-      { header: 'جهة السفر', key: 'destination', width: 20 },
-      { header: 'شركة الطيران', key: 'flight', width: 25 },
-      { header: 'تاريخ المغادرة', key: 'depDate', width: 15 },
-      { header: 'ميعاد المغادرة', key: 'depTime', width: 15 },
-      { header: 'الوكيل', key: 'agent', width: 25 },
-      { header: 'مورد الاستثمار', key: 'investor', width: 18 },
-      { header: 'ملاحظات', key: 'notes1', width: 20 },
-      { header: 'نوع الخدمه', key: 'service', width: 25 },
-      { header: 'مدين دولار', key: 'debitUsd', width: 15 },
-      { header: 'دائن دولار', key: 'creditUsd', width: 15 },
-      { header: 'مدين مصري', key: 'debitEgp', width: 15 },
-      { header: 'دائن مصري', key: 'creditEgp', width: 15 }
+      { header: 'الاسم', key: 'name', width: 30 },
+      { header: 'تاريخ الميلاد', key: 'dob', width: 12 },
+      { header: 'الرقم القومي', key: 'nationalId', width: 18 },
+      { header: 'رقم الجواز', key: 'passport', width: 15 },
+      { header: 'المنفذ', key: 'departurePort', width: 15 },
+      { header: 'جهة السفر', key: 'destination', width: 15 },
+      { header: 'شركة الطيران', key: 'flight', width: 18 },
+      { header: 'تاريخ المغادرة', key: 'depDate', width: 14 },
+      { header: 'ميعاد المغادرة', key: 'depTime', width: 14 },
+      { header: 'الوكيل', key: 'agent', width: 20 },
+      { header: 'ملاحظات', key: 'notes1', width: 15 },
+      { header: 'نوع الخدمه', key: 'service', width: 18 },
+      { header: 'مدين دولار', key: 'debitUsd', width: 12 },
+      { header: 'دائن دولار', key: 'creditUsd', width: 12 },
+      { header: 'مدين مصري', key: 'debitEgp', width: 12 },
+      { header: 'دائن مصري', key: 'creditEgp', width: 12 }
     ];
 
     const headerRow = worksheet.getRow(1);
@@ -92,7 +91,6 @@ export const exportAgentsToExcel = async (agentGroups) => {
           depDate: p.departureDate || '',
           depTime: p.arrivalTime || '',
           agent: agent.agentName || '',
-          investor: '',
           notes1: p.passengerCategory || 'بالغ',
           service: p.serviceType || '',
           debitUsd: pDebitUsd || '',
@@ -119,8 +117,8 @@ export const exportAgentsToExcel = async (agentGroups) => {
           creditEgp: !isUsd ? amt : ''
         });
 
-        // Merge cells A to M (1 to 13)
-        worksheet.mergeCells(`A${row.number}:M${row.number}`);
+        // 16 columns total (A to P). We merge A to L (1 to 12), leaving M to P for amounts.
+        worksheet.mergeCells(`A${row.number}:L${row.number}`);
         row.getCell(1).alignment = { vertical: 'middle', horizontal: 'right' };
 
         applyStyle(row, paymentFill, paymentFont);
@@ -137,42 +135,68 @@ export const exportAgentsToExcel = async (agentGroups) => {
     const creditEgp = Number(agent.creditEgp || 0);
     const balanceEgp = debitEgp - creditEgp;
 
-    const summaryStartRow = currentLastRow + 3;
+    const summaryStartRow = currentLastRow + 2;
+    
+    const totalsHeaderFont = { name: 'Arial', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+    const totalsValFont = { name: 'Arial', size: 13, bold: true, color: { argb: 'FF000000' } };
+    const totalsHeaderFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2F75B5' } };
+    const totalsValFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } };
 
-    // اجمالي المديونيه دولار
-    const usdSummaryRow = worksheet.getRow(summaryStartRow);
+    // Header row for summary
+    const sHeader = worksheet.getRow(summaryStartRow);
     worksheet.mergeCells(`A${summaryStartRow}:L${summaryStartRow}`);
-    usdSummaryRow.getCell(1).value = 'إجمالي المديونية (دولار أمريكي)';
-    usdSummaryRow.getCell(1).fill = totalFill;
-    usdSummaryRow.getCell(1).font = totalFont;
-    usdSummaryRow.getCell(1).alignment = alignmentCentered;
+    sHeader.getCell(1).value = 'ملخص حساب الوكيل';
+    sHeader.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4E78' } };
+    sHeader.getCell(1).font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+    sHeader.getCell(1).alignment = alignmentCentered;
+    
+    // Title row
+    worksheet.mergeCells(`M${summaryStartRow}:P${summaryStartRow}`);
+    sHeader.getCell(13).value = 'الرصيد الختامي';
+    sHeader.getCell(13).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4E78' } };
+    sHeader.getCell(13).font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+    sHeader.getCell(13).alignment = alignmentCentered;
+    sHeader.height = 35;
 
-    worksheet.mergeCells(`M${summaryStartRow}:Q${summaryStartRow}`);
-    usdSummaryRow.getCell(13).value = balanceUsd === 0 ? 'خالص' : (balanceUsd > 0 ? `الوكيل عليه ${balanceUsd.toLocaleString()} $` : `للشركة ${Math.abs(balanceUsd).toLocaleString()} $`);
-    usdSummaryRow.getCell(13).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEEEEEE' } };
-    usdSummaryRow.getCell(13).font = { name: 'Arial', size: 16, bold: true, color: { argb: balanceUsd > 0 ? 'FFD32F2F' : (balanceUsd < 0 ? 'FF388E3C' : 'FF1976D2') } };
-    usdSummaryRow.getCell(13).alignment = alignmentCentered;
-    usdSummaryRow.height = 40;
-
-    // اجمالي المديونيه مصري
-    const egpSummaryRow = worksheet.getRow(summaryStartRow + 1);
+    // USD Row
+    const sUsd = worksheet.getRow(summaryStartRow + 1);
     worksheet.mergeCells(`A${summaryStartRow + 1}:L${summaryStartRow + 1}`);
-    egpSummaryRow.getCell(1).value = 'إجمالي المديونية (جنيه مصري)';
-    egpSummaryRow.getCell(1).fill = totalFill;
-    egpSummaryRow.getCell(1).font = totalFont;
-    egpSummaryRow.getCell(1).alignment = alignmentCentered;
+    sUsd.getCell(1).value = 'إجمالي المديونية (دولار أمريكي)';
+    sUsd.getCell(1).fill = totalsHeaderFill;
+    sUsd.getCell(1).font = totalsHeaderFont;
+    sUsd.getCell(1).alignment = alignmentCentered;
+    sUsd.getCell(1).border = borderThin;
 
-    worksheet.mergeCells(`M${summaryStartRow + 1}:Q${summaryStartRow + 1}`);
-    egpSummaryRow.getCell(13).value = balanceEgp === 0 ? 'خالص' : (balanceEgp > 0 ? `الوكيل عليه ${balanceEgp.toLocaleString()} ج.م` : `للشركة ${Math.abs(balanceEgp).toLocaleString()} ج.م`);
-    egpSummaryRow.getCell(13).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEEEEEE' } };
-    egpSummaryRow.getCell(13).font = { name: 'Arial', size: 16, bold: true, color: { argb: balanceEgp > 0 ? 'FFD32F2F' : (balanceEgp < 0 ? 'FF388E3C' : 'FF1976D2') } };
-    egpSummaryRow.getCell(13).alignment = alignmentCentered;
-    egpSummaryRow.height = 40;
+    worksheet.mergeCells(`M${summaryStartRow + 1}:P${summaryStartRow + 1}`);
+    sUsd.getCell(13).value = balanceUsd === 0 ? 'خالص' : (balanceUsd > 0 ? `الوكيل عليه ${balanceUsd.toLocaleString()} $` : `للشركة ${Math.abs(balanceUsd).toLocaleString()} $`);
+    sUsd.getCell(13).fill = totalsValFill;
+    sUsd.getCell(13).font = { name: 'Arial', size: 14, bold: true, color: { argb: balanceUsd > 0 ? 'FFC00000' : (balanceUsd < 0 ? 'FF385D8A' : 'FF000000') } };
+    sUsd.getCell(13).alignment = alignmentCentered;
+    sUsd.getCell(13).border = borderThin;
+    sUsd.height = 30;
 
-    // Ensure borders for total rows
-    [usdSummaryRow, egpSummaryRow].forEach(row => {
-      for (let i = 1; i <= 17; i++) {
-        row.getCell(i).border = borderThin;
+    // EGP Row
+    const sEgp = worksheet.getRow(summaryStartRow + 2);
+    worksheet.mergeCells(`A${summaryStartRow + 2}:L${summaryStartRow + 2}`);
+    sEgp.getCell(1).value = 'إجمالي المديونية (جنيه مصري)';
+    sEgp.getCell(1).fill = totalsHeaderFill;
+    sEgp.getCell(1).font = totalsHeaderFont;
+    sEgp.getCell(1).alignment = alignmentCentered;
+    sEgp.getCell(1).border = borderThin;
+
+    worksheet.mergeCells(`M${summaryStartRow + 2}:P${summaryStartRow + 2}`);
+    sEgp.getCell(13).value = balanceEgp === 0 ? 'خالص' : (balanceEgp > 0 ? `الوكيل عليه ${balanceEgp.toLocaleString()} ج.م` : `للشركة ${Math.abs(balanceEgp).toLocaleString()} ج.م`);
+    sEgp.getCell(13).fill = totalsValFill;
+    sEgp.getCell(13).font = { name: 'Arial', size: 14, bold: true, color: { argb: balanceEgp > 0 ? 'FFC00000' : (balanceEgp < 0 ? 'FF385D8A' : 'FF000000') } };
+    sEgp.getCell(13).alignment = alignmentCentered;
+    sEgp.getCell(13).border = borderThin;
+    sEgp.height = 30;
+
+    // Adding borders around the summary
+    [sHeader, sUsd, sEgp].forEach(row => {
+      for (let i = 1; i <= 16; i++) {
+        const cell = row.getCell(i);
+        if(!cell.border) cell.border = borderThin;
       }
     });
 
@@ -245,7 +269,7 @@ export const exportBalancesReportToExcel = async (agentGroups, ticketPrice = 440
 
     if (isZeroEgp && isZeroUsd) {
       status = 'خالص';
-    } else if (ticketsNum >= 1 || balanceUsd < 0) {
+    } else if (balanceEgp < 0 || balanceUsd < 0) {
       status = 'دائن (له)';
     } else {
       // If tickets < 1 (or balance is debit) and not completely zero
