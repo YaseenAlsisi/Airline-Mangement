@@ -88,14 +88,14 @@ function parseTime(v) {
 async function run() {
     console.log('Starting direct import...');
     try {
-        const wb = xlsx.readFile('حسابات وكلاء 26-6-2026العماله (1).xlsx');
+        const wb = xlsx.readFile('data.xlsx');
         
         // 1. Create Batch
         const batchId = uuidv4();
         await pool.query(
             `INSERT INTO agent_import_batches (id, original_filename, status, created_at) 
              VALUES ($1, $2, 'COMPLETED', NOW())`,
-            [batchId, 'حسابات وكلاء 26-6-2026العماله (1).xlsx']
+            [batchId, 'data.xlsx']
         );
         console.log(`Created batch ${batchId}`);
 

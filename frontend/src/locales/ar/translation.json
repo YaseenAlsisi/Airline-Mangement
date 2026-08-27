@@ -481,7 +481,7 @@
   },
   "agent": {
     "importing": "جاري الرفع...",
-    "importExcel": "استيراد أرصدة سابقة",
+    "importExcel": "تفاصيل العملاء",
     "importSuccess": "تم رفع الملف واستيراد الأرصدة بنجاح!",
     "importError": "حدث خطأ أثناء رفع الملف",
     "exportExcel": "تصدير إلى إكسل",

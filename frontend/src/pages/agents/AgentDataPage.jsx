@@ -387,15 +387,7 @@ export const AgentDataPage = () => {
             {t('agent.addAgent', 'Add Agent')}
           </button>
 
-          {canEdit && (
-            <Link
-              to="/agent-accounts/balance-report"
-              className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-orange-700 transition-colors"
-            >
-              <ArrowDownTrayIcon className="h-5 w-5" />
-              {t('agent.importExcel', 'استيراد أرصدة سابقة')}
-            </Link>
-          )}
+
 
           <button
             onClick={() => {

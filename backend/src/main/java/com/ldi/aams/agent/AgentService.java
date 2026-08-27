@@ -103,7 +103,7 @@ public class AgentService {
         int serialNumber = 1;
         for (AgentDto.AgentBalanceSummary summary : allBalances) {
             if (ticketPrice != null && ticketPrice.compareTo(BigDecimal.ZERO) > 0) {
-                summary.setTicketEquivalent(summary.getDebtEgp().divide(ticketPrice, 2, java.math.RoundingMode.HALF_UP));
+                summary.setTicketEquivalent(summary.getTotalCreditEgp().divide(ticketPrice, 2, java.math.RoundingMode.HALF_UP));
             }
             
             if ("BAD_DEBT".equals(summary.getDebtCategory())) {
@@ -129,7 +129,7 @@ public class AgentService {
                 .build();
                 
         if (ticketPrice != null && ticketPrice.compareTo(BigDecimal.ZERO) > 0) {
-            grandTotal.setTicketEquivalent(grandTotal.getDebtEgp().divide(ticketPrice, 2, java.math.RoundingMode.HALF_UP));
+            grandTotal.setTicketEquivalent(grandTotal.getTotalCreditEgp().divide(ticketPrice, 2, java.math.RoundingMode.HALF_UP));
         }
 
         return AgentDto.BalanceReportResponse.builder()

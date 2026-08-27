@@ -3,234 +3,187 @@ import { saveAs } from 'file-saver';
 
 export const exportAgentsToExcel = async (agentGroups) => {
   const workbook = new ExcelJS.Workbook();
-  
-  // Style constants
-  const headerFill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: 'FFDAEAFF' } // #daeaff
-  };
-  
-  const headerFont = {
-    name: 'Cairo',
-    color: { argb: 'FF304ACE' }, // #304ace
-    size: 14,
-    bold: true
-  };
-  
-  const defaultFont = {
-    name: 'Cairo',
-    size: 12
-  };
-  
-  const alignmentCentered = {
-    vertical: 'middle',
-    horizontal: 'center'
-  };
 
-  const applyHeaderStyle = (row) => {
-    row.eachCell((cell) => {
-      cell.fill = headerFill;
-      cell.font = headerFont;
-      cell.alignment = alignmentCentered;
-      cell.border = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' }
-      };
-    });
-    row.height = 30;
-  };
+  const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFED7D31' } }; // Orange
+  const paymentFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFD5B8' } }; // Light Orange for payments
+  const totalFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF304ACE' } }; // Deep Blue for totals
 
-  const applyRowStyle = (row) => {
+  const headerFont = { name: 'Arial', color: { argb: 'FF000000' }, size: 14, bold: true };
+  const rowFont = { name: 'Arial', color: { argb: 'FF000000' }, size: 12, bold: false };
+  const paymentFont = { name: 'Arial', color: { argb: 'FF9C4200' }, size: 13, bold: true };
+  const totalFont = { name: 'Arial', color: { argb: 'FFFFFFFF' }, size: 15, bold: true };
+  const normalFont = { name: 'Arial', size: 12, bold: true }; // For values in total
+
+  const alignmentCentered = { vertical: 'middle', horizontal: 'center' };
+  const borderThin = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+
+  const applyStyle = (row, fill, font) => {
     row.eachCell((cell) => {
-      cell.font = defaultFont;
+      if (fill) cell.fill = fill;
+      if (font) cell.font = font;
       cell.alignment = alignmentCentered;
-      cell.border = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' }
-      };
+      cell.border = borderThin;
     });
-    row.height = 25;
   };
 
   agentGroups.forEach((agent) => {
-    // Truncate agent name if it's too long (max 31 chars for sheet name)
     const sheetName = (agent.agentName || 'Agent').substring(0, 31).replace(/[\\/?*\[\]]/g, '');
-    const worksheet = workbook.addWorksheet(sheetName, {
-      views: [{ rightToLeft: true }]
-    });
+    const worksheet = workbook.addWorksheet(sheetName, { views: [{ rightToLeft: true }] });
 
-    // 1. Passengers Table
+    // 1. Columns setup (Fixed: Removed extra notes columns)
     worksheet.columns = [
-      { header: 'الاسم', key: 'name', width: 30 },
-      { header: 'تاريخ الميلاد', key: 'dob', width: 16 },
+      { header: 'الاسم', key: 'name', width: 35 },
+      { header: 'تاريخ الميلاد', key: 'dob', width: 15 },
+      { header: 'الرقم القومي', key: 'nationalId', width: 20 },
       { header: 'رقم الجواز', key: 'passport', width: 18 },
-      { header: 'النوع', key: 'category', width: 14 },
-      { header: 'تاريخ المغادرة', key: 'depDate', width: 16 },
-      { header: 'رقم الرحله', key: 'flight', width: 16 },
-      { header: 'جهة المغادرة', key: 'departure', width: 18 },
-      { header: 'جهة الوصول', key: 'arrival', width: 18 },
-      { header: 'ميعاد الوصول', key: 'arrTime', width: 16 },
+      { header: 'المنفذ', key: 'departurePort', width: 20 },
+      { header: 'جهة السفر', key: 'destination', width: 20 },
+      { header: 'شركة الطيران', key: 'flight', width: 25 },
+      { header: 'تاريخ المغادرة', key: 'depDate', width: 15 },
+      { header: 'ميعاد المغادرة', key: 'depTime', width: 15 },
       { header: 'الوكيل', key: 'agent', width: 25 },
-      { header: 'نوع الخدمة', key: 'service', width: 18 },
-      { header: 'مدين دولار ($)', key: 'debitUsd', width: 16 },
-      { header: 'دائن دولار ($)', key: 'creditUsd', width: 16 },
-      { header: 'مدين مصري (ج.م)', key: 'debitEgp', width: 18 },
-      { header: 'دائن مصري (ج.م)', key: 'creditEgp', width: 18 }
+      { header: 'مورد الاستثمار', key: 'investor', width: 18 },
+      { header: 'ملاحظات', key: 'notes1', width: 20 },
+      { header: 'نوع الخدمه', key: 'service', width: 25 },
+      { header: 'مدين دولار', key: 'debitUsd', width: 15 },
+      { header: 'دائن دولار', key: 'creditUsd', width: 15 },
+      { header: 'مدين مصري', key: 'debitEgp', width: 15 },
+      { header: 'دائن مصري', key: 'creditEgp', width: 15 }
     ];
 
-    applyHeaderStyle(worksheet.getRow(1));
+    const headerRow = worksheet.getRow(1);
+    applyStyle(headerRow, headerFill, headerFont);
+    headerRow.height = 30;
 
-    let totalPassengersDebitUsd = 0;
-    let totalPassengersCreditUsd = 0;
-    let totalPassengersDebitEgp = 0;
-    let totalPassengersCreditEgp = 0;
+    // 2. Timeline combination and sorting (Newest first)
+    const timeline = [];
 
     if (agent.passengers && agent.passengers.length > 0) {
-      agent.passengers.forEach((p) => {
+      agent.passengers.forEach(p => timeline.push({ type: 'passenger', date: p.departureDate || '', data: p }));
+    }
+
+    if (agent.payments && agent.payments.length > 0) {
+      agent.payments.forEach(p => timeline.push({ type: 'payment', date: p.paymentDate || '', data: p }));
+    }
+
+    timeline.sort((a, b) => {
+      const dateA = new Date(a.date).getTime() || 0;
+      const dateB = new Date(b.date).getTime() || 0;
+      return dateB - dateA; // Descending (Newest top)
+    });
+
+    // 3. Render rows
+    timeline.forEach((item) => {
+      if (item.type === 'passenger') {
+        const p = item.data;
         const pDebitUsd = Number(p.debitUsd) || 0;
         const pCreditUsd = Number(p.creditUsd) || 0;
         const pDebitEgp = p.totalPrice != null ? Number(p.totalPrice) : (Number(p.debitEgp) || 0);
         const pCreditEgp = Number(p.creditEgp) || 0;
 
-        totalPassengersDebitUsd += pDebitUsd;
-        totalPassengersCreditUsd += pCreditUsd;
-        totalPassengersDebitEgp += pDebitEgp;
-        totalPassengersCreditEgp += pCreditEgp;
+        const row = worksheet.addRow({
+          name: p.passengerName || '',
+          dob: p.birthDate || '',
+          nationalId: p.nationalId || '',
+          passport: p.passportNumber || '',
+          departurePort: p.departurePort || '',
+          destination: p.destination || '',
+          flight: p.flightNumber || '',
+          depDate: p.departureDate || '',
+          depTime: p.arrivalTime || '',
+          agent: agent.agentName || '',
+          investor: '',
+          notes1: p.passengerCategory || 'بالغ',
+          service: p.serviceType || '',
+          debitUsd: pDebitUsd || '',
+          creditUsd: pCreditUsd || '',
+          debitEgp: pDebitEgp || '',
+          creditEgp: pCreditEgp || ''
+        });
+        applyStyle(row, null, rowFont);
+        row.height = 25;
+      } else {
+        const payment = item.data;
+        const amt = Number(payment.amount || 0);
+        const isUsd = payment.currency === 'USD';
+
+        let desc = payment.note || '';
+        if (!desc.includes('تسليم') && !desc.includes('إيداع') && !desc.includes('تاريخ')) {
+          const dateStr = payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString('en-GB') : '';
+          desc = desc ? `تسليم نقدية بتاريخ ${dateStr} - ${desc}` : `تسليم نقدية بتاريخ ${dateStr}`;
+        }
 
         const row = worksheet.addRow({
-          name: p.passengerName || '-',
-          dob: p.birthDate || '-',
-          passport: p.passportNumber || '-',
-          category: p.passengerCategory || '-',
-          depDate: p.departureDate || '-',
-          flight: p.flightNumber || '-',
-          departure: p.departurePort || '-',
-          arrival: p.destination || '-',
-          arrTime: p.arrivalTime || '-',
-          agent: agent.agentName,
-          service: p.serviceType || '-',
-          debitUsd: pDebitUsd,
-          creditUsd: pCreditUsd,
-          debitEgp: pDebitEgp,
-          creditEgp: pCreditEgp
+          name: desc,
+          creditUsd: isUsd ? amt : '',
+          creditEgp: !isUsd ? amt : ''
         });
-        applyRowStyle(row);
-      });
-      
-      // Add Total Row for Passengers
-      const totalRow = worksheet.addRow({
-        service: 'الإجمالي:',
-        debitUsd: totalPassengersDebitUsd,
-        creditUsd: totalPassengersCreditUsd,
-        debitEgp: totalPassengersDebitEgp,
-        creditEgp: totalPassengersCreditEgp
-      });
-      
-      totalRow.eachCell((cell) => {
-        cell.font = { name: 'Cairo', size: 12, bold: true, color: { argb: 'FF304ACE' } };
-        cell.alignment = alignmentCentered;
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F5' } };
-        cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
-      });
-    }
 
+        // Merge cells A to M (1 to 13)
+        worksheet.mergeCells(`A${row.number}:M${row.number}`);
+        row.getCell(1).alignment = { vertical: 'middle', horizontal: 'right' };
+
+        applyStyle(row, paymentFill, paymentFont);
+        row.height = 30;
+      }
+    });
+
+    // 4. Totals with beautiful styling
     const currentLastRow = worksheet.lastRow ? worksheet.lastRow.number : 1;
-
-    // 2. Deposits (Payments) Table
-    const paymentsStartRow = currentLastRow + 3;
-    worksheet.getCell(`A${paymentsStartRow}`).value = 'سجل عمليات الإيداع (الدفعات)';
-    worksheet.getCell(`A${paymentsStartRow}`).font = { ...headerFont, size: 16 };
-    worksheet.getCell(`A${paymentsStartRow}`).alignment = alignmentCentered;
-    worksheet.mergeCells(`A${paymentsStartRow}:D${paymentsStartRow}`);
-
-    const paymentHeaderRow = worksheet.getRow(paymentsStartRow + 1);
-    paymentHeaderRow.values = ['تاريخ الدفع', 'المبلغ', 'العملة', 'ملاحظات'];
-    applyHeaderStyle(paymentHeaderRow);
-
-    if (agent.payments && agent.payments.length > 0) {
-      const sortedPayments = [...agent.payments].sort((a, b) => new Date(b.paymentDate) - new Date(a.paymentDate));
-      sortedPayments.forEach((payment, idx) => {
-        const row = worksheet.getRow(paymentsStartRow + 2 + idx);
-        row.values = [
-          payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : '-',
-          Number(payment.amount || 0),
-          payment.currency || 'EGP',
-          payment.note || '-'
-        ];
-        applyRowStyle(row);
-      });
-    } else {
-      const row = worksheet.getRow(paymentsStartRow + 2);
-      row.values = ['لا يوجد دفعات مسجلة', '-', '-', '-'];
-      applyRowStyle(row);
-    }
-
-    const afterPaymentsRow = worksheet.lastRow ? worksheet.lastRow.number : paymentsStartRow + 2;
-
-    // 3. Summary Table (Financial Summary for EGP and USD)
-    const summaryStartRow = afterPaymentsRow + 3;
-    worksheet.getCell(`A${summaryStartRow}`).value = 'ملخص حساب الوكيل (Financial Summary)';
-    worksheet.getCell(`A${summaryStartRow}`).font = { ...headerFont, size: 16 };
-    worksheet.getCell(`A${summaryStartRow}`).alignment = alignmentCentered;
-    worksheet.mergeCells(`A${summaryStartRow}:D${summaryStartRow}`);
-
-    const summaryHeaderRow = worksheet.getRow(summaryStartRow + 1);
-    summaryHeaderRow.values = ['العملة', 'إجمالي المدين (عليه)', 'إجمالي الدائن (له)', 'الرصيد المتبقي (الملخص)'];
-    applyHeaderStyle(summaryHeaderRow);
-
-    // EGP Summary Row
-    const debitEgp = Number(agent.debitEgp || 0);
-    const creditEgp = Number(agent.creditEgp || 0);
-    const balanceEgp = debitEgp - creditEgp;
-    let balanceEgpText = 'خالص';
-    if (balanceEgp > 0) balanceEgpText = `الوكيل عليه ${balanceEgp.toLocaleString()} ج.م`;
-    else if (balanceEgp < 0) balanceEgpText = `للشركة ${Math.abs(balanceEgp).toLocaleString()} ج.م`;
-
-    const summaryEgpRow = worksheet.getRow(summaryStartRow + 2);
-    summaryEgpRow.values = ['الجنيه المصري (EGP)', debitEgp, creditEgp, balanceEgpText];
-    applyRowStyle(summaryEgpRow);
-
-    const balanceEgpCell = worksheet.getCell(`D${summaryStartRow + 2}`);
-    if (balanceEgp > 0) {
-      balanceEgpCell.font = { ...defaultFont, color: { argb: 'FFD32F2F' }, bold: true };
-    } else if (balanceEgp < 0) {
-      balanceEgpCell.font = { ...defaultFont, color: { argb: 'FF388E3C' }, bold: true };
-    } else {
-      balanceEgpCell.font = { ...defaultFont, color: { argb: 'FF1976D2' }, bold: true };
-    }
-
-    // USD Summary Row
     const debitUsd = Number(agent.debitUsd || 0);
     const creditUsd = Number(agent.creditUsd || 0);
     const balanceUsd = debitUsd - creditUsd;
-    let balanceUsdText = 'خالص';
-    if (balanceUsd > 0) balanceUsdText = `الوكيل عليه ${balanceUsd.toLocaleString()} $`;
-    else if (balanceUsd < 0) balanceUsdText = `للشركة ${Math.abs(balanceUsd).toLocaleString()} $`;
+    const debitEgp = Number(agent.debitEgp || 0);
+    const creditEgp = Number(agent.creditEgp || 0);
+    const balanceEgp = debitEgp - creditEgp;
 
-    const summaryUsdRow = worksheet.getRow(summaryStartRow + 3);
-    summaryUsdRow.values = ['الدولار الأمريكي (USD)', debitUsd, creditUsd, balanceUsdText];
-    applyRowStyle(summaryUsdRow);
+    const summaryStartRow = currentLastRow + 3;
 
-    const balanceUsdCell = worksheet.getCell(`D${summaryStartRow + 3}`);
-    if (balanceUsd > 0) {
-      balanceUsdCell.font = { ...defaultFont, color: { argb: 'FFD32F2F' }, bold: true };
-    } else if (balanceUsd < 0) {
-      balanceUsdCell.font = { ...defaultFont, color: { argb: 'FF388E3C' }, bold: true };
-    } else {
-      balanceUsdCell.font = { ...defaultFont, color: { argb: 'FF1976D2' }, bold: true };
-    }
+    // اجمالي المديونيه دولار
+    const usdSummaryRow = worksheet.getRow(summaryStartRow);
+    worksheet.mergeCells(`A${summaryStartRow}:L${summaryStartRow}`);
+    usdSummaryRow.getCell(1).value = 'إجمالي المديونية (دولار أمريكي)';
+    usdSummaryRow.getCell(1).fill = totalFill;
+    usdSummaryRow.getCell(1).font = totalFont;
+    usdSummaryRow.getCell(1).alignment = alignmentCentered;
+
+    worksheet.mergeCells(`M${summaryStartRow}:Q${summaryStartRow}`);
+    usdSummaryRow.getCell(13).value = balanceUsd === 0 ? 'خالص' : (balanceUsd > 0 ? `الوكيل عليه ${balanceUsd.toLocaleString()} $` : `للشركة ${Math.abs(balanceUsd).toLocaleString()} $`);
+    usdSummaryRow.getCell(13).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEEEEEE' } };
+    usdSummaryRow.getCell(13).font = { name: 'Arial', size: 16, bold: true, color: { argb: balanceUsd > 0 ? 'FFD32F2F' : (balanceUsd < 0 ? 'FF388E3C' : 'FF1976D2') } };
+    usdSummaryRow.getCell(13).alignment = alignmentCentered;
+    usdSummaryRow.height = 40;
+
+    // اجمالي المديونيه مصري
+    const egpSummaryRow = worksheet.getRow(summaryStartRow + 1);
+    worksheet.mergeCells(`A${summaryStartRow + 1}:L${summaryStartRow + 1}`);
+    egpSummaryRow.getCell(1).value = 'إجمالي المديونية (جنيه مصري)';
+    egpSummaryRow.getCell(1).fill = totalFill;
+    egpSummaryRow.getCell(1).font = totalFont;
+    egpSummaryRow.getCell(1).alignment = alignmentCentered;
+
+    worksheet.mergeCells(`M${summaryStartRow + 1}:Q${summaryStartRow + 1}`);
+    egpSummaryRow.getCell(13).value = balanceEgp === 0 ? 'خالص' : (balanceEgp > 0 ? `الوكيل عليه ${balanceEgp.toLocaleString()} ج.م` : `للشركة ${Math.abs(balanceEgp).toLocaleString()} ج.م`);
+    egpSummaryRow.getCell(13).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEEEEEE' } };
+    egpSummaryRow.getCell(13).font = { name: 'Arial', size: 16, bold: true, color: { argb: balanceEgp > 0 ? 'FFD32F2F' : (balanceEgp < 0 ? 'FF388E3C' : 'FF1976D2') } };
+    egpSummaryRow.getCell(13).alignment = alignmentCentered;
+    egpSummaryRow.height = 40;
+
+    // Ensure borders for total rows
+    [usdSummaryRow, egpSummaryRow].forEach(row => {
+      for (let i = 1; i <= 17; i++) {
+        row.getCell(i).border = borderThin;
+      }
+    });
+
   });
 
   const buffer = await workbook.xlsx.writeBuffer();
   const dateStr = new Date().toISOString().split('T')[0];
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  saveAs(blob, `Agents_Report_${dateStr}.xlsx`);
+  saveAs(blob, `Agents_Detailed_Report_${dateStr}.xlsx`);
 };
+
 
 export const exportBalancesReportToExcel = async (agentGroups, ticketPrice = 44000) => {
   const workbook = new ExcelJS.Workbook();
@@ -260,8 +213,7 @@ export const exportBalancesReportToExcel = async (agentGroups, ticketPrice = 440
     row.height = 25;
   };
 
-  const positiveAgents = [];
-  const negativeAgents = [];
+  const allAgentsData = [];
 
   agentGroups.forEach(agent => {
     const debitUsd = Number(agent.debitUsd || 0);
@@ -271,9 +223,36 @@ export const exportBalancesReportToExcel = async (agentGroups, ticketPrice = 440
     const debitEgp = Number(agent.debitEgp || 0);
     const creditEgp = Number(agent.creditEgp || 0);
     const balanceEgp = debitEgp - creditEgp;
-    const tickets = ticketPrice > 0 ? (balanceEgp / ticketPrice).toFixed(2) : '0.00';
+    // Calculate tickets ONLY for creditor agents (agents who have a credit balance)
+    let ticketsNum = 0;
+    if (balanceEgp < 0 && ticketPrice > 0) {
+      let exactTickets = Math.abs(balanceEgp) / ticketPrice;
+      let integerPart = Math.floor(exactTickets);
+      let fractionalPart = exactTickets - integerPart;
 
-    const data = {
+      // If fraction is >= 0.90 round up, otherwise just keep the integer (drop the fraction)
+      if (fractionalPart >= 0.90) {
+        ticketsNum = integerPart + 1;
+      } else {
+        ticketsNum = integerPart;
+      }
+    }
+    const tickets = ticketsNum.toString();
+
+    let status = 'خالص';
+    const isZeroEgp = balanceEgp === 0;
+    const isZeroUsd = balanceUsd === 0;
+
+    if (isZeroEgp && isZeroUsd) {
+      status = 'خالص';
+    } else if (ticketsNum >= 1 || balanceUsd < 0) {
+      status = 'دائن (له)';
+    } else {
+      // If tickets < 1 (or balance is debit) and not completely zero
+      status = 'مدين (عليه)';
+    }
+
+    allAgentsData.push({
       name: agent.agentName,
       debitUsd,
       creditUsd,
@@ -281,18 +260,14 @@ export const exportBalancesReportToExcel = async (agentGroups, ticketPrice = 440
       debitEgp,
       creditEgp,
       balanceEgp,
-      tickets: Number(tickets)
-    };
-
-    if (balanceEgp >= 0 && balanceUsd >= 0) {
-      positiveAgents.push(data);
-    } else {
-      negativeAgents.push(data);
-    }
+      tickets: Number(tickets),
+      status
+    });
   });
 
   const columns = [
     { header: 'اسم الوكيل', key: 'name', width: 30 },
+    { header: 'الحالة', key: 'status', width: 15 },
     { header: 'مدين دولار ($)', key: 'debitUsd', width: 18 },
     { header: 'دائن دولار ($)', key: 'creditUsd', width: 18 },
     { header: 'رصيد دولار ($)', key: 'balanceUsd', width: 18 },
@@ -303,122 +278,68 @@ export const exportBalancesReportToExcel = async (agentGroups, ticketPrice = 440
   ];
 
   worksheet.columns = columns;
-  
-  // Table 1: Positive Agents (Debtors)
-  worksheet.getCell('A1').value = 'الوكلاء المدينين (عليهم أموال للشركة)';
+
+  worksheet.getCell('A1').value = 'تقرير أرصدة جميع الوكلاء';
   worksheet.getCell('A1').font = { ...headerFont, size: 16 };
   worksheet.getCell('A1').alignment = alignmentCentered;
-  worksheet.mergeCells('A1:H1');
+  worksheet.mergeCells('A1:I1');
 
-  const posHeaderRow = worksheet.getRow(2);
-  posHeaderRow.values = columns.map(c => c.header);
-  applyTableStyle(posHeaderRow);
+  const headerRow = worksheet.getRow(2);
+  headerRow.values = columns.map(c => c.header);
+  applyTableStyle(headerRow);
 
   let currentRow = 3;
-  let totalPosDebitUsd = 0;
-  let totalPosCreditUsd = 0;
-  let totalPosBalanceUsd = 0;
-  let totalPosDebitEgp = 0;
-  let totalPosCreditEgp = 0;
-  let totalPosBalanceEgp = 0;
+  let totalDebitUsd = 0;
+  let totalCreditUsd = 0;
+  let totalBalanceUsd = 0;
+  let totalDebitEgp = 0;
+  let totalCreditEgp = 0;
+  let totalBalanceEgp = 0;
+  let totalTickets = 0;
 
-  positiveAgents.forEach(agent => {
-    totalPosDebitUsd += agent.debitUsd;
-    totalPosCreditUsd += agent.creditUsd;
-    totalPosBalanceUsd += agent.balanceUsd;
-    totalPosDebitEgp += agent.debitEgp;
-    totalPosCreditEgp += agent.creditEgp;
-    totalPosBalanceEgp += agent.balanceEgp;
-
-    const row = worksheet.getRow(currentRow++);
-    row.values = [
-      agent.name, 
-      agent.debitUsd, 
-      agent.creditUsd, 
-      agent.balanceUsd, 
-      agent.debitEgp, 
-      agent.creditEgp, 
-      agent.balanceEgp, 
-      agent.tickets
-    ];
-    applyRowStyle(row);
-  });
-
-  // Total row for positive
-  const posTotalRow = worksheet.getRow(currentRow++);
-  posTotalRow.values = [
-    'الإجمالي', 
-    totalPosDebitUsd, 
-    totalPosCreditUsd, 
-    totalPosBalanceUsd, 
-    totalPosDebitEgp, 
-    totalPosCreditEgp, 
-    totalPosBalanceEgp, 
-    ticketPrice > 0 ? (totalPosBalanceEgp / ticketPrice).toFixed(2) : '0.00'
-  ];
-  posTotalRow.eachCell((cell) => {
-    cell.font = { ...headerFont, size: 12 };
-    cell.alignment = alignmentCentered;
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F5' } };
-    cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
-  });
-
-  // Space
-  currentRow += 2;
-
-  // Table 2: Negative Agents (Creditors)
-  worksheet.getCell(`A${currentRow}`).value = 'الوكلاء الدائنين (لهم أموال عند الشركة)';
-  worksheet.getCell(`A${currentRow}`).font = { ...headerFont, size: 16 };
-  worksheet.getCell(`A${currentRow}`).alignment = alignmentCentered;
-  worksheet.mergeCells(`A${currentRow}:H${currentRow}`);
-  currentRow++;
-
-  const negHeaderRow = worksheet.getRow(currentRow++);
-  negHeaderRow.values = columns.map(c => c.header);
-  applyTableStyle(negHeaderRow);
-
-  let totalNegDebitUsd = 0;
-  let totalNegCreditUsd = 0;
-  let totalNegBalanceUsd = 0;
-  let totalNegDebitEgp = 0;
-  let totalNegCreditEgp = 0;
-  let totalNegBalanceEgp = 0;
-
-  negativeAgents.forEach(agent => {
-    totalNegDebitUsd += agent.debitUsd;
-    totalNegCreditUsd += agent.creditUsd;
-    totalNegBalanceUsd += agent.balanceUsd;
-    totalNegDebitEgp += agent.debitEgp;
-    totalNegCreditEgp += agent.creditEgp;
-    totalNegBalanceEgp += agent.balanceEgp;
+  allAgentsData.forEach(agent => {
+    totalDebitUsd += agent.debitUsd;
+    totalCreditUsd += agent.creditUsd;
+    totalBalanceUsd += agent.balanceUsd;
+    totalDebitEgp += agent.debitEgp;
+    totalCreditEgp += agent.creditEgp;
+    totalBalanceEgp += agent.balanceEgp;
+    totalTickets += Number(agent.tickets);
 
     const row = worksheet.getRow(currentRow++);
     row.values = [
-      agent.name, 
-      agent.debitUsd, 
-      agent.creditUsd, 
-      agent.balanceUsd, 
-      agent.debitEgp, 
-      agent.creditEgp, 
-      agent.balanceEgp, 
+      agent.name,
+      agent.status,
+      agent.debitUsd,
+      agent.creditUsd,
+      agent.balanceUsd,
+      agent.debitEgp,
+      agent.creditEgp,
+      agent.balanceEgp,
       agent.tickets
     ];
     applyRowStyle(row);
+
+    // Apply color to status
+    const statusCell = row.getCell(2);
+    if (agent.status === 'مدين (عليه)') statusCell.font = { ...defaultFont, color: { argb: 'FFD32F2F' } }; // Red
+    else if (agent.status === 'دائن (له)') statusCell.font = { ...defaultFont, color: { argb: 'FF388E3C' } }; // Green
   });
 
-  // Total row for negative
-  const negTotalRow = worksheet.getRow(currentRow++);
-  negTotalRow.values = [
-    'الإجمالي', 
-    totalNegDebitUsd, 
-    totalNegCreditUsd, 
-    totalNegBalanceUsd, 
-    totalNegDebitEgp, 
-    totalNegCreditEgp, 
-    totalNegBalanceEgp, 
-    ticketPrice > 0 ? (totalNegBalanceEgp / ticketPrice).toFixed(2) : '0.00'
+  // Total row
+  const totalRow = worksheet.getRow(currentRow++);
+  totalRow.values = [
+    'الإجمالي',
+    '-',
+    totalDebitUsd,
+    totalCreditUsd,
+    totalBalanceUsd,
+    totalDebitEgp,
+    totalCreditEgp,
+    totalBalanceEgp,
+    totalTickets
   ];
-  negTotalRow.eachCell((cell) => {
+  totalRow.eachCell((cell) => {
     cell.font = { ...headerFont, size: 12 };
     cell.alignment = alignmentCentered;
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F5' } };

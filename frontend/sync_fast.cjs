@@ -9,12 +9,10 @@ const pool = new Pool({
 async function run() {
     try {
         console.log("Starting FAST data sync to legacy tables...");
+        // DB already wiped
+        const batchId = uuidv4();
         
-        // Delete previous partially inserted data
-        await pool.query(`DELETE FROM manifest_passengers WHERE batch_id = 'c47ad75c-ef25-49dc-948d-7efaa4e5323c'`);
-        await pool.query(`DELETE FROM agent_payments WHERE payment_date > NOW() - INTERVAL '1 hour'`);
-
-        const batchId = 'c47ad75c-ef25-49dc-948d-7efaa4e5323c';
+        await pool.query(`INSERT INTO manifest_import_batches (id, original_filename, status, created_at, updated_at) VALUES ($1, $2, 'COMPLETED', NOW(), NOW())`, [batchId, 'Migration']);
         
         const txRes = await pool.query(`SELECT t.*, a.source_sheet_name as sheet_name FROM agent_transactions t JOIN agents a ON t.agent_id = a.id`);
         const transactions = txRes.rows;
