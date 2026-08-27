@@ -1,4 +1,6 @@
-import ExcelJS from 'exceljs';
+const fs = require('fs');
+
+const fileContent = `import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 
 export const exportAgentsToExcel = async (agentGroups) => {
@@ -59,7 +61,7 @@ export const exportAgentsToExcel = async (agentGroups) => {
 
   agentGroups.forEach((agent) => {
     // Truncate agent name if it's too long (max 31 chars for sheet name)
-    const sheetName = (agent.agentName || 'Agent').substring(0, 31).replace(/[\\/?*\[\]]/g, '');
+    const sheetName = (agent.agentName || 'Agent').substring(0, 31).replace(/[\\\\/?*\\[\\]]/g, '');
     const worksheet = workbook.addWorksheet(sheetName, {
       views: [{ rightToLeft: true }]
     });
@@ -143,10 +145,10 @@ export const exportAgentsToExcel = async (agentGroups) => {
 
     // 2. Deposits (Payments) Table
     const paymentsStartRow = currentLastRow + 3;
-    worksheet.getCell(`A${paymentsStartRow}`).value = 'سجل عمليات الإيداع (الدفعات)';
-    worksheet.getCell(`A${paymentsStartRow}`).font = { ...headerFont, size: 16 };
-    worksheet.getCell(`A${paymentsStartRow}`).alignment = alignmentCentered;
-    worksheet.mergeCells(`A${paymentsStartRow}:D${paymentsStartRow}`);
+    worksheet.getCell(\`A\${paymentsStartRow}\`).value = 'سجل عمليات الإيداع (الدفعات)';
+    worksheet.getCell(\`A\${paymentsStartRow}\`).font = { ...headerFont, size: 16 };
+    worksheet.getCell(\`A\${paymentsStartRow}\`).alignment = alignmentCentered;
+    worksheet.mergeCells(\`A\${paymentsStartRow}:D\${paymentsStartRow}\`);
 
     const paymentHeaderRow = worksheet.getRow(paymentsStartRow + 1);
     paymentHeaderRow.values = ['تاريخ الدفع', 'المبلغ', 'العملة', 'ملاحظات'];
@@ -174,10 +176,10 @@ export const exportAgentsToExcel = async (agentGroups) => {
 
     // 3. Summary Table (Financial Summary for EGP and USD)
     const summaryStartRow = afterPaymentsRow + 3;
-    worksheet.getCell(`A${summaryStartRow}`).value = 'ملخص حساب الوكيل (Financial Summary)';
-    worksheet.getCell(`A${summaryStartRow}`).font = { ...headerFont, size: 16 };
-    worksheet.getCell(`A${summaryStartRow}`).alignment = alignmentCentered;
-    worksheet.mergeCells(`A${summaryStartRow}:D${summaryStartRow}`);
+    worksheet.getCell(\`A\${summaryStartRow}\`).value = 'ملخص حساب الوكيل (Financial Summary)';
+    worksheet.getCell(\`A\${summaryStartRow}\`).font = { ...headerFont, size: 16 };
+    worksheet.getCell(\`A\${summaryStartRow}\`).alignment = alignmentCentered;
+    worksheet.mergeCells(\`A\${summaryStartRow}:D\${summaryStartRow}\`);
 
     const summaryHeaderRow = worksheet.getRow(summaryStartRow + 1);
     summaryHeaderRow.values = ['العملة', 'إجمالي المدين (عليه)', 'إجمالي الدائن (له)', 'الرصيد المتبقي (الملخص)'];
@@ -188,14 +190,14 @@ export const exportAgentsToExcel = async (agentGroups) => {
     const creditEgp = Number(agent.creditEgp || 0);
     const balanceEgp = debitEgp - creditEgp;
     let balanceEgpText = 'خالص';
-    if (balanceEgp > 0) balanceEgpText = `الوكيل عليه ${balanceEgp.toLocaleString()} ج.م`;
-    else if (balanceEgp < 0) balanceEgpText = `للشركة ${Math.abs(balanceEgp).toLocaleString()} ج.م`;
+    if (balanceEgp > 0) balanceEgpText = \`الوكيل عليه \${balanceEgp.toLocaleString()} ج.م\`;
+    else if (balanceEgp < 0) balanceEgpText = \`للشركة \${Math.abs(balanceEgp).toLocaleString()} ج.م\`;
 
     const summaryEgpRow = worksheet.getRow(summaryStartRow + 2);
     summaryEgpRow.values = ['الجنيه المصري (EGP)', debitEgp, creditEgp, balanceEgpText];
     applyRowStyle(summaryEgpRow);
 
-    const balanceEgpCell = worksheet.getCell(`D${summaryStartRow + 2}`);
+    const balanceEgpCell = worksheet.getCell(\`D\${summaryStartRow + 2}\`);
     if (balanceEgp > 0) {
       balanceEgpCell.font = { ...defaultFont, color: { argb: 'FFD32F2F' }, bold: true };
     } else if (balanceEgp < 0) {
@@ -209,14 +211,14 @@ export const exportAgentsToExcel = async (agentGroups) => {
     const creditUsd = Number(agent.creditUsd || 0);
     const balanceUsd = debitUsd - creditUsd;
     let balanceUsdText = 'خالص';
-    if (balanceUsd > 0) balanceUsdText = `الوكيل عليه ${balanceUsd.toLocaleString()} $`;
-    else if (balanceUsd < 0) balanceUsdText = `للشركة ${Math.abs(balanceUsd).toLocaleString()} $`;
+    if (balanceUsd > 0) balanceUsdText = \`الوكيل عليه \${balanceUsd.toLocaleString()} $\`;
+    else if (balanceUsd < 0) balanceUsdText = \`للشركة \${Math.abs(balanceUsd).toLocaleString()} $\`;
 
     const summaryUsdRow = worksheet.getRow(summaryStartRow + 3);
     summaryUsdRow.values = ['الدولار الأمريكي (USD)', debitUsd, creditUsd, balanceUsdText];
     applyRowStyle(summaryUsdRow);
 
-    const balanceUsdCell = worksheet.getCell(`D${summaryStartRow + 3}`);
+    const balanceUsdCell = worksheet.getCell(\`D\${summaryStartRow + 3}\`);
     if (balanceUsd > 0) {
       balanceUsdCell.font = { ...defaultFont, color: { argb: 'FFD32F2F' }, bold: true };
     } else if (balanceUsd < 0) {
@@ -229,7 +231,7 @@ export const exportAgentsToExcel = async (agentGroups) => {
   const buffer = await workbook.xlsx.writeBuffer();
   const dateStr = new Date().toISOString().split('T')[0];
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  saveAs(blob, `Agents_Report_${dateStr}.xlsx`);
+  saveAs(blob, \`Agents_Report_\${dateStr}.xlsx\`);
 };
 
 export const exportBalancesReportToExcel = async (agentGroups, ticketPrice = 44000) => {
@@ -299,7 +301,7 @@ export const exportBalancesReportToExcel = async (agentGroups, ticketPrice = 440
     { header: 'مدين مصري (ج.م)', key: 'debitEgp', width: 18 },
     { header: 'دائن مصري (ج.م)', key: 'creditEgp', width: 18 },
     { header: 'رصيد مصري (ج.م)', key: 'balanceEgp', width: 18 },
-    { header: `التذاكر التقريبية (${ticketPrice.toLocaleString()})`, key: 'tickets', width: 25 }
+    { header: \`التذاكر التقريبية (\${ticketPrice.toLocaleString()})\`, key: 'tickets', width: 25 }
   ];
 
   worksheet.columns = columns;
@@ -367,10 +369,10 @@ export const exportBalancesReportToExcel = async (agentGroups, ticketPrice = 440
   currentRow += 2;
 
   // Table 2: Negative Agents (Creditors)
-  worksheet.getCell(`A${currentRow}`).value = 'الوكلاء الدائنين (لهم أموال عند الشركة)';
-  worksheet.getCell(`A${currentRow}`).font = { ...headerFont, size: 16 };
-  worksheet.getCell(`A${currentRow}`).alignment = alignmentCentered;
-  worksheet.mergeCells(`A${currentRow}:H${currentRow}`);
+  worksheet.getCell(\`A\${currentRow}\`).value = 'الوكلاء الدائنين (لهم أموال عند الشركة)';
+  worksheet.getCell(\`A\${currentRow}\`).font = { ...headerFont, size: 16 };
+  worksheet.getCell(\`A\${currentRow}\`).alignment = alignmentCentered;
+  worksheet.mergeCells(\`A\${currentRow}:H\${currentRow}\`);
   currentRow++;
 
   const negHeaderRow = worksheet.getRow(currentRow++);
@@ -428,7 +430,7 @@ export const exportBalancesReportToExcel = async (agentGroups, ticketPrice = 440
   const buffer = await workbook.xlsx.writeBuffer();
   const dateStr = new Date().toISOString().split('T')[0];
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  saveAs(blob, `Balances_Report_${dateStr}.xlsx`);
+  saveAs(blob, \`Balances_Report_\${dateStr}.xlsx\`);
 };
 
 export const exportSalesSummaryToExcel = async (data) => {
@@ -471,7 +473,7 @@ export const exportSalesSummaryToExcel = async (data) => {
   const buffer = await workbook.xlsx.writeBuffer();
   const dateStr = new Date().toISOString().split('T')[0];
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  saveAs(blob, `Sales_Report_${dateStr}.xlsx`);
+  saveAs(blob, \`Sales_Report_\${dateStr}.xlsx\`);
 };
 
 export const exportDashboardToExcel = async (data, t) => {
@@ -529,5 +531,9 @@ export const exportDashboardToExcel = async (data, t) => {
   const buffer = await workbook.xlsx.writeBuffer();
   const dateStr = new Date().toISOString().split('T')[0];
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  saveAs(blob, `Dashboard_Report_${dateStr}.xlsx`);
+  saveAs(blob, \`Dashboard_Report_\${dateStr}.xlsx\`);
 };
+`;
+
+fs.writeFileSync('src/utils/excelExportUtils.js', fileContent, 'utf8');
+console.log('Successfully updated excelExportUtils.js with full USD and EGP support!');

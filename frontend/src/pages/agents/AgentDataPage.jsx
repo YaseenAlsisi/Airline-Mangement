@@ -189,11 +189,15 @@ export const AgentDataPage = () => {
     group.passengerCount += 1;
     group.passengers.push(p);
     
-    // Ignore p.creditUsd and p.creditEgp as we now rely on the AgentPayment ledger
-    
     const debitEgp = p.totalPrice != null ? Number(p.totalPrice) : (Number(p.debitEgp) || 0);
     group.debitEgp += debitEgp;
     group.debitUsd += (Number(p.debitUsd) || 0);
+    if (Number(p.creditUsd) > 0) {
+      group.creditUsd += Number(p.creditUsd);
+    }
+    if (Number(p.creditEgp) > 0) {
+      group.creditEgp += Number(p.creditEgp);
+    }
   });
 
   allAgentPayments.forEach(payment => {

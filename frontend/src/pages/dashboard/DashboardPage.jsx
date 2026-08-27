@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { getDashboardOverview, getDashboardFilterOptions } from '../../api/dashboard.api';
+import { exportDashboardToExcel } from '../../utils/excelExportUtils';
 import { 
   UsersIcon, 
   PaperAirplaneIcon, 
@@ -91,39 +92,14 @@ export const DashboardPage = () => {
     fetchDashboardData();
   }, [filters, fetchDashboardData]);
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     if (!data) return;
-    const wb = XLSX.utils.book_new();
-    
-    const kpiData = [
-      ['Metric', 'Value'],
-      [t('dashboard.kpi.totalPassengers'), data?.kpis?.totalPassengers],
-      [t('dashboard.kpi.totalFlights'), data?.kpis?.totalFlights],
-      [t('dashboard.kpi.totalRevenue'), data?.kpis?.revenueEgp],
-      [t('dashboard.kpi.totalExpenses'), data?.kpis?.expensesEgp],
-      [t('dashboard.kpi.netProfit'), data?.kpis?.netProfitEgp],
-    ];
-    const wsKpi = XLSX.utils.aoa_to_sheet(kpiData);
-    XLSX.utils.book_append_sheet(wb, wsKpi, 'KPI Summary');
-
-    if (data?.charts?.passengersByDestination?.length > 0) {
-      const destWs = XLSX.utils.json_to_sheet(data.charts.passengersByDestination);
-      XLSX.utils.book_append_sheet(wb, destWs, 'By Destination');
+    try {
+      await exportDashboardToExcel(data, t);
+    } catch (err) {
+      console.error(err);
+      alert("Error exporting Excel: " + err.message);
     }
-    if (data?.charts?.revenueByServiceType?.length > 0) {
-      const svcWs = XLSX.utils.json_to_sheet(data.charts.revenueByServiceType);
-      XLSX.utils.book_append_sheet(wb, svcWs, 'By Service');
-    }
-    if (data?.charts?.topAgentsByPassengers?.length > 0) {
-      const agentsWs = XLSX.utils.json_to_sheet(data.charts.topAgentsByPassengers);
-      XLSX.utils.book_append_sheet(wb, agentsWs, 'Top Agents');
-    }
-    if (data?.flights?.length > 0) {
-      const flightsWs = XLSX.utils.json_to_sheet(data.flights);
-      XLSX.utils.book_append_sheet(wb, flightsWs, 'Flights');
-    }
-
-    XLSX.writeFile(wb, `Dashboard_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   const destColors = ['#2563eb', '#16a34a', '#d97706', '#9333ea', '#ef4444', '#0ea5e9'];

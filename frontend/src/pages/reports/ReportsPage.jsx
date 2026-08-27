@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { getDashboardData } from '../../api/reports.api';
 import { getAgents } from '../../api/agents.api';
 import * as XLSX from 'xlsx';
+import { exportSalesSummaryToExcel } from '../../utils/excelExportUtils';
 import html2pdf from 'html2pdf.js';
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
@@ -226,16 +227,13 @@ export const ReportsPage = () => {
     }, 0);
   };
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     try {
       if (!data?.detailedSummary) {
         alert("No data available to export");
         return;
       }
-      const ws = XLSX.utils.json_to_sheet(data.detailedSummary);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Sales Summary");
-      XLSX.writeFile(wb, `Sales_Report.xlsx`);
+      await exportSalesSummaryToExcel(data.detailedSummary);
     } catch (err) {
       console.error(err);
       alert("Error exporting Excel: " + err.message);

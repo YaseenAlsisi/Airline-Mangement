@@ -704,17 +704,6 @@ export const ImportDataPage = () => {
                       <ArrowUpTrayIcon className="h-4 w-4 text-slate-500" />
                       {exporting ? t('import.exporting', 'جاري التصدير...') : t('import.export', 'Export')}
                     </button>
-                    {batch.status === 'DRAFT' && (
-                      <button 
-                        type="button" 
-                        onClick={handleCalculate}
-                        disabled={calculating}
-                        className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 shadow-sm ring-1 ring-inset ring-emerald-200 hover:bg-emerald-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <CalculatorIcon className="h-4 w-4 text-emerald-600" />
-                        {calculating ? t('import.calculating', 'جاري الحساب...') : t('import.calculate', 'Calculate')}
-                      </button>
-                    )}
 
                   </div>
 
