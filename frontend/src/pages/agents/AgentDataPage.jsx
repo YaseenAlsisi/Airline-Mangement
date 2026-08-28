@@ -217,7 +217,13 @@ export const AgentDataPage = () => {
     }
   });
 
-  const agentGroups = Array.from(agentGroupsMap.values()).sort((a, b) => a.agentName.localeCompare(b.agentName));
+  const agentGroups = Array.from(agentGroupsMap.values())
+    .filter(a => {
+      if (searchTerm && !a.agentName.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+      if (selectedFilterName && a.agentName !== selectedFilterName) return false;
+      return true;
+    })
+    .sort((a, b) => a.agentName.localeCompare(b.agentName));
 
   const totalPages = Math.ceil(agentGroups.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
