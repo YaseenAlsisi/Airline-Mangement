@@ -25,8 +25,8 @@ const navigation = [
   { name: 'Agent Data', href: '/agents', icon: UsersIcon, permission: 'AGENT_VIEW' },
   { name: 'Reports', href: '/reports', icon: ChartBarIcon, permission: 'REPORT_VIEW' },
   { name: 'Notes', href: '/notes', icon: ChatBubbleLeftRightIcon, permission: 'NOTE_VIEW' },
-  { name: 'Safe Calculator', href: '/safe-calculator', icon: CalculatorIcon },
-  { name: 'Settings', href: '/settings', icon: Cog6ToothIcon, permission: 'USER_MANAGE' }
+  { name: 'Safe Calculator', href: '/safe-calculator', icon: CalculatorIcon, permission: 'REPORT_VIEW' },
+  { name: 'Settings', href: '/settings', icon: Cog6ToothIcon, permission: 'SETTINGS_MANAGE' }
 ];
 
 export const Sidebar = () => {

@@ -58,17 +58,17 @@ export const exportAgentsToExcel = async (agentGroups) => {
     const timeline = [];
 
     if (agent.passengers && agent.passengers.length > 0) {
-      agent.passengers.forEach(p => timeline.push({ type: 'passenger', date: p.departureDate || '', data: p }));
+      agent.passengers.forEach(p => timeline.push({ type: 'passenger', date: p.createdAt || p.departureDate || '', data: p }));
     }
 
     if (agent.payments && agent.payments.length > 0) {
-      agent.payments.forEach(p => timeline.push({ type: 'payment', date: p.paymentDate || '', data: p }));
+      agent.payments.forEach(p => timeline.push({ type: 'payment', date: p.createdAt || p.paymentDate || '', data: p }));
     }
 
     timeline.sort((a, b) => {
       const dateA = new Date(a.date).getTime() || 0;
       const dateB = new Date(b.date).getTime() || 0;
-      return dateB - dateA; // Descending (Newest top)
+      return dateA - dateB; // Ascending (Oldest top, Newest bottom)
     });
 
     // 3. Render rows
@@ -168,7 +168,7 @@ export const exportAgentsToExcel = async (agentGroups) => {
     sUsd.getCell(1).border = borderThin;
 
     worksheet.mergeCells(`M${summaryStartRow + 1}:P${summaryStartRow + 1}`);
-    sUsd.getCell(13).value = balanceUsd === 0 ? 'خالص' : (balanceUsd > 0 ? `الوكيل عليه ${balanceUsd.toLocaleString()} $` : `للشركة ${Math.abs(balanceUsd).toLocaleString()} $`);
+    sUsd.getCell(13).value = balanceUsd === 0 ? 'خالص' : (balanceUsd > 0 ? `الوكيل عليه (مدين) ${balanceUsd.toLocaleString()} $` : `للوكيل (دائن) ${Math.abs(balanceUsd).toLocaleString()} $`);
     sUsd.getCell(13).fill = totalsValFill;
     sUsd.getCell(13).font = { name: 'Arial', size: 14, bold: true, color: { argb: balanceUsd > 0 ? 'FFC00000' : (balanceUsd < 0 ? 'FF385D8A' : 'FF000000') } };
     sUsd.getCell(13).alignment = alignmentCentered;
@@ -185,7 +185,7 @@ export const exportAgentsToExcel = async (agentGroups) => {
     sEgp.getCell(1).border = borderThin;
 
     worksheet.mergeCells(`M${summaryStartRow + 2}:P${summaryStartRow + 2}`);
-    sEgp.getCell(13).value = balanceEgp === 0 ? 'خالص' : (balanceEgp > 0 ? `الوكيل عليه ${balanceEgp.toLocaleString()} ج.م` : `للشركة ${Math.abs(balanceEgp).toLocaleString()} ج.م`);
+    sEgp.getCell(13).value = balanceEgp === 0 ? 'خالص' : (balanceEgp > 0 ? `الوكيل عليه (مدين) ${balanceEgp.toLocaleString()} ج.م` : `للوكيل (دائن) ${Math.abs(balanceEgp).toLocaleString()} ج.م`);
     sEgp.getCell(13).fill = totalsValFill;
     sEgp.getCell(13).font = { name: 'Arial', size: 14, bold: true, color: { argb: balanceEgp > 0 ? 'FFC00000' : (balanceEgp < 0 ? 'FF385D8A' : 'FF000000') } };
     sEgp.getCell(13).alignment = alignmentCentered;

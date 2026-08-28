@@ -57,6 +57,7 @@ public class ManifestMapper {
                 .totalPrice(row.getTotalPrice())
                 .validationStatus(row.getValidationStatus())
                 .validationErrors(row.getValidationErrors())
+                .createdAt(row.getCreatedAt())
                 .build();
     }
 

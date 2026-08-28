@@ -56,7 +56,11 @@ export const AgentPaymentHistoryModal = ({ isOpen, onClose, agentGroup, payments
     }
   };
 
-  const agentPayments = payments.filter(p => p.agentNameRaw === agentGroup.agentName).sort((a, b) => new Date(b.paymentDate) - new Date(a.paymentDate));
+  const agentPayments = payments.filter(p => p.agentNameRaw === agentGroup.agentName).sort((a, b) => {
+    const dateA = new Date(a.createdAt || a.paymentDate).getTime();
+    const dateB = new Date(b.createdAt || b.paymentDate).getTime();
+    return dateA - dateB;
+  });
 
   return (
     <div className="relative z-30" aria-labelledby="modal-title" role="dialog" aria-modal="true">

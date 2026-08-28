@@ -62,14 +62,14 @@ public class DashboardService {
         long totalFlights = getSingleLongResult("SELECT COUNT(DISTINCT p.flightNumber) FROM ManifestPassenger p " + whereClause, startDate, endDate, agent, destination, serviceType);
         long prevTotalFlights = getSingleLongResult("SELECT COUNT(DISTINCT p.flightNumber) FROM ManifestPassenger p " + prevWhereClause, prevStartDate, prevEndDate, agent, destination, serviceType);
         
-        BigDecimal revenueEgp = getSingleBigDecimalResult("SELECT SUM(p.totalPrice) FROM ManifestPassenger p " + whereClause, startDate, endDate, agent, destination, serviceType);
-        BigDecimal prevRevenueEgp = getSingleBigDecimalResult("SELECT SUM(p.totalPrice) FROM ManifestPassenger p " + prevWhereClause, prevStartDate, prevEndDate, agent, destination, serviceType);
+        BigDecimal revenueEgp = getSingleBigDecimalResult("SELECT SUM(p.debitEgp) FROM ManifestPassenger p " + whereClause, startDate, endDate, agent, destination, serviceType);
+        BigDecimal prevRevenueEgp = getSingleBigDecimalResult("SELECT SUM(p.debitEgp) FROM ManifestPassenger p " + prevWhereClause, prevStartDate, prevEndDate, agent, destination, serviceType);
         
         BigDecimal revenueUsd = getSingleBigDecimalResult("SELECT SUM(p.debitUsd) FROM ManifestPassenger p " + whereClause, startDate, endDate, agent, destination, serviceType);
-        BigDecimal expensesEgp = getSingleBigDecimalResult("SELECT SUM(p.commission) FROM ManifestPassenger p " + whereClause, startDate, endDate, agent, destination, serviceType);
+        BigDecimal expensesEgp = BigDecimal.ZERO; // Expenses not used in excel import
         
         BigDecimal netProfitEgp = revenueEgp.subtract(expensesEgp);
-        BigDecimal prevExpensesEgp = getSingleBigDecimalResult("SELECT SUM(p.commission) FROM ManifestPassenger p " + prevWhereClause, prevStartDate, prevEndDate, agent, destination, serviceType);
+        BigDecimal prevExpensesEgp = BigDecimal.ZERO;
         BigDecimal prevNetProfitEgp = prevRevenueEgp.subtract(prevExpensesEgp);
         
         long publishedFiles = getSingleLongResult("SELECT COUNT(DISTINCT p.batch.id) FROM ManifestPassenger p " + whereClause, startDate, endDate, agent, destination, serviceType);
@@ -93,17 +93,17 @@ public class DashboardService {
 
         // 2. Charts
         DashboardDto.Charts charts = DashboardDto.Charts.builder()
-                .revenueByDestination(getChartData("SELECT p.destination, SUM(p.totalPrice) FROM ManifestPassenger p " + whereClause + " GROUP BY p.destination ORDER BY SUM(p.totalPrice) DESC", startDate, endDate, agent, destination, serviceType, revenueEgp.longValue()))
-                .revenueByServiceType(getChartData("SELECT p.serviceType, SUM(p.totalPrice) FROM ManifestPassenger p " + whereClause + " GROUP BY p.serviceType ORDER BY SUM(p.totalPrice) DESC", startDate, endDate, agent, destination, serviceType, revenueEgp.longValue()))
+                .revenueByDestination(getChartData("SELECT p.destination, SUM(p.debitEgp) FROM ManifestPassenger p " + whereClause + " GROUP BY p.destination ORDER BY SUM(p.debitEgp) DESC", startDate, endDate, agent, destination, serviceType, revenueEgp.longValue()))
+                .revenueByServiceType(getChartData("SELECT p.serviceType, SUM(p.debitEgp) FROM ManifestPassenger p " + whereClause + " GROUP BY p.serviceType ORDER BY SUM(p.debitEgp) DESC", startDate, endDate, agent, destination, serviceType, revenueEgp.longValue()))
                 .passengersByDestination(getChartData("SELECT p.destination, COUNT(p) FROM ManifestPassenger p " + whereClause + " GROUP BY p.destination ORDER BY COUNT(p) DESC", startDate, endDate, agent, destination, serviceType, totalPassengers))
                 .passengersByServiceType(getChartData("SELECT p.serviceType, COUNT(p) FROM ManifestPassenger p " + whereClause + " GROUP BY p.serviceType ORDER BY COUNT(p) DESC", startDate, endDate, agent, destination, serviceType, totalPassengers))
                 .passengersByCategory(getChartData("SELECT p.passengerCategory, COUNT(p) FROM ManifestPassenger p " + whereClause + " GROUP BY p.passengerCategory ORDER BY COUNT(p) DESC", startDate, endDate, agent, destination, serviceType, totalPassengers))
                 .passengersByAirline(getChartData("SELECT p.flightNumber, COUNT(p) FROM ManifestPassenger p " + whereClause + " GROUP BY p.flightNumber ORDER BY COUNT(p) DESC", startDate, endDate, agent, destination, serviceType, totalPassengers))
                 .topAgentsByPassengers(getChartData("SELECT p.agentNameRaw, COUNT(p) FROM ManifestPassenger p " + whereClause + " GROUP BY p.agentNameRaw ORDER BY COUNT(p) DESC", startDate, endDate, agent, destination, serviceType, totalPassengers))
-                .topAgentsByRevenue(getChartData("SELECT p.agentNameRaw, SUM(p.totalPrice) FROM ManifestPassenger p " + whereClause + " GROUP BY p.agentNameRaw ORDER BY SUM(p.totalPrice) DESC", startDate, endDate, agent, destination, serviceType, revenueEgp.longValue()))
+                .topAgentsByRevenue(getChartData("SELECT p.agentNameRaw, SUM(p.debitEgp) FROM ManifestPassenger p " + whereClause + " GROUP BY p.agentNameRaw ORDER BY SUM(p.debitEgp) DESC", startDate, endDate, agent, destination, serviceType, revenueEgp.longValue()))
                 .flightsByDate(getChartData("SELECT p.departureDate, COUNT(DISTINCT p.flightNumber) FROM ManifestPassenger p " + whereClause + " GROUP BY p.departureDate ORDER BY p.departureDate ASC", startDate, endDate, agent, destination, serviceType, totalFlights))
-                .revenueOverTime(getChartData("SELECT p.departureDate, SUM(p.totalPrice) FROM ManifestPassenger p " + whereClause + " GROUP BY p.departureDate ORDER BY p.departureDate ASC", startDate, endDate, agent, destination, serviceType, revenueEgp.longValue()))
-                .profitOverTime(getChartData("SELECT p.departureDate, SUM(p.totalPrice) - SUM(p.commission) FROM ManifestPassenger p " + whereClause + " GROUP BY p.departureDate ORDER BY p.departureDate ASC", startDate, endDate, agent, destination, serviceType, netProfitEgp.longValue()))
+                .revenueOverTime(getChartData("SELECT p.departureDate, SUM(p.debitEgp) FROM ManifestPassenger p " + whereClause + " GROUP BY p.departureDate ORDER BY p.departureDate ASC", startDate, endDate, agent, destination, serviceType, revenueEgp.longValue()))
+                .profitOverTime(getChartData("SELECT p.departureDate, SUM(p.debitEgp) FROM ManifestPassenger p " + whereClause + " GROUP BY p.departureDate ORDER BY p.departureDate ASC", startDate, endDate, agent, destination, serviceType, netProfitEgp.longValue()))
                 .build();
 
         // 3. Flights

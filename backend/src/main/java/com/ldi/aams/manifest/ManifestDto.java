@@ -78,6 +78,7 @@ public class ManifestDto {
         private BigDecimal totalPrice;
         private String validationStatus;
         private String validationErrors;
+        private Instant createdAt;
     }
 
     @Data
