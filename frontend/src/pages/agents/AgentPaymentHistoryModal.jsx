@@ -7,6 +7,7 @@ export const AgentPaymentHistoryModal = ({ isOpen, onClose, agentGroup, payments
   const { t } = useTranslation();
   const [editingPayment, setEditingPayment] = useState(null);
   const [editAmount, setEditAmount] = useState('');
+  const [editPaymentType, setEditPaymentType] = useState('CREDIT');
   const [editDate, setEditDate] = useState('');
   const [editNote, setEditNote] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,6 +17,7 @@ export const AgentPaymentHistoryModal = ({ isOpen, onClose, agentGroup, payments
   const handleEditClick = (payment) => {
     setEditingPayment(payment.id);
     setEditAmount(payment.amount);
+    setEditPaymentType(payment.paymentType || 'CREDIT');
     // Format date for date input
     const dateStr = payment.paymentDate ? new Date(payment.paymentDate).toISOString().split('T')[0] : '';
     setEditDate(dateStr);
@@ -30,6 +32,7 @@ export const AgentPaymentHistoryModal = ({ isOpen, onClose, agentGroup, payments
     try {
       await updateAgentPayment(editingPayment, {
         amount: Number(editAmount),
+        paymentType: editPaymentType,
         paymentDate: editDate ? new Date(editDate).toISOString() : new Date().toISOString(),
         note: editNote
       });
@@ -57,8 +60,8 @@ export const AgentPaymentHistoryModal = ({ isOpen, onClose, agentGroup, payments
   };
 
   const agentPayments = payments.filter(p => p.agentNameRaw === agentGroup.agentName).sort((a, b) => {
-    const dateA = new Date(a.createdAt || a.paymentDate).getTime();
-    const dateB = new Date(b.createdAt || b.paymentDate).getTime();
+    const dateA = new Date(a.paymentDate).getTime();
+    const dateB = new Date(b.paymentDate).getTime();
     return dateA - dateB;
   });
 
@@ -107,6 +110,7 @@ export const AgentPaymentHistoryModal = ({ isOpen, onClose, agentGroup, payments
                     <thead className="bg-slate-50">
                       <tr>
                         <th className="px-4 py-3 text-start text-xs font-bold text-slate-500 uppercase">{t('agent.payment.date', 'Date')}</th>
+                        <th className="px-4 py-3 text-start text-xs font-bold text-slate-500 uppercase">{t('agent.payment.type', 'Type')}</th>
                         <th className="px-4 py-3 text-start text-xs font-bold text-slate-500 uppercase">{t('agent.payment.amount', 'Amount')}</th>
                         <th className="px-4 py-3 text-start text-xs font-bold text-slate-500 uppercase">{t('common.note', 'Note')}</th>
                         <th className="px-4 py-3 text-end text-xs font-bold text-slate-500 uppercase">{t('import.col.actions', 'Actions')}</th>
@@ -121,6 +125,13 @@ export const AgentPaymentHistoryModal = ({ isOpen, onClose, agentGroup, payments
                                 <div className="flex-1">
                                   <label className="block text-xs font-semibold text-slate-600 mb-1">{t('agent.payment.date', 'Date')}</label>
                                   <input type="date" required className="w-full rounded-lg border-slate-300 py-2 px-3 text-sm" value={editDate} onChange={e => setEditDate(e.target.value)} />
+                                </div>
+                                <div className="flex-1">
+                                  <label className="block text-xs font-semibold text-slate-600 mb-1">{t('agent.payment.type', 'Type')}</label>
+                                  <select required className="w-full rounded-lg border-slate-300 py-2 px-3 text-sm" value={editPaymentType} onChange={e => setEditPaymentType(e.target.value)}>
+                                    <option value="CREDIT">{t('agent.payment.credit', 'دائن')}</option>
+                                    <option value="DEBIT">{t('agent.payment.debit', 'مدين')}</option>
+                                  </select>
                                 </div>
                                 <div className="flex-1">
                                   <label className="block text-xs font-semibold text-slate-600 mb-1">{t('agent.payment.amount', 'Amount')}</label>
@@ -141,7 +152,14 @@ export const AgentPaymentHistoryModal = ({ isOpen, onClose, agentGroup, payments
                               <td className="whitespace-nowrap px-4 py-4 text-sm font-semibold text-slate-900">
                                 {new Date(payment.paymentDate).toLocaleDateString()}
                               </td>
-                              <td className="whitespace-nowrap px-4 py-4 text-sm font-bold text-emerald-600">
+                              <td className="whitespace-nowrap px-4 py-4 text-sm font-semibold">
+                                {payment.paymentType === 'DEBIT' ? (
+                                  <span className="text-orange-600 bg-orange-50 px-2 py-1 rounded-md text-xs border border-orange-200">{t('agent.payment.debit', 'مدين')}</span>
+                                ) : (
+                                  <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md text-xs border border-emerald-200">{t('agent.payment.credit', 'دائن')}</span>
+                                )}
+                              </td>
+                              <td className={`whitespace-nowrap px-4 py-4 text-sm font-bold ${payment.paymentType === 'DEBIT' ? 'text-orange-600' : 'text-emerald-600'}`}>
                                 {Number(payment.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-xs text-slate-500 font-medium ml-1">{payment.currency || 'EGP'}</span>
                               </td>
                               <td className="px-4 py-4 text-sm text-slate-600 max-w-xs truncate" title={payment.note}>

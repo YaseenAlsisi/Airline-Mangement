@@ -30,6 +30,9 @@ public class AgentPayment {
     @Column(name = "currency", length = 3)
     private String currency;
 
+    @Column(name = "payment_type", length = 20)
+    private String paymentType;
+
     @Column(name = "payment_date", nullable = false)
     private Instant paymentDate;
 

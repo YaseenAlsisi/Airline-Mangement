@@ -11,7 +11,11 @@ export const AgentPassengersModal = ({ agent, isOpen, onClose, onDataChanged }) 
 
   if (!isOpen || !agent) return null;
   
-  const passengers = agent.passengers || [];
+  const passengers = [...(agent.passengers || [])].sort((a, b) => {
+    const dateA = new Date(a.createdAt).getTime() || 0;
+    const dateB = new Date(b.createdAt).getTime() || 0;
+    return dateA - dateB;
+  });
 
   return (
     <div className="relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true">

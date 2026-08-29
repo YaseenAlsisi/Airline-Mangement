@@ -35,6 +35,7 @@ public class AgentPaymentService {
                 .agentNameRaw(request.getAgentNameRaw())
                 .amount(request.getAmount())
                 .currency(request.getCurrency())
+                .paymentType(request.getPaymentType() != null ? request.getPaymentType() : "CREDIT")
                 .paymentDate(request.getPaymentDate())
                 .note(request.getNote())
                 .build();
@@ -51,6 +52,9 @@ public class AgentPaymentService {
         payment.setAmount(request.getAmount());
         if (request.getCurrency() != null) {
             payment.setCurrency(request.getCurrency());
+        }
+        if (request.getPaymentType() != null) {
+            payment.setPaymentType(request.getPaymentType());
         }
         payment.setPaymentDate(request.getPaymentDate());
         payment.setNote(request.getNote());
@@ -72,6 +76,7 @@ public class AgentPaymentService {
                 .agentNameRaw(payment.getAgentNameRaw())
                 .amount(payment.getAmount())
                 .currency(payment.getCurrency())
+                .paymentType(payment.getPaymentType() != null ? payment.getPaymentType() : "CREDIT")
                 .paymentDate(payment.getPaymentDate())
                 .note(payment.getNote())
                 .createdAt(payment.getCreatedAt())

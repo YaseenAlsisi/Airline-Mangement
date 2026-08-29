@@ -19,6 +19,7 @@ public class AgentPaymentDto {
         private String agentNameRaw;
         private BigDecimal amount;
         private String currency;
+        private String paymentType;
         private Instant paymentDate;
         private String note;
         private Instant createdAt;
@@ -34,6 +35,7 @@ public class AgentPaymentDto {
         private BigDecimal amount;
 
         private String currency;
+        private String paymentType;
 
         @NotNull(message = "Payment date is required")
         private Instant paymentDate;
@@ -47,6 +49,7 @@ public class AgentPaymentDto {
         private BigDecimal amount;
 
         private String currency;
+        private String paymentType;
 
         @NotNull(message = "Payment date is required")
         private Instant paymentDate;

@@ -149,23 +149,26 @@ export const AgentDataPage = () => {
   
     // Pre-fill with explicit agents
     allExplicitAgents.forEach(agent => {
-      const agentName = agent.name;
-      if (agentName && !agentGroupsMap.has(agentName)) {
-        agentGroupsMap.set(agentName, {
-          id: agent.id,
-          fullAgentData: agent,
-          isDeleted: agent.status === 'DELETED',
-          agentName,
-          passengerCount: 0,
-          debitUsd: 0,
-          creditUsd: 0,
-          debitEgp: 0,
-          creditEgp: 0,
-          passengers: [],
-          payments: []
-        });
-      }
+    const existing = agentGroupsMap.get(agent.name);
+    // If an ACTIVE agent is already mapped, do not overwrite it with a DELETED one of the same name.
+    if (existing && !existing.isDeleted && agent.status === 'DELETED') {
+      return; 
+    }
+    
+    agentGroupsMap.set(agent.name, {
+      id: agent.id,
+      agentName: agent.name,
+      isDeleted: agent.status === 'DELETED',
+      passengerCount: 0,
+      debitUsd: 0,
+      creditUsd: 0,
+      debitEgp: 0,
+      creditEgp: 0,
+      passengers: [],
+      payments: [],
+      fullAgentData: agent
     });
+  });
 
   displayedPassengers.forEach(p => {
     const agentName = p.agentNameRaw || 'Unknown';
@@ -205,11 +208,14 @@ export const AgentDataPage = () => {
     if (agentGroupsMap.has(agentName)) {
       const group = agentGroupsMap.get(agentName);
       const currency = payment.currency || group.fullAgentData?.currency || 'EGP';
+      const isDebit = payment.paymentType === 'DEBIT';
       
       if (currency === 'USD') {
-        group.creditUsd += (Number(payment.amount) || 0);
+        if (isDebit) group.debitUsd += (Number(payment.amount) || 0);
+        else group.creditUsd += (Number(payment.amount) || 0);
       } else {
-        group.creditEgp += (Number(payment.amount) || 0);
+        if (isDebit) group.debitEgp += (Number(payment.amount) || 0);
+        else group.creditEgp += (Number(payment.amount) || 0);
       }
       
       if (!group.payments) group.payments = [];
@@ -219,6 +225,12 @@ export const AgentDataPage = () => {
 
   const agentGroups = Array.from(agentGroupsMap.values())
     .filter(a => {
+      // Completely hide deleted agents if their balance is zero in both currencies
+      const diffEgp = a.debitEgp - a.creditEgp;
+      const diffUsd = a.debitUsd - a.creditUsd;
+      if (a.isDeleted && diffEgp === 0 && diffUsd === 0) {
+        return false;
+      }
       if (searchTerm && !a.agentName.toLowerCase().includes(searchTerm.toLowerCase())) return false;
       if (selectedFilterName && a.agentName !== selectedFilterName) return false;
       return true;
@@ -230,8 +242,14 @@ export const AgentDataPage = () => {
   const paginatedAgents = agentGroups.slice(startIndex, startIndex + itemsPerPage);
 
   const totalAgentsCount = agentGroups.filter(g => g.passengerCount > 0 && !g.isDeleted).length;
-  const totalDebitEgpOverall = agentGroups.reduce((sum, g) => sum + g.debitEgp, 0);
-  const totalDebitUsdOverall = agentGroups.reduce((sum, g) => sum + g.debitUsd, 0);
+  const totalDebitEgpOverall = agentGroups.reduce((sum, g) => {
+    const bal = g.debitEgp - g.creditEgp;
+    return bal > 0 ? sum + bal : sum;
+  }, 0);
+  const totalDebitUsdOverall = agentGroups.reduce((sum, g) => {
+    const bal = g.debitUsd - g.creditUsd;
+    return bal > 0 ? sum + bal : sum;
+  }, 0);
 
   const handleViewDetails = (agentGroup) => {
     setViewingAgent(agentGroup);

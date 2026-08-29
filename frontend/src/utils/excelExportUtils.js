@@ -58,7 +58,7 @@ export const exportAgentsToExcel = async (agentGroups) => {
     const timeline = [];
 
     if (agent.passengers && agent.passengers.length > 0) {
-      agent.passengers.forEach(p => timeline.push({ type: 'passenger', date: p.createdAt || p.departureDate || '', data: p }));
+      agent.passengers.forEach(p => timeline.push({ type: 'passenger', date: p.createdAt || '', data: p }));
     }
 
     if (agent.payments && agent.payments.length > 0) {
@@ -104,17 +104,25 @@ export const exportAgentsToExcel = async (agentGroups) => {
         const payment = item.data;
         const amt = Number(payment.amount || 0);
         const isUsd = payment.currency === 'USD';
+        const isDebit = payment.paymentType === 'DEBIT';
 
         let desc = payment.note || '';
         if (!desc.includes('تسليم') && !desc.includes('إيداع') && !desc.includes('تاريخ')) {
           const dateStr = payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString('en-GB') : '';
-          desc = desc ? `تسليم نقدية بتاريخ ${dateStr} - ${desc}` : `تسليم نقدية بتاريخ ${dateStr}`;
+          desc = desc ? `تسوية/عملية نقدية بتاريخ ${dateStr} - ${desc}` : `تسوية/عملية نقدية بتاريخ ${dateStr}`;
+        }
+        if (isDebit && !desc.includes('مدين')) {
+          desc = `(مدين) ${desc}`;
+        } else if (!isDebit && !desc.includes('دائن') && !desc.includes('تسليم')) {
+          desc = `(دائن) ${desc}`;
         }
 
         const row = worksheet.addRow({
           name: desc,
-          creditUsd: isUsd ? amt : '',
-          creditEgp: !isUsd ? amt : ''
+          debitUsd: (isUsd && isDebit) ? amt : '',
+          creditUsd: (isUsd && !isDebit) ? amt : '',
+          debitEgp: (!isUsd && isDebit) ? amt : '',
+          creditEgp: (!isUsd && !isDebit) ? amt : ''
         });
 
         // 16 columns total (A to P). We merge A to L (1 to 12), leaving M to P for amounts.

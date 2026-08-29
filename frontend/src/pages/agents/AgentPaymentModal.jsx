@@ -12,6 +12,7 @@ export const AgentPaymentModal = ({ agentGroup, isOpen, onClose, onPaymentApplie
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [currency, setCurrency] = useState('EGP');
+  const [paymentType, setPaymentType] = useState('CREDIT');
 
   React.useEffect(() => {
     if (agentGroup?.fullAgentData?.currency) {
@@ -40,6 +41,7 @@ export const AgentPaymentModal = ({ agentGroup, isOpen, onClose, onPaymentApplie
         agentNameRaw: agentGroup.agentName,
         amount: paymentAmount,
         currency: currency,
+        paymentType: paymentType,
         paymentDate: paymentDate ? new Date(paymentDate).toISOString() : new Date().toISOString(),
         note: note
       };
@@ -112,10 +114,19 @@ export const AgentPaymentModal = ({ agentGroup, isOpen, onClose, onPaymentApplie
                     </label>
                     <div className="relative mt-2 flex rounded-xl shadow-sm">
                       <select
+                        name="paymentType"
+                        value={paymentType}
+                        onChange={(e) => setPaymentType(e.target.value)}
+                        className="rounded-l-xl border-0 py-3 pl-3 pr-8 text-slate-900 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-emerald-600 sm:text-sm font-bold bg-slate-50 border-r border-slate-300"
+                      >
+                        <option value="CREDIT">{t('agent.payment.credit', 'دائن (الدفع للشركة)')}</option>
+                        <option value="DEBIT">{t('agent.payment.debit', 'مدين (مستحقات للشركة)')}</option>
+                      </select>
+                      <select
                         name="currency"
                         value={currency}
                         onChange={(e) => setCurrency(e.target.value)}
-                        className="rounded-l-xl border-0 py-3 pl-3 pr-8 text-slate-900 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-emerald-600 sm:text-sm font-bold bg-slate-50"
+                        className="border-0 py-3 pl-3 pr-8 text-slate-900 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-emerald-600 sm:text-sm font-bold bg-slate-50"
                       >
                         <option value="EGP">EGP</option>
                         <option value="USD">USD</option>

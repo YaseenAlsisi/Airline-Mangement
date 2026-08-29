@@ -9,6 +9,7 @@ import com.ldi.aams.common.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ public class AgentService {
     private final AgentMapper agentMapper;
     private final ManifestPassengerRepository passengerRepository;
     private final com.ldi.aams.agent.internal.balance.AgentTransactionRepository transactionRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     @Transactional(readOnly = true)
     public Page<AgentDto.AgentResponse> getAllAgents(Pageable pageable) {
@@ -61,6 +63,7 @@ public class AgentService {
         Agent agent = agentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Agent", "id", id));
 
+        String oldName = agent.getName();
         agent.setName(request.getName());
         agent.setEmail(request.getEmail());
         agent.setPhone(request.getPhone());
@@ -76,6 +79,11 @@ public class AgentService {
             agent.setCurrency(request.getCurrency());
         }
 
+        if (oldName != null && request.getName() != null && !oldName.equals(request.getName())) {
+            jdbcTemplate.update("UPDATE manifest_passengers SET agent_name_raw = ? WHERE agent_name_raw = ?", request.getName(), oldName);
+            jdbcTemplate.update("UPDATE agent_payments SET agent_name_raw = ? WHERE agent_name_raw = ?", request.getName(), oldName);
+        }
+
         return agentMapper.toResponse(agentRepository.save(agent));
     }
 
@@ -84,8 +92,20 @@ public class AgentService {
         Agent agent = agentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Agent", "id", id));
         
-        agent.setStatus("DELETED");
-        agentRepository.save(agent);
+        String agentName = agent.getName();
+        Integer passengerCount = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM manifest_passengers WHERE agent_name_raw = ?", 
+            Integer.class, agentName);
+        Integer paymentCount = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM agent_payments WHERE agent_name_raw = ?", 
+            Integer.class, agentName);
+            
+        if ((passengerCount == null || passengerCount == 0) && (paymentCount == null || paymentCount == 0)) {
+            agentRepository.delete(agent);
+        } else {
+            agent.setStatus("DELETED");
+            agentRepository.save(agent);
+        }
     }
 
     @Transactional(readOnly = true)
