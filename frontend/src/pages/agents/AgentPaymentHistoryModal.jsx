@@ -105,7 +105,7 @@ export const AgentPaymentHistoryModal = ({ isOpen, onClose, agentGroup, payments
                   <p className="mt-1 text-sm text-slate-500">{t('agent.noPaymentsDesc', 'This agent has no recorded payments yet.')}</p>
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
                   <table className="min-w-full divide-y divide-slate-200">
                     <thead className="bg-slate-50">
                       <tr>
@@ -120,7 +120,7 @@ export const AgentPaymentHistoryModal = ({ isOpen, onClose, agentGroup, payments
                       {agentPayments.map(payment => (
                         <tr key={payment.id} className="hover:bg-slate-50 transition-colors">
                           {editingPayment === payment.id ? (
-                            <td colSpan="4" className="p-4 bg-indigo-50/50">
+                            <td colSpan="5" className="p-4 bg-indigo-50/50">
                               <form onSubmit={handleSaveEdit} className="flex flex-wrap md:flex-nowrap items-end gap-3">
                                 <div className="flex-1">
                                   <label className="block text-xs font-semibold text-slate-600 mb-1">{t('agent.payment.date', 'Date')}</label>

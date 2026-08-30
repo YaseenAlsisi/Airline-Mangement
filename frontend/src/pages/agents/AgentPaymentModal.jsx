@@ -112,12 +112,12 @@ export const AgentPaymentModal = ({ agentGroup, isOpen, onClose, onPaymentApplie
                     <label htmlFor="amount" className="block text-sm font-semibold text-slate-700">
                       {t('agent.payment.amount', 'Amount')}
                     </label>
-                    <div className="relative mt-2 flex rounded-xl shadow-sm">
+                    <div className="relative mt-2 flex flex-col sm:flex-row gap-3 sm:gap-0 sm:rounded-xl sm:shadow-sm">
                       <select
                         name="paymentType"
                         value={paymentType}
                         onChange={(e) => setPaymentType(e.target.value)}
-                        className="rounded-l-xl border-0 py-3 pl-3 pr-8 text-slate-900 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-emerald-600 sm:text-sm font-bold bg-slate-50 border-r border-slate-300"
+                        className="w-full sm:w-auto rounded-xl sm:rounded-none sm:rounded-l-xl border-0 py-3 pl-3 pr-8 text-slate-900 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-emerald-600 sm:text-sm font-bold bg-slate-50 sm:border-r border-slate-300 shadow-sm sm:shadow-none"
                       >
                         <option value="CREDIT">{t('agent.payment.credit', 'دائن (الدفع للشركة)')}</option>
                         <option value="DEBIT">{t('agent.payment.debit', 'مدين (مستحقات للشركة)')}</option>
@@ -126,7 +126,7 @@ export const AgentPaymentModal = ({ agentGroup, isOpen, onClose, onPaymentApplie
                         name="currency"
                         value={currency}
                         onChange={(e) => setCurrency(e.target.value)}
-                        className="border-0 py-3 pl-3 pr-8 text-slate-900 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-emerald-600 sm:text-sm font-bold bg-slate-50"
+                        className="w-full sm:w-auto rounded-xl sm:rounded-none border-0 py-3 pl-3 pr-8 text-slate-900 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-emerald-600 sm:text-sm font-bold bg-slate-50 shadow-sm sm:shadow-none"
                       >
                         <option value="EGP">EGP</option>
                         <option value="USD">USD</option>
@@ -138,7 +138,7 @@ export const AgentPaymentModal = ({ agentGroup, isOpen, onClose, onPaymentApplie
                         required
                         min="1"
                         step="0.01"
-                        className="block w-full rounded-r-xl border-0 py-3 px-4 text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:text-sm sm:leading-6 font-bold"
+                        className="block w-full flex-1 rounded-xl sm:rounded-none sm:rounded-r-xl border-0 py-3 px-4 text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:text-sm sm:leading-6 font-bold shadow-sm sm:shadow-none"
                         placeholder="0.00"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}

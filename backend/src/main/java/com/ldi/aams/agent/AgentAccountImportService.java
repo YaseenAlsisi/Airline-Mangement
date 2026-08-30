@@ -72,12 +72,25 @@ public class AgentAccountImportService {
                 Agent agent = matchOrCreateAgent(sheetName, batch.getId());
                 boolean hasData = false;
                 List<AgentTransaction> batchTransactions = new ArrayList<>();
+                
+                Row headerRow = sheet.getRow(0);
+                int idxDUsd = 16, idxCUsd = 17, idxDEgp = 18, idxCEgp = 19;
+                if (headerRow != null) {
+                    for (int c = 0; c < Math.max(25, headerRow.getLastCellNum()); c++) {
+                        String h = getStringValue(headerRow, c);
+                        if (h == null) continue;
+                        if (h.contains("مدين دولار")) idxDUsd = c;
+                        else if (h.contains("دائن دولار")) idxCUsd = c;
+                        else if (h.contains("مدين مصري") || h.contains("مدين جنيه")) idxDEgp = c;
+                        else if (h.contains("دائن مصري") || h.contains("دائن جنيه")) idxCEgp = c;
+                    }
+                }
 
                 for (int r = 1; r <= sheet.getLastRowNum(); r++) { // skip header at r=0
                     Row row = sheet.getRow(r);
                     if (row == null) continue;
 
-                    String transactionType = classifyRow(row);
+                    String transactionType = classifyRow(row, idxDUsd, idxCUsd, idxDEgp, idxCEgp);
                     if (transactionType.equals("EMPTY") || transactionType.equals("SUMMARY") || transactionType.equals("SECTION_HEADER") || transactionType.equals("UNKNOWN")) {
                         continue;
                     }
@@ -91,7 +104,7 @@ public class AgentAccountImportService {
                             .rawColumnA(getStringValue(row, 0))
                             .build();
 
-                    populateTransaction(transaction, row, transactionType);
+                    populateTransaction(transaction, row, transactionType, idxDUsd, idxCUsd, idxDEgp, idxCEgp);
 
                     batchTransactions.add(transaction);
                     hasData = true;
@@ -187,7 +200,7 @@ public class AgentAccountImportService {
         return agentRepository.save(newAgent);
     }
 
-    private String classifyRow(Row row) {
+    private String classifyRow(Row row, int idxDUsd, int idxCUsd, int idxDEgp, int idxCEgp) {
         String colA = getStringValue(row, 0);
         
         if (isRowEmpty(row)) return "EMPTY";
@@ -195,14 +208,25 @@ public class AgentAccountImportService {
         if (colA != null && colA.contains("ما قبله")) return "OPENING_BALANCE";
         
         String colI = getStringValue(row, 8);
-        if (colI != null && (colI.contains("اجمالي المديونيه") || colI.contains("الرئيسيه"))) {
+        if ((colI != null && (colI.contains("اجمالي المديونيه") || colI.contains("الرئيسيه"))) ||
+            (colA != null && (colA.contains("اجمالي المديونيه") || colA.contains("الرئيسيه")))) {
             return "SUMMARY";
         }
         
         boolean hasTravelData = hasAnyValue(row, 1, 15);
-        boolean hasFinancials = hasAnyFinancialValue(row, 16, 19);
+        boolean hasFinancials = false;
+        int[] finIndices = {idxDUsd, idxCUsd, idxDEgp, idxCEgp};
+        for (int idx : finIndices) {
+            if (idx >= 0) {
+                BigDecimal val = getNumericValue(row, idx);
+                if (val.compareTo(BigDecimal.ZERO) != 0) {
+                    hasFinancials = true;
+                    break;
+                }
+            }
+        }
         
-        if (colA != null && !colA.isEmpty() && !hasTravelData && hasFinancials) {
+        if (!hasTravelData && hasFinancials) {
             return "PAYMENT";
         }
         if (colA != null && !colA.isEmpty() && !hasTravelData && !hasFinancials) {
@@ -220,11 +244,11 @@ public class AgentAccountImportService {
         return val.length() > maxLen ? val.substring(0, maxLen) : val;
     }
 
-    private void populateTransaction(AgentTransaction txn, Row row, String type) {
-        txn.setDebitUsd(getNumericValue(row, 16));
-        txn.setCreditUsd(getNumericValue(row, 17));
-        txn.setDebitEgp(getNumericValue(row, 18));
-        txn.setCreditEgp(getNumericValue(row, 19));
+    private void populateTransaction(AgentTransaction txn, Row row, String type, int idxDUsd, int idxCUsd, int idxDEgp, int idxCEgp) {
+        txn.setDebitUsd(getNumericValue(row, idxDUsd));
+        txn.setCreditUsd(getNumericValue(row, idxCUsd));
+        txn.setDebitEgp(getNumericValue(row, idxDEgp));
+        txn.setCreditEgp(getNumericValue(row, idxCEgp));
 
         if (type.equals("PASSENGER")) {
             txn.setPassengerName(truncate(getStringValue(row, 0), 255));

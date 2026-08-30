@@ -222,23 +222,8 @@ public class ManifestImportService {
                     passenger.setAgent(agent);
                 }
 
-                // Validation
+                // Validation relaxed as per user request
                 List<String> errors = new ArrayList<>();
-                if (passenger.getPassengerName() == null || passenger.getPassengerName().isEmpty()) {
-                    errors.add("Passenger name is required");
-                }
-                if (passenger.getPassportNumber() == null || passenger.getPassportNumber().isEmpty()) {
-                    errors.add("Passport number is required");
-                }
-                if (passenger.getAgentNameRaw() == null || passenger.getAgentNameRaw().isEmpty()) {
-                    errors.add("Agent name is required");
-                }
-                if (passenger.getDepartureDate() == null) {
-                    errors.add("Departure date is required");
-                }
-                if (isDuplicate) {
-                    errors.add("مسافر مكرر (Duplicate)");
-                }
 
                 if (errors.isEmpty()) {
                     passenger.setValidationStatus("VALID");
@@ -643,20 +628,8 @@ public class ManifestImportService {
             passenger.setAgent(null);
         }
 
-        // Re-validate
+        // Re-validate relaxed as per user request
         List<String> errors = new ArrayList<>();
-        if (passenger.getPassengerName() == null || passenger.getPassengerName().isEmpty()) {
-            errors.add("Passenger name is required");
-        }
-        if (passenger.getPassportNumber() == null || passenger.getPassportNumber().isEmpty()) {
-            errors.add("Passport number is required");
-        }
-        if (passenger.getAgentNameRaw() == null || passenger.getAgentNameRaw().isEmpty()) {
-            errors.add("Agent name is required");
-        }
-        if (passenger.getDepartureDate() == null) {
-            errors.add("Departure date is required");
-        }
 
         String oldStatus = passenger.getValidationStatus();
         if (errors.isEmpty()) {
@@ -725,19 +698,8 @@ public class ManifestImportService {
             passenger.setAgent(agent);
         }
 
+        // Validation relaxed as per user request
         List<String> errors = new ArrayList<>();
-        if (passenger.getPassengerName() == null || passenger.getPassengerName().isEmpty()) {
-            errors.add("Passenger name is required");
-        }
-        if (passenger.getPassportNumber() == null || passenger.getPassportNumber().isEmpty()) {
-            errors.add("Passport number is required");
-        }
-        if (passenger.getAgentNameRaw() == null || passenger.getAgentNameRaw().isEmpty()) {
-            errors.add("Agent name is required");
-        }
-        if (passenger.getDepartureDate() == null) {
-            errors.add("Departure date is required");
-        }
 
         if (errors.isEmpty()) {
             passenger.setValidationStatus("VALID");
