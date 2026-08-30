@@ -688,7 +688,7 @@ export const AgentDataPage = () => {
                       <th className="px-6 py-4 text-start text-sm font-semibold text-slate-900">{t('agent.credit', 'Credit')}</th>
                       <th className="px-6 py-4 text-start text-sm font-semibold text-slate-900">{t('agent.summary', 'Summary')}</th>
                       <th className="px-6 py-4 text-start text-sm font-semibold text-slate-900">{t('dashboard.kpi.totalPassengers', 'Passengers')}</th>
-                      <th className="px-6 py-4 text-end text-sm font-semibold text-slate-900">{t('import.col.actions', 'Actions')}</th>
+                      <th className="px-6 py-4 text-end text-sm font-semibold text-slate-900 sticky right-0 bg-slate-50 z-10 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">{t('import.col.actions', 'Actions')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white">
@@ -702,7 +702,7 @@ export const AgentDataPage = () => {
                       const hasUsd = agentGroup.debitUsd > 0 || agentGroup.creditUsd > 0;
 
                       return (
-                        <tr key={idx} className={`hover:bg-slate-50 transition-colors ${agentGroup.isDeleted ? 'opacity-75' : ''}`}>
+                        <tr key={idx} className={`hover:bg-slate-50 transition-colors group ${agentGroup.isDeleted ? 'opacity-75' : ''}`}>
                           <td className="whitespace-nowrap px-6 py-4 text-sm font-bold text-slate-900">
                             {agentGroup.agentName}
                             {agentGroup.isDeleted && (
@@ -741,7 +741,7 @@ export const AgentDataPage = () => {
                             </div>
                           </td>
                           <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-600">{agentGroup.passengerCount}</td>
-                          <td className="whitespace-nowrap px-6 py-4 text-end text-sm font-medium">
+                          <td className="whitespace-nowrap px-6 py-4 text-end text-sm font-medium sticky right-0 bg-white group-hover:bg-slate-50 z-10 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">
                             <div className="flex items-center justify-end gap-2">
                               <button 
                                 onClick={() => handleViewDetails(agentGroup)}

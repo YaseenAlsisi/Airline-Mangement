@@ -113,12 +113,12 @@ export const AgentPaymentHistoryModal = ({ isOpen, onClose, agentGroup, payments
                         <th className="px-4 py-3 text-start text-xs font-bold text-slate-500 uppercase">{t('agent.payment.type', 'Type')}</th>
                         <th className="px-4 py-3 text-start text-xs font-bold text-slate-500 uppercase">{t('agent.payment.amount', 'Amount')}</th>
                         <th className="px-4 py-3 text-start text-xs font-bold text-slate-500 uppercase">{t('common.note', 'Note')}</th>
-                        <th className="px-4 py-3 text-end text-xs font-bold text-slate-500 uppercase">{t('import.col.actions', 'Actions')}</th>
+                        <th className="px-4 py-3 text-end text-xs font-bold text-slate-500 uppercase sticky right-0 bg-slate-50 z-10 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">{t('import.col.actions', 'Actions')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
                       {agentPayments.map(payment => (
-                        <tr key={payment.id} className="hover:bg-slate-50 transition-colors">
+                        <tr key={payment.id} className="hover:bg-slate-50 transition-colors group">
                           {editingPayment === payment.id ? (
                             <td colSpan="5" className="p-4 bg-indigo-50/50">
                               <form onSubmit={handleSaveEdit} className="flex flex-wrap md:flex-nowrap items-end gap-3">
@@ -165,7 +165,7 @@ export const AgentPaymentHistoryModal = ({ isOpen, onClose, agentGroup, payments
                               <td className="px-4 py-4 text-sm text-slate-600 max-w-xs truncate" title={payment.note}>
                                 {payment.note || '-'}
                               </td>
-                              <td className="whitespace-nowrap px-4 py-4 text-end text-sm font-medium">
+                              <td className="whitespace-nowrap px-4 py-4 text-end text-sm font-medium sticky right-0 bg-white group-hover:bg-slate-50 z-10 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">
                                 <div className="flex items-center justify-end gap-2">
                                   <button onClick={() => handleEditClick(payment)} className="p-1.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors">
                                     <PencilIcon className="w-4 h-4" />
