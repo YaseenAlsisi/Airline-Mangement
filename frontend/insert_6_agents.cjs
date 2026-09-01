@@ -135,9 +135,9 @@ async function run() {
 
             const header = data[0];
             const idxDUsd = Math.max(header.indexOf('مدين دولار '), 16);
-            const idxCUsd = Math.max(header.indexOf('دائن دولار'), 17);
-            const idxDEgp = Math.max(header.indexOf('مدين مصري'), 18);
-            const idxCEgp = Math.max(header.indexOf('دائن مصري'), 19);
+            const idxCUsd = Math.max(header.indexOf('دائن دولار '), 17);
+            const idxDEgp = Math.max(header.indexOf('مدين جنيه '), 18);
+            const idxCEgp = Math.max(header.indexOf('دائن جنيه'), 19);
 
             for (let r = 1; r < data.length; r++) {
                 const row = data[r];
@@ -150,8 +150,7 @@ async function run() {
                 const creditUsd = Number(String(row[idxCUsd] || '').replace(/[^\d.-]/g, '')) || 0;
                 const debitEgp = Number(String(row[idxDEgp] || '').replace(/[^\d.-]/g, '')) || 0;
                 const creditEgp = Number(String(row[idxCEgp] || '').replace(/[^\d.-]/g, '')) || 0;
-                const balanceUsd = debitUsd - creditUsd;
-                const balanceEgp = debitEgp - creditEgp;
+                const balance = debitEgp - creditEgp; // simplistic for now
 
                 if (type === 'PASSENGER') {
                     let passengerName = truncate(row[0], 255);
@@ -169,6 +168,7 @@ async function run() {
                     let note2 = truncate(row[13], 1000);
                     let note3 = truncate(row[14], 1000);
 
+                    // fallback if passenger name is somehow empty
                     if (!passengerName) passengerName = 'بدون اسم';
 
                     await pool.query(`
@@ -190,28 +190,14 @@ async function run() {
                     let date = parseDate(row[7]) || new Date().toISOString().split('T')[0];
                     let note = rawColA || (type === 'OPENING_BALANCE' ? 'رصيد ما قبله' : 'دفعة/تسوية');
                     
-                    if (balanceUsd !== 0) {
-                        const paymentType = balanceUsd > 0 ? 'DEBIT' : 'CREDIT';
-                        await pool.query(`
-                            INSERT INTO agent_payments (
-                                id, agent_name_raw, amount, currency, payment_type, payment_date, note, created_at, updated_at
-                            ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-                        `, [
-                            uuidv4(), sheetName, Math.abs(balanceUsd), 'USD', paymentType, date, note
-                        ]);
-                        totalPayments++;
-                    }
-                    if (balanceEgp !== 0) {
-                        const paymentType = balanceEgp > 0 ? 'DEBIT' : 'CREDIT';
-                        await pool.query(`
-                            INSERT INTO agent_payments (
-                                id, agent_name_raw, amount, currency, payment_type, payment_date, note, created_at, updated_at
-                            ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-                        `, [
-                            uuidv4(), sheetName, Math.abs(balanceEgp), 'EGP', paymentType, date, note
-                        ]);
-                        totalPayments++;
-                    }
+                    await pool.query(`
+                        INSERT INTO agent_payments (
+                            id, agent_name_raw, amount, currency, payment_date, note, created_at, updated_at
+                        ) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+                    `, [
+                        uuidv4(), sheetName, Math.abs(balance), 'EGP', date, note
+                    ]);
+                    totalPayments++;
                 }
             }
         }

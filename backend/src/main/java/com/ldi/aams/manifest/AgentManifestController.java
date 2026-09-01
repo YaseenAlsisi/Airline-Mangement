@@ -26,29 +26,7 @@ public class AgentManifestController {
     @GetMapping("/manifest-summary")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Map<String, Object>>> getManifestSummary() {
-        List<ManifestPassenger> allPublished = passengerRepository.findAll().stream()
-                .filter(p -> "PUBLISHED".equals(p.getBatch().getStatus()))
-                .filter(p -> "VALID".equals(p.getValidationStatus()))
-                .collect(Collectors.toList());
-
-        List<Map<String, Object>> summary = allPublished.stream()
-                .filter(p -> p.getAgent() != null)
-                .collect(Collectors.groupingBy(p -> p.getAgent().getId()))
-                .entrySet().stream()
-                .map(entry -> {
-                    UUID agentId = entry.getKey();
-                    List<ManifestPassenger> passengers = entry.getValue();
-                    String agentName = passengers.get(0).getAgent().getName();
-                    long count = passengers.size();
-                    Map<String, Object> row = new HashMap<>();
-                    row.put("agentId", agentId);
-                    row.put("agentName", agentName);
-                    row.put("passengerCount", count);
-                    return row;
-                })
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(summary);
+        return ResponseEntity.ok(passengerRepository.getManifestSummary());
     }
 
     @GetMapping("/{agentId}/manifest-passengers")
@@ -56,50 +34,15 @@ public class AgentManifestController {
     public ResponseEntity<Page<ManifestDto.PassengerRowResponse>> getAgentPassengers(
             @PathVariable UUID agentId,
             Pageable pageable) {
-        List<ManifestPassenger> allForAgent = passengerRepository.findAll().stream()
-                .filter(p -> p.getAgent() != null && p.getAgent().getId().equals(agentId))
-                .filter(p -> "PUBLISHED".equals(p.getBatch().getStatus()))
-                .filter(p -> "VALID".equals(p.getValidationStatus()))
-                .collect(Collectors.toList());
-
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), allForAgent.size());
-        List<ManifestPassenger> pageContent = allForAgent.subList(start, end);
-
-        Page<ManifestDto.PassengerRowResponse> page = new PageImpl<>(
-                pageContent.stream().map(mapper::toPassengerRowResponse).collect(Collectors.toList()),
-                pageable,
-                allForAgent.size()
-        );
-
-        return ResponseEntity.ok(page);
+        Page<ManifestPassenger> page = passengerRepository.findPublishedAndValidByAgentId(agentId, pageable);
+        return ResponseEntity.ok(page.map(mapper::toPassengerRowResponse));
     }
 
     @GetMapping("/all-manifest-passengers")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<ManifestDto.PassengerRowResponse>> getAllPassengers(Pageable pageable) {
-        List<ManifestPassenger> allPublished = passengerRepository.findAll().stream()
-                .filter(p -> "PUBLISHED".equals(p.getBatch().getStatus()))
-                .filter(p -> "VALID".equals(p.getValidationStatus()))
-                .collect(Collectors.toList());
-
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), allPublished.size());
-        
-        List<ManifestPassenger> pageContent;
-        if (start > allPublished.size()) {
-            pageContent = Collections.emptyList();
-        } else {
-            pageContent = allPublished.subList(start, end);
-        }
-
-        Page<ManifestDto.PassengerRowResponse> page = new PageImpl<>(
-                pageContent.stream().map(mapper::toPassengerRowResponse).collect(Collectors.toList()),
-                pageable,
-                allPublished.size()
-        );
-
-        return ResponseEntity.ok(page);
+        Page<ManifestPassenger> page = passengerRepository.findAllPublishedAndValid(pageable);
+        return ResponseEntity.ok(page.map(mapper::toPassengerRowResponse));
     }
 
     @PostMapping("/{agentId}/manifest-passengers")

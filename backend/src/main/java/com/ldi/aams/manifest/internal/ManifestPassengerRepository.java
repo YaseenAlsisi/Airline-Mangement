@@ -27,4 +27,17 @@ public interface ManifestPassengerRepository extends JpaRepository<ManifestPasse
     List<ManifestPassenger> findByPassengerName(String passengerName);
     List<ManifestPassenger> findByPassportNumberIn(java.util.Collection<String> passportNumbers);
     List<ManifestPassenger> findByPassengerNameIn(java.util.Collection<String> passengerNames);
+
+    @Query(value = "SELECT p FROM ManifestPassenger p LEFT JOIN FETCH p.agent LEFT JOIN FETCH p.batch WHERE p.agent.id = :agentId AND p.batch.status = 'PUBLISHED' AND p.validationStatus = 'VALID'",
+           countQuery = "SELECT COUNT(p) FROM ManifestPassenger p WHERE p.agent.id = :agentId AND p.batch.status = 'PUBLISHED' AND p.validationStatus = 'VALID'")
+    Page<ManifestPassenger> findPublishedAndValidByAgentId(@Param("agentId") UUID agentId, Pageable pageable);
+
+    @Query(value = "SELECT p FROM ManifestPassenger p LEFT JOIN FETCH p.agent LEFT JOIN FETCH p.batch WHERE p.batch.status = 'PUBLISHED' AND p.validationStatus = 'VALID'",
+           countQuery = "SELECT COUNT(p) FROM ManifestPassenger p WHERE p.batch.status = 'PUBLISHED' AND p.validationStatus = 'VALID'")
+    Page<ManifestPassenger> findAllPublishedAndValid(Pageable pageable);
+
+    @Query("SELECT new map(p.agent.id as agentId, p.agent.name as agentName, COUNT(p.id) as passengerCount) " +
+           "FROM ManifestPassenger p WHERE p.agent IS NOT NULL AND p.batch.status = 'PUBLISHED' AND p.validationStatus = 'VALID' " +
+           "GROUP BY p.agent.id, p.agent.name")
+    List<java.util.Map<String, Object>> getManifestSummary();
 }
