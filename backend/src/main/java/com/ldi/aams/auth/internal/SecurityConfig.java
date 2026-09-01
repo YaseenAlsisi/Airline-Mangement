@@ -36,16 +36,17 @@ public class SecurityConfig {
                                 org.springframework.http.HttpStatus.UNAUTHORIZED
                         )
                 ))
-                .authorizeHttpRequests(req ->
-                        req.requestMatchers(
-                                "/api/v1/auth/login",
-                                "/api/v1/auth/refresh",
-                                "/error"
-                        )
-                        .permitAll()
-                        .anyRequest()
-                        .authenticated()
-                )
+            .authorizeHttpRequests(req ->
+        req.requestMatchers(
+                "/api/v1/auth/login",
+                "/api/v1/auth/refresh",
+                "/actuator/health",
+                "/error"
+        )
+        .permitAll()
+        .anyRequest()
+        .authenticated()
+)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
