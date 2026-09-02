@@ -12,4 +12,8 @@ ENV VITE_API_URL=$VITE_API_URL
 
 RUN npm run build
 
-RUN mkdir -p /output && cp -r dist/. /output/
+FROM alpine:3.20
+
+COPY --from=builder /app/dist /dist
+
+CMD ["sh", "-c", "rm -rf /output/* && cp -r /dist/. /output/"]

@@ -27,7 +27,7 @@ services:
           cpus: "0.8"
           memory: 1200M
 
-frontend:
+  frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
