@@ -11,8 +11,11 @@ services:
     ports:
       - "127.0.0.1:8081:8081"
 
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
     environment:
-      SPRING_DATASOURCE_URL: "jdbc:postgresql://localhost:5432/airline_db?channel_binding=require"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://host.docker.internal:5432/airline_db"
       SPRING_DATASOURCE_USERNAME: "airline_user"
       SPRING_DATASOURCE_PASSWORD: "airsys8808"
 
