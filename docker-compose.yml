@@ -27,3 +27,12 @@ services:
           cpus: "0.8"
           memory: 1200M
 
+frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: "https://airosys.duckdns.org/api/v1"
+
+    volumes:
+      - ./frontend/dist:/output
