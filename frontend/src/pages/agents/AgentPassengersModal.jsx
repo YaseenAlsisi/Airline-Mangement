@@ -99,7 +99,7 @@ export const AgentPassengersModal = ({ agent, isOpen, onClose, onDataChanged }) 
                                       onClick={async () => {
                                         if (window.confirm(t('common.confirmDelete', 'Are you sure you want to delete this?'))) {
                                           await deletePublishedPassenger(p.id);
-                                          if (onDataChanged) onDataChanged();
+                                          if (onDataChanged) onDataChanged('DELETE', p.id);
                                         }
                                       }}
                                       className="text-red-600 hover:text-red-900 font-medium"
@@ -132,11 +132,12 @@ export const AgentPassengersModal = ({ agent, isOpen, onClose, onDataChanged }) 
         }}
         onSave={async (data) => {
           if (editingPassenger && editingPassenger.id) {
-            await updatePublishedPassenger(editingPassenger.id, data);
+            const res = await updatePublishedPassenger(editingPassenger.id, data);
+            if (onDataChanged) onDataChanged('UPDATE', res.data || res.content || res);
           } else {
-            await addPublishedPassenger(agent.id, data);
+            const res = await addPublishedPassenger(agent.id, data);
+            if (onDataChanged) onDataChanged('ADD', res.data || res.content || res);
           }
-          if (onDataChanged) onDataChanged();
         }}
       />
     </div>

@@ -30,14 +30,14 @@ export const AgentPaymentHistoryModal = ({ isOpen, onClose, agentGroup, payments
     
     setLoading(true);
     try {
-      await updateAgentPayment(editingPayment, {
+      const res = await updateAgentPayment(editingPayment, {
         amount: Number(editAmount),
         paymentType: editPaymentType,
         paymentDate: editDate ? new Date(editDate).toISOString() : new Date().toISOString(),
         note: editNote
       });
       setEditingPayment(null);
-      onPaymentsChanged(); // Refresh data
+      onPaymentsChanged('UPDATE', res.data || res.content || res);
     } catch (error) {
       console.error('Error updating payment', error);
     } finally {
@@ -51,7 +51,7 @@ export const AgentPaymentHistoryModal = ({ isOpen, onClose, agentGroup, payments
     setLoading(true);
     try {
       await deleteAgentPayment(id);
-      onPaymentsChanged();
+      onPaymentsChanged('DELETE', id);
     } catch (error) {
       console.error('Error deleting payment', error);
     } finally {

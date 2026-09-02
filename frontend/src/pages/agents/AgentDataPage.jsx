@@ -266,11 +266,19 @@ export const AgentDataPage = () => {
     setIsPaymentModalOpen(true);
   };
 
-  const handlePaymentApplied = async () => {
+  const handlePaymentApplied = async (action, payload) => {
     try {
-      const res = await getAllAgentPayments();
-      const payments = res.content || res.data || res || [];
-      setAllAgentPayments(Array.isArray(payments) ? payments : []);
+      if (action === 'ADD' && payload) {
+        setAllAgentPayments(prev => [...prev, payload]);
+      } else if (action === 'DELETE' && payload) {
+        setAllAgentPayments(prev => prev.filter(p => p.id !== payload));
+      } else if (action === 'UPDATE' && payload) {
+        setAllAgentPayments(prev => prev.map(p => p.id === payload.id ? payload : p));
+      } else {
+        const res = await getAllAgentPayments();
+        const payments = res.content || res.data || res || [];
+        setAllAgentPayments(Array.isArray(payments) ? payments : []);
+      }
     } catch (e) {
       console.error('Failed to refresh payments', e);
     }
@@ -289,10 +297,7 @@ export const AgentDataPage = () => {
       try {
         await deleteAgent(agentGroup.id);
         
-        // Refresh all agents
-        const res = await getAgents({ size: 5000 });
-        const agents = res.data?.data?.content || res.data?.content || res.content || [];
-        setAllExplicitAgents(Array.isArray(agents) ? agents : []);
+        setAllExplicitAgents(prev => prev.map(a => a.id === agentGroup.id ? { ...a, status: 'DELETED' } : a));
         
       } catch (e) {
         console.error(e);
@@ -803,17 +808,23 @@ export const AgentDataPage = () => {
       <AgentFormModal
         isOpen={isFormModalOpen}
         agent={editingAgent}
-        onClose={async (refresh) => {
+        onClose={async (refresh, action, payload) => {
           setIsFormModalOpen(false);
           setEditingAgent(null);
           if (refresh) {
-            setLoadingPassengers(true);
-            try {
-              const res = await getAgents({ size: 5000 });
-              const agents = res.data?.data?.content || res.data?.content || res.content || [];
-              setAllExplicitAgents(Array.isArray(agents) ? agents : []);
-            } finally {
-              setLoadingPassengers(false);
+            if (action === 'ADD' && payload) {
+              setAllExplicitAgents(prev => [...prev, payload]);
+            } else if (action === 'UPDATE' && payload) {
+              setAllExplicitAgents(prev => prev.map(a => a.id === payload.id ? payload : a));
+            } else {
+              setLoadingPassengers(true);
+              try {
+                const res = await getAgents({ size: 5000 });
+                const agents = res.data?.data?.content || res.data?.content || res.content || [];
+                setAllExplicitAgents(Array.isArray(agents) ? agents : []);
+              } finally {
+                setLoadingPassengers(false);
+              }
             }
           }
         }}
@@ -822,8 +833,16 @@ export const AgentDataPage = () => {
       <AgentPassengersModal
         isOpen={isPassengersModalOpen}
         agent={viewingAgent ? (agentGroups.find(g => g.agentName === viewingAgent.agentName) || viewingAgent) : null}
-        onDataChanged={async () => {
-          await fetchAllPassengers();
+        onDataChanged={async (action, payload) => {
+          if (action === 'DELETE' && payload) {
+             setAllPassengers(prev => prev.filter(p => p.id !== payload));
+          } else if (action === 'UPDATE' && payload) {
+             setAllPassengers(prev => prev.map(p => p.id === payload.id ? payload : p));
+          } else if (action === 'ADD' && payload) {
+             setAllPassengers(prev => [...prev, payload]);
+          } else {
+             await fetchAllPassengers();
+          }
         }}
         onClose={() => {
           setIsPassengersModalOpen(false);

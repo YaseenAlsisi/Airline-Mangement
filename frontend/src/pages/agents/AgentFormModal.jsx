@@ -44,11 +44,12 @@ const AgentFormModal = ({ isOpen, agent, onClose }) => {
 
     try {
       if (agent) {
-        await updateAgent(agent.id, formData);
+        const res = await updateAgent(agent.id, formData);
+        onClose(true, 'UPDATE', res.data || res.content || res);
       } else {
-        await createAgent(formData);
+        const res = await createAgent(formData);
+        onClose(true, 'ADD', res.data || res.content || res);
       }
-      onClose(true);
     } catch (err) {
       setError(err.response?.data?.error?.message || 'An error occurred while saving the agent.');
     } finally {

@@ -46,10 +46,10 @@ export const AgentPaymentModal = ({ agentGroup, isOpen, onClose, onPaymentApplie
         note: note
       };
 
-      await createAgentPayment(payload);
+      const res = await createAgentPayment(payload);
 
       setSuccessMsg(t('agent.payment.success', 'Payment applied successfully!'));
-      onPaymentApplied();
+      onPaymentApplied('ADD', res.data || res.content || res);
       setAmount('');
       setNote('');
       setTimeout(() => {
