@@ -12,9 +12,9 @@ services:
       - "127.0.0.1:8081:8081"
 
     environment:
-      SPRING_DATASOURCE_URL: "jdbc:postgresql://ep-tiny-night-b1ydnyk0.c-5.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-      SPRING_DATASOURCE_USERNAME: "neondb_owner"
-      SPRING_DATASOURCE_PASSWORD: "npg_oJ21CsYWzTie"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://localhost:5432/airline_db?channel_binding=require"
+      SPRING_DATASOURCE_USERNAME: "airline_user"
+      SPRING_DATASOURCE_PASSWORD: "airsys8808"
 
       JWT_SECRET: "${JWT_SECRET}"
 
