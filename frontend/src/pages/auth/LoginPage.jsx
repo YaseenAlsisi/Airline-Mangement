@@ -13,8 +13,8 @@ export const LoginPage = () => {
   const location = useLocation();
   const { t } = useTranslation();
   const { user, setTokens, setUser } = useAuthStore();
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
